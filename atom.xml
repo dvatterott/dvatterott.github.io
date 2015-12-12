@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2015-12-12T13:13:46-05:00</updated>
+  <updated>2015-12-12T13:16:45-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -18,8 +18,7 @@
     <link href="http://www.danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes/"/>
     <updated>2015-12-12T13:10:09-05:00</updated>
     <id>http://www.danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes</id>
-    <content type="html"><![CDATA[<p>&lt;!DOCTYPE html>
-<html>
+    <content type="html"><![CDATA[<p><html>
 <head><meta charset="utf-8" />
 <title>Wyble_PsychSci</title></p>
 
@@ -51,28 +50,6 @@
 
 <!-- Load mathjax -->
 
-
-<pre><code>&lt;script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"&gt;&lt;/script&gt;
-&lt;!-- MathJax configuration --&gt;
-&lt;script type="text/x-mathjax-config"&gt;
-MathJax.Hub.Config({
-    tex2jax: {
-        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-        processEscapes: true,
-        processEnvironments: true
-    },
-    // Center justify equations in code and markdown cells. Elsewhere
-    // we use CSS to left justify single line equations in code cells.
-    displayAlign: 'center',
-    "HTML-CSS": {
-        styles: {'.MathJax_Display': {"margin": 0}},
-        linebreaks: { automatic: true }
-    }
-});
-&lt;/script&gt;
-&lt;!-- End of mathjax configuration --&gt;&lt;/head&gt;
-</code></pre>
 
 <p><body>
   <div tabindex="-1" id="notebook" class="border-box-sizing">
