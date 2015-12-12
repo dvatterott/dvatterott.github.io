@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2015-12-12T13:16:45-05:00</updated>
+  <updated>2015-12-12T13:47:41-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -51,6 +51,28 @@
 <!-- Load mathjax -->
 
 
+<pre><code>&lt;script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"&gt;&lt;/script&gt;
+&lt;!-- MathJax configuration --&gt;
+&lt;script type="text/x-mathjax-config"&gt;
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+        processEscapes: true,
+        processEnvironments: true
+    },
+    // Center justify equations in code and markdown cells. Elsewhere
+    // we use CSS to left justify single line equations in code cells.
+    displayAlign: 'center',
+    "HTML-CSS": {
+        styles: {'.MathJax_Display': {"margin": 0}},
+        linebreaks: { automatic: true }
+    }
+});
+&lt;/script&gt;
+&lt;!-- End of mathjax configuration --&gt;&lt;/head&gt;
+</code></pre>
+
 <p><body>
   <div tabindex="-1" id="notebook" class="border-box-sizing">
     <div class="container" id="notebook-container"></p>
@@ -60,10 +82,10 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Reanalysis-of-Chen-&amp;-Wyble,-2015">Reanalysis of Chen &amp; Wyble, 2015<a class="anchor-link" href="#Reanalysis-of-Chen-&amp;-Wyble,-2015">&#182;</a></h1><p>Chen and Wyble published an interesting paper (2015) where they demonstrate that participants cannot report attributes of attended stimuli unless the participants are previously informed that this attribute is important. For instance, you wouldn't remember the color of the apple if you had had just told someone the shape. I would have expected the opposite, so ... cool!</p>
+<h3 id="Reanalysis-of-Chen-&amp;-Wyble,-2015">Reanalysis of Chen &amp; Wyble, 2015<a class="anchor-link" href="#Reanalysis-of-Chen-&amp;-Wyble,-2015">&#182;</a></h3><p>Chen and Wyble published an interesting paper (2015) where they demonstrate that participants cannot report attributes of attended stimuli unless the participants are previously informed that this attribute is important. For instance, you wouldn't remember the color of the apple if you had had just told someone the shape. I would have expected the opposite, so ... cool!</p>
 <p>After reading the paper (you can check it out at <a href="http://wyblelab.com/publications">http://wyblelab.com/publications</a>), I became curious whether participants might unconsciously retain some information about these forgotten attributes. Chen and Wyble posted their data to databrary.com (<a href="https://nyu.databrary.org/volume/79">https://nyu.databrary.org/volume/79</a>), so I downloaded the data and did some quick analyses that you see here! I want to commend Chen and Wyble for sharing their data. This is something everyone should start doing (including me).</p>
 <p>Below, I will start by showing I can replicate Chen and Wyble's analyses, then I will investigate whether there's a trace of unconscious memory for the "forgotten" features.</p>
-<h3 id="References">References<a class="anchor-link" href="#References">&#182;</a></h3><p>Chen, H., &amp; Wyble, B. (2015). Amnesia for Object Attributes Failure to Report Attended Information That Had Just Reached Conscious Awareness. Psychological science, 26(2),203-210.</p>
+<h5 id="References">References<a class="anchor-link" href="#References">&#182;</a></h5><p>Chen, H., &amp; Wyble, B. (2015). Amnesia for Object Attributes Failure to Report Attended Information That Had Just Reached Conscious Awareness. Psychological science, 26(2),203-210.</p>
 <p>Wyble, B. (2014). Amnesia for object attributes: Failure to report attended information that had just reached conscious awareness. Databrary. Retrieved November 22, 2015 from <a href="http://doi.org/10.17910/B7G010">http://doi.org/10.17910/B7G010</a></p>
 
 </div>
@@ -76,7 +98,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Load-relevant-libraries-and-write-analysis-functions">Load relevant libraries and write analysis functions<a class="anchor-link" href="#Load-relevant-libraries-and-write-analysis-functions">&#182;</a></h3>
+<h4 id="Load-relevant-libraries-and-write-analysis-functions">Load relevant libraries and write analysis functions<a class="anchor-link" href="#Load-relevant-libraries-and-write-analysis-functions">&#182;</a></h4>
 </div>
 </div>
 </div>
@@ -256,7 +278,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Experiment-1">Experiment 1<a class="anchor-link" href="#Experiment-1">&#182;</a></h2>
+<h4 id="Experiment-1">Experiment 1<a class="anchor-link" href="#Experiment-1">&#182;</a></h4>
 </div>
 </div>
 </div>
@@ -478,7 +500,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Experiment-1:-Replicating-Chen-&amp;-Wyble's-(2015)-analyses">Experiment 1: Replicating Chen &amp; Wyble's (2015) analyses<a class="anchor-link" href="#Experiment-1:-Replicating-Chen-&amp;-Wyble's-(2015)-analyses">&#182;</a></h3>
+<h4 id="Experiment-1:-Replicating-Chen-&amp;-Wyble's-(2015)-analyses">Experiment 1: Replicating Chen &amp; Wyble's (2015) analyses<a class="anchor-link" href="#Experiment-1:-Replicating-Chen-&amp;-Wyble's-(2015)-analyses">&#182;</a></h4>
 </div>
 </div>
 </div>
@@ -1267,7 +1289,7 @@ FwAAAABJRU5ErkJggg==
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Experiment-1---Intertrial-analyses">Experiment 1 - Intertrial analyses<a class="anchor-link" href="#Experiment-1---Intertrial-analyses">&#182;</a></h3>
+<h4 id="Experiment-1---Intertrial-analyses">Experiment 1 - Intertrial analyses<a class="anchor-link" href="#Experiment-1---Intertrial-analyses">&#182;</a></h4>
 </div>
 </div>
 </div>
@@ -1695,7 +1717,7 @@ BwCDcSUOAAYjxAHAYIQ4ABiMEAcAgxHiAGAwQhwADPb/G78dL4oVRVcAAAAASUVORK5CYII=
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Replicate-Experiments-1-Intertrial-Analyses-with-Experiment-1b">Replicate Experiments 1 Intertrial Analyses with Experiment 1b<a class="anchor-link" href="#Replicate-Experiments-1-Intertrial-Analyses-with-Experiment-1b">&#182;</a></h1>
+<h3 id="Replicate-Experiments-1-Intertrial-Analyses-with-Experiment-1b">Replicate Experiments 1 Intertrial Analyses with Experiment 1b<a class="anchor-link" href="#Replicate-Experiments-1-Intertrial-Analyses-with-Experiment-1b">&#182;</a></h3>
 </div>
 </div>
 </div>
