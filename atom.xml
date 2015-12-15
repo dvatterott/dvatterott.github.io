@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2015-12-14T20:37:09-05:00</updated>
+  <updated>2015-12-14T20:37:44-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -514,7 +514,7 @@ Presurprise vs Postsurprise
 
 <p><img src="http://www.danvatterott.com/images/Wyble2.png" /></p>
 
-<p>The axis represents percent correct. All graphs in this post will have percent correct on the y-axis.</p>
+<p>The y-axis represents percent correct. All graphs in this post will have percent correct on the y-axis.</p>
 
 <p>Replicating Chen and Wyble, participants perform no worse in the surprise and post surprise trials, indicating that they succesfully found the target.</p>
 
