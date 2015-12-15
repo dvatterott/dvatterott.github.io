@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2015-12-14T20:25:15-05:00</updated>
+  <updated>2015-12-14T20:27:28-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -478,7 +478,8 @@ standard deviation of accuracies
 0.71
 </code></pre>
 
-<p><img src="../images/output_15_1.png" title="accuracies" alt="accuracies" /></p>
+<p><img src="http://www.danvatterott.com/images/output_15_1.png" />
+<img src="../images/output_15_1.png" title="accuracies" alt="accuracies" /></p>
 
 <p>Lets look at participants' performance when asked to identify the target&rsquo;s location. I will plot performance as mean accuracy in the presurprise,surprise, and postsurprose trials.</p>
 
