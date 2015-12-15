@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2015-12-14T20:34:19-05:00</updated>
+  <updated>2015-12-14T20:37:09-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -514,6 +514,8 @@ Presurprise vs Postsurprise
 
 <p><img src="http://www.danvatterott.com/images/Wyble2.png" /></p>
 
+<p>The axis represents percent correct. All graphs in this post will have percent correct on the y-axis.</p>
+
 <p>Replicating Chen and Wyble, participants perform no worse in the surprise and post surprise trials, indicating that they succesfully found the target.</p>
 
 <p>Now lets look at participants' ability to report the target&rsquo;s color in the surprise trial and the trial immediately following the surprise test.</p>
@@ -620,7 +622,7 @@ Match vs Mismatch
 
 <p><img src="http://www.danvatterott.com/images/Wyble5.png" /></p>
 
-<p>Looks like a 2.5% increase in accuracy. This time significant. Now, this wasn&rsquo;t really a planned comparison, so please take this result with a grain of salt.</p>
+<p>Looks like a 2.5% increase in accuracy. Now, this wasn&rsquo;t really a planned comparison, so please take this result with a grain of salt.</p>
 
 <p>As a sanity check, lets look at how repetitions in the target&rsquo;s location (the reported feature) effect performance.</p>
 
