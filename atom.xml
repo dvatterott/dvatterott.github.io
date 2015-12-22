@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2015-12-15T20:07:46-05:00</updated>
+  <updated>2015-12-22T10:18:58-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -25,6 +25,9 @@
 <p>After reading the paper (you can check it out at <a href="http://wyblelab.com/publications">http://wyblelab.com/publications</a>), I became curious whether participants might unconsciously retain some information about these forgotten attributes. Chen and Wyble posted their data to databrary.com (<a href="https://nyu.databrary.org/volume/79">https://nyu.databrary.org/volume/79</a>), so I downloaded the data and did some quick analyses that you see here! I want to commend Chen and Wyble for sharing their data. This is something everyone should start doing (including me).</p>
 
 <p>Below, I will start by showing I can replicate Chen and Wyble&rsquo;s analyses, then I will investigate whether there&rsquo;s a trace of unconscious memory for the &ldquo;forgotten&rdquo; features.</p>
+
+<p>EDIT:12/22/15
+Brad Wyble recently pointed out that I overstated the claim in their paper. They do not claim participants have complete amnesia for unqueried object attributes. Rather, Chen and Wyble focus on the dramatic performance change between the first and second trial following the initial query about an object attribute. This performance change demonstrates amnesia, but not necessarily complete amnesia.</p>
 
 <h5>References</h5>
 
