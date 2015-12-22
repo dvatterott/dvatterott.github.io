@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2015-12-22T14:25:37-05:00</updated>
+  <updated>2015-12-22T14:27:22-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -396,8 +396,6 @@
 <p>One concern with my plots is the use of hexbin. It&rsquo;s a bit hacky. In particular, it does not account for the nonlinearity produced by the 3 point line (some hexbins include both long 2-pt shots and 3-pt shots). It would be nice to limit some bins to 3-pt shots, but I can&rsquo;t think of a way to do this without hardcoding the locations. One advantage with the hexbin method is I can easily change the number of bins. I&rsquo;m not sure I could produce equivalent flexibility with a plot that bins 2-pt and 3-pt shots seperately.</p>
 
 <p>Another concern is my plots treat all shots as equal, which is not fair. Shooting 40% from the restricted area and behind the 3-pt line are very different. Austin Clemens accounts for this by plotting shooting percentage relative to league average. Maybe I&rsquo;ll implement something similar in the future.</p>
-
-<pre><code class="python"></code></pre>
 ]]></content>
   </entry>
   
