@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Machine Learning | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/machine-learning/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-02-21T15:35:29-05:00</updated>
+  <updated>2016-02-21T15:43:25-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -18,9 +18,7 @@
     <link href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/"/>
     <updated>2016-02-21T15:14:23-05:00</updated>
     <id>http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players</id>
-    <content type="html"><![CDATA[<h3>Grouping NBA players</h3>
-
-<p>In basketball, we typically talk about 5 positions: point guard, shooting guard, small forward, power forward, and center. Based on this, one might expect NBA players to fall into 5 distinct groups- Point guards perform similar to other point guards, shooting guards perform similar to other shooting guards, etc. Is this the case? Do NBA players fall neatly into position groups?</p>
+    <content type="html"><![CDATA[<p>In basketball, we typically talk about 5 positions: point guard, shooting guard, small forward, power forward, and center. Based on this, one might expect NBA players to fall into 5 distinct groups- Point guards perform similar to other point guards, shooting guards perform similar to other shooting guards, etc. Is this the case? Do NBA players fall neatly into position groups?</p>
 
 <p>To answer this question, I will look at how NBA players &ldquo;group&rdquo; together. For example, there might be a group of players who collect lots of rebounds, shoot poorly from behind the 3 point line, and block lots of shots. I might call these players forwards. If we allow player performance to create groups, what will these groups look like?</p>
 
@@ -47,114 +45,7 @@ response = requests.get(url) #get data
 headers = response.json()['resultSets'][0]
 players = response.json()['resultSets'][0]['rowSet']
 players_df = pd.DataFrame(players, columns=headers['headers']) #turn data into dataframe
-players_df.head() #check what this looks like
 </code></pre>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>PERSON_ID</th>
-      <th>DISPLAY_LAST_COMMA_FIRST</th>
-      <th>DISPLAY_FIRST_LAST</th>
-      <th>ROSTERSTATUS</th>
-      <th>FROM_YEAR</th>
-      <th>TO_YEAR</th>
-      <th>PLAYERCODE</th>
-      <th>TEAM_ID</th>
-      <th>TEAM_CITY</th>
-      <th>TEAM_NAME</th>
-      <th>TEAM_ABBREVIATION</th>
-      <th>TEAM_CODE</th>
-      <th>GAMES_PLAYED_FLAG</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>76001</td>
-      <td>Abdelnaby, Alaa</td>
-      <td>Alaa Abdelnaby</td>
-      <td>0</td>
-      <td>1990</td>
-      <td>1994</td>
-      <td>HISTADD_alaa_abdelnaby</td>
-      <td>0</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Y</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>76002</td>
-      <td>Abdul-Aziz, Zaid</td>
-      <td>Zaid Abdul-Aziz</td>
-      <td>0</td>
-      <td>1968</td>
-      <td>1977</td>
-      <td>HISTADD_zaid_abdul-aziz</td>
-      <td>0</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Y</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>76003</td>
-      <td>Abdul-Jabbar, Kareem</td>
-      <td>Kareem Abdul-Jabbar</td>
-      <td>0</td>
-      <td>1969</td>
-      <td>1988</td>
-      <td>HISTADD_kareem_abdul-jabbar</td>
-      <td>0</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Y</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>51</td>
-      <td>Abdul-Rauf, Mahmoud</td>
-      <td>Mahmoud Abdul-Rauf</td>
-      <td>0</td>
-      <td>1990</td>
-      <td>2000</td>
-      <td>HISTADD_mahmoud_abdul-rauf</td>
-      <td>0</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Y</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>1505</td>
-      <td>Abdul-Wahad, Tariq</td>
-      <td>Tariq Abdul-Wahad</td>
-      <td>0</td>
-      <td>1997</td>
-      <td>2003</td>
-      <td>tariq_abdul-wahad</td>
-      <td>0</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Y</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
 
 <p>In the 1979-1980 season, the NBA started using the 3-point line. The 3-point has dramatically changed basketball, so players performed different before it. While this change in play was not instantaneous, it does not make sense to include players before the 3-point line.</p>
 
@@ -197,163 +88,7 @@ players_df = players_df[players_df['TO_YEAR']&gt;1979] #only use players after 3
 #df.index = range(np.size(df,0))
 #df.to_pickle('nba_career_stats_'+time.strftime("%Y_%b_%d", time.gmtime())+'.pkl')
 df = pd.read_pickle('nba_career_stats_2016_Feb_14.pkl')
-df.head()
 </code></pre>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>PLAYER_ID</th>
-      <th>LEAGUE_ID</th>
-      <th>TEAM_ID</th>
-      <th>GP</th>
-      <th>GS</th>
-      <th>MIN</th>
-      <th>FGM</th>
-      <th>FGA</th>
-      <th>FG_PCT</th>
-      <th>FG3M</th>
-      <th>...</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>REB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>PTS</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>76001</td>
-      <td>00</td>
-      <td>0</td>
-      <td>256</td>
-      <td>53</td>
-      <td>3200</td>
-      <td>7.0</td>
-      <td>13.9</td>
-      <td>0.502</td>
-      <td>0.0</td>
-      <td>...</td>
-      <td>0.701</td>
-      <td>3.2</td>
-      <td>6.3</td>
-      <td>9.5</td>
-      <td>1.0</td>
-      <td>0.8</td>
-      <td>0.8</td>
-      <td>2.8</td>
-      <td>5.4</td>
-      <td>16.5</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>76003</td>
-      <td>00</td>
-      <td>0</td>
-      <td>1560</td>
-      <td>1476</td>
-      <td>57446</td>
-      <td>9.9</td>
-      <td>17.7</td>
-      <td>0.559</td>
-      <td>0.0</td>
-      <td>...</td>
-      <td>0.721</td>
-      <td>1.9</td>
-      <td>5.9</td>
-      <td>10.9</td>
-      <td>3.5</td>
-      <td>0.7</td>
-      <td>2.0</td>
-      <td>1.6</td>
-      <td>2.9</td>
-      <td>24.1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>51</td>
-      <td>00</td>
-      <td>0</td>
-      <td>586</td>
-      <td>336</td>
-      <td>15627</td>
-      <td>8.1</td>
-      <td>18.3</td>
-      <td>0.442</td>
-      <td>1.1</td>
-      <td>...</td>
-      <td>0.905</td>
-      <td>0.5</td>
-      <td>2.0</td>
-      <td>2.5</td>
-      <td>4.8</td>
-      <td>1.1</td>
-      <td>0.1</td>
-      <td>2.2</td>
-      <td>2.5</td>
-      <td>19.7</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1505</td>
-      <td>00</td>
-      <td>0</td>
-      <td>236</td>
-      <td>145</td>
-      <td>4809</td>
-      <td>5.4</td>
-      <td>12.9</td>
-      <td>0.417</td>
-      <td>0.1</td>
-      <td>...</td>
-      <td>0.703</td>
-      <td>2.1</td>
-      <td>3.7</td>
-      <td>5.8</td>
-      <td>2.0</td>
-      <td>1.4</td>
-      <td>0.6</td>
-      <td>2.3</td>
-      <td>3.6</td>
-      <td>13.7</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>949</td>
-      <td>00</td>
-      <td>0</td>
-      <td>830</td>
-      <td>704</td>
-      <td>28872</td>
-      <td>6.8</td>
-      <td>14.4</td>
-      <td>0.472</td>
-      <td>0.2</td>
-      <td>...</td>
-      <td>0.810</td>
-      <td>2.3</td>
-      <td>5.4</td>
-      <td>7.8</td>
-      <td>2.6</td>
-      <td>1.0</td>
-      <td>0.8</td>
-      <td>2.7</td>
-      <td>2.9</td>
-      <td>18.7</td>
-    </tr>
-  </tbody>
-</table>
-<p>5 rows × 24 columns</p>
-</div>
-
 
 <pre><code class="python">df.columns
 </code></pre>
@@ -377,114 +112,7 @@ df['FG2A'] = df['FGA']-df['FG3A'] #2 point field goal attempts
 df['FG2_PCT'] = df['FG2M']/df['FG2A'] #2 point field goal percentage
 saveIDs = df['PLAYER_ID'] #save player IDs for later
 df = df.drop(['PLAYER_ID','LEAGUE_ID','TEAM_ID','GP','GS','MIN','FGM','FGA','FG_PCT','FG3M','FTM','REB','PTS','FG2M'],1) #pull out unncessary columns
-df.head()
 </code></pre>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0.0</td>
-      <td>0.000</td>
-      <td>3.6</td>
-      <td>0.701</td>
-      <td>3.2</td>
-      <td>6.3</td>
-      <td>1.0</td>
-      <td>0.8</td>
-      <td>0.8</td>
-      <td>2.8</td>
-      <td>5.4</td>
-      <td>13.9</td>
-      <td>0.503597</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>0.0</td>
-      <td>0.056</td>
-      <td>5.8</td>
-      <td>0.721</td>
-      <td>1.9</td>
-      <td>5.9</td>
-      <td>3.5</td>
-      <td>0.7</td>
-      <td>2.0</td>
-      <td>1.6</td>
-      <td>2.9</td>
-      <td>17.7</td>
-      <td>0.559322</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3.1</td>
-      <td>0.354</td>
-      <td>2.7</td>
-      <td>0.905</td>
-      <td>0.5</td>
-      <td>2.0</td>
-      <td>4.8</td>
-      <td>1.1</td>
-      <td>0.1</td>
-      <td>2.2</td>
-      <td>2.5</td>
-      <td>15.2</td>
-      <td>0.460526</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>0.6</td>
-      <td>0.237</td>
-      <td>4.0</td>
-      <td>0.703</td>
-      <td>2.1</td>
-      <td>3.7</td>
-      <td>2.0</td>
-      <td>1.4</td>
-      <td>0.6</td>
-      <td>2.3</td>
-      <td>3.6</td>
-      <td>12.3</td>
-      <td>0.430894</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>0.6</td>
-      <td>0.297</td>
-      <td>6.2</td>
-      <td>0.810</td>
-      <td>2.3</td>
-      <td>5.4</td>
-      <td>2.6</td>
-      <td>1.0</td>
-      <td>0.8</td>
-      <td>2.7</td>
-      <td>2.9</td>
-      <td>13.8</td>
-      <td>0.478261</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
 
 <p>It&rsquo;s always important to visualize the data, so lets get an idea what we&rsquo;re working with!</p>
 
@@ -541,7 +169,7 @@ plt.xlabel('PCA Component');
 
 <p>I chose to include the first 5 components because no component after the 5th explained more than 5% of the data. This part of the analysis is admittedly arbitrary, but 5% is a relatively conservative cut-off.</p>
 
-<p>Below is the fun part of the data. We get to look at what features contribute to the different principle components (greater values mean a feature contribute more to the principle component). Each principle component is a row and each column is a different feature.</p>
+<p>Below is the fun part of the data. We get to look at what features contribute to the different principle components.</p>
 
 <ul>
 <li>Assists and 3-point shooting contribute to the first component. I will call this the <strong>Outside Skills</strong> component.</li>
@@ -558,114 +186,8 @@ plt.xlabel('PCA Component');
 
 <pre><code class="python">factor_names = ['Outside Skills','Rim Scoring','Pure Points','Defensive Big Man','Dead Eye'] #my component names
 loadings_df = pd.DataFrame(pca.components_, columns=df.columns)
-loadings_df[0:5] #all the factor loadings appear below.
+#loadings_df[0:5] #all the factor loadings appear below.
 </code></pre>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0.321506</td>
-      <td>0.320929</td>
-      <td>-0.137827</td>
-      <td>0.288127</td>
-      <td>-0.414188</td>
-      <td>-0.368314</td>
-      <td>0.312043</td>
-      <td>0.197567</td>
-      <td>-0.341307</td>
-      <td>0.038788</td>
-      <td>-0.302558</td>
-      <td>-0.090183</td>
-      <td>-0.174199</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>-0.271638</td>
-      <td>-0.131264</td>
-      <td>0.466679</td>
-      <td>0.086695</td>
-      <td>0.012204</td>
-      <td>-0.071757</td>
-      <td>0.306964</td>
-      <td>0.281692</td>
-      <td>-0.093162</td>
-      <td>0.506950</td>
-      <td>0.005162</td>
-      <td>0.485509</td>
-      <td>0.058126</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0.081277</td>
-      <td>0.223501</td>
-      <td>0.281449</td>
-      <td>0.412681</td>
-      <td>0.001659</td>
-      <td>0.142971</td>
-      <td>-0.186244</td>
-      <td>-0.345386</td>
-      <td>0.017632</td>
-      <td>-0.255977</td>
-      <td>-0.403291</td>
-      <td>0.324247</td>
-      <td>0.431144</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>-0.012076</td>
-      <td>0.003643</td>
-      <td>-0.151055</td>
-      <td>-0.138015</td>
-      <td>0.004676</td>
-      <td>0.138542</td>
-      <td>0.287597</td>
-      <td>0.441416</td>
-      <td>0.177912</td>
-      <td>-0.001267</td>
-      <td>-0.182245</td>
-      <td>-0.301243</td>
-      <td>0.711044</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>0.484921</td>
-      <td>0.358494</td>
-      <td>0.278203</td>
-      <td>-0.027049</td>
-      <td>0.013008</td>
-      <td>0.302193</td>
-      <td>0.000929</td>
-      <td>-0.170477</td>
-      <td>0.239647</td>
-      <td>0.537719</td>
-      <td>0.141084</td>
-      <td>-0.265262</td>
-      <td>-0.028485</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
 
 <p>Cool, we have our 5 PCA components. Now lets transform the data into our 5 component PCA space (from our 13 feature space - e.g., FG3A, FG3_PCT, ect.). To do this, we give each player a score on each of the 5 PCA components.</p>
 
@@ -734,133 +256,7 @@ df['Name'] = player_names
 #lets also create a dataframe with data about where the clusters occur in the 5 component PCA space.
 cluster_locs = pd.DataFrame(final_fit.cluster_centers_,columns=['component %s'% str(s) for s in range(np.size(final_fit.cluster_centers_,1))])
 cluster_locs.columns = factor_names
-
-df.head()
 </code></pre>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-      <th>kmeans_label</th>
-      <th>PLAYER_ID</th>
-      <th>Name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0.0</td>
-      <td>0.000</td>
-      <td>3.6</td>
-      <td>0.701</td>
-      <td>3.2</td>
-      <td>6.3</td>
-      <td>1.0</td>
-      <td>0.8</td>
-      <td>0.8</td>
-      <td>2.8</td>
-      <td>5.4</td>
-      <td>13.9</td>
-      <td>0.503597</td>
-      <td>4</td>
-      <td>76001</td>
-      <td>Abdelnaby, Alaa</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>0.0</td>
-      <td>0.056</td>
-      <td>5.8</td>
-      <td>0.721</td>
-      <td>1.9</td>
-      <td>5.9</td>
-      <td>3.5</td>
-      <td>0.7</td>
-      <td>2.0</td>
-      <td>1.6</td>
-      <td>2.9</td>
-      <td>17.7</td>
-      <td>0.559322</td>
-      <td>1</td>
-      <td>76003</td>
-      <td>Abdul-Jabbar, Kareem</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3.1</td>
-      <td>0.354</td>
-      <td>2.7</td>
-      <td>0.905</td>
-      <td>0.5</td>
-      <td>2.0</td>
-      <td>4.8</td>
-      <td>1.1</td>
-      <td>0.1</td>
-      <td>2.2</td>
-      <td>2.5</td>
-      <td>15.2</td>
-      <td>0.460526</td>
-      <td>2</td>
-      <td>51</td>
-      <td>Abdul-Rauf, Mahmoud</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>0.6</td>
-      <td>0.237</td>
-      <td>4.0</td>
-      <td>0.703</td>
-      <td>2.1</td>
-      <td>3.7</td>
-      <td>2.0</td>
-      <td>1.4</td>
-      <td>0.6</td>
-      <td>2.3</td>
-      <td>3.6</td>
-      <td>12.3</td>
-      <td>0.430894</td>
-      <td>2</td>
-      <td>1505</td>
-      <td>Abdul-Wahad, Tariq</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>0.6</td>
-      <td>0.297</td>
-      <td>6.2</td>
-      <td>0.810</td>
-      <td>2.3</td>
-      <td>5.4</td>
-      <td>2.6</td>
-      <td>1.0</td>
-      <td>0.8</td>
-      <td>2.7</td>
-      <td>2.9</td>
-      <td>13.8</td>
-      <td>0.478261</td>
-      <td>1</td>
-      <td>949</td>
-      <td>Abdur-Rahim, Shareef</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
 
 <p>Awesome. Now lets see how all the clusters look. These clusters were created in 5 dimensional space, which is not easy to visualize. Below I plot another scatter matrix. The scatter matrix allows us to visualize the clusters in different 2D combinations of the 5D space.</p>
 
@@ -922,62 +318,12 @@ PlayerID = str(int(df[df['Name']==name]['PLAYER_ID'])) #get players ID number
 #player = Image(url = "http://stats.nba.com/media/players/230x185/"+PlayerID+".png")
 player = Image(url = 'http://4.bp.blogspot.com/_RaOrchOImw8/S3mNk3exLeI/AAAAAAAAdZk/Hs-81mnXO_E/s400/Lloyd+Daniels.jpg',width=100)
 display(player) 
-display(df[df['Name']==name]) #prototype's stats
+#display(df[df['Name']==name]) #prototype's stats
 display(cluster_locs[0:1]) #cluster centroid location
 df[df['kmeans_label']==0]['Name'][:10] #first ten players in the cluster (alphabetically)
 </code></pre>
 
 <p><img src="http://4.bp.blogspot.com/_RaOrchOImw8/S3mNk3exLeI/AAAAAAAAdZk/Hs-81mnXO_E/s400/Lloyd+Daniels.jpg" width="100"/></p>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-      <th>kmeans_label</th>
-      <th>PLAYER_ID</th>
-      <th>Name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>534</th>
-      <td>4.9</td>
-      <td>0.316</td>
-      <td>2.1</td>
-      <td>0.743</td>
-      <td>1.9</td>
-      <td>2.6</td>
-      <td>3.2</td>
-      <td>1</td>
-      <td>0.6</td>
-      <td>2.1</td>
-      <td>3</td>
-      <td>9</td>
-      <td>0.455556</td>
-      <td>0</td>
-      <td>1380</td>
-      <td>Daniels, Lloyd</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
 
 <div>
 <table border="1" class="dataframe">
@@ -1035,62 +381,12 @@ PlayerID = str(int(df[df['Name']==name]['PLAYER_ID']))
 #player = Image(url = "http://stats.nba.com/media/players/230x185/"+PlayerID+".png")
 player = Image(url = 'https://allshookdown.files.wordpress.com/2009/06/laettner_200_921121.jpg?w=200&amp;h=300',width=100)
 display(player)
-display(df[df['Name']==name])
+#display(df[df['Name']==name])
 display(cluster_locs[1:2])
 df[df['kmeans_label']==1]['Name'][:10]
 </code></pre>
 
 <p><img src="https://allshookdown.files.wordpress.com/2009/06/laettner_200_921121.jpg?w=200&h=300" width="100"/></p>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-      <th>kmeans_label</th>
-      <th>PLAYER_ID</th>
-      <th>Name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>1374</th>
-      <td>0.5</td>
-      <td>0.261</td>
-      <td>5</td>
-      <td>0.82</td>
-      <td>2.3</td>
-      <td>5.9</td>
-      <td>3.1</td>
-      <td>1.3</td>
-      <td>0.9</td>
-      <td>2.7</td>
-      <td>3.9</td>
-      <td>11.2</td>
-      <td>0.491071</td>
-      <td>1</td>
-      <td>363</td>
-      <td>Laettner, Christian</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
 
 <div>
 <table border="1" class="dataframe">
@@ -1146,62 +442,12 @@ PlayerID = str(int(df[df['Name']==name]['PLAYER_ID']))
 #player = Image(url = "http://stats.nba.com/media/players/230x185/"+PlayerID+".png")
 player = Image(url = 'http://imageocd.com/images/nba10/doug-west-wallpaper-height-weight-position-college-high-school/doug-west.jpg',width=100)
 display(player)
-display(df[df['Name']==name])
+#display(df[df['Name']==name])
 display(cluster_locs[2:3])
 df[df['kmeans_label']==2]['Name'][:10]
 </code></pre>
 
 <p><img src="http://imageocd.com/images/nba10/doug-west-wallpaper-height-weight-position-college-high-school/doug-west.jpg" width="100"/></p>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-      <th>kmeans_label</th>
-      <th>PLAYER_ID</th>
-      <th>Name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>2527</th>
-      <td>0.4</td>
-      <td>0.191</td>
-      <td>3.2</td>
-      <td>0.801</td>
-      <td>1.2</td>
-      <td>2.5</td>
-      <td>2.8</td>
-      <td>1</td>
-      <td>0.4</td>
-      <td>1.8</td>
-      <td>4</td>
-      <td>11.4</td>
-      <td>0.491228</td>
-      <td>2</td>
-      <td>28</td>
-      <td>West, Doug</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
 
 <div>
 <table border="1" class="dataframe">
@@ -1255,62 +501,12 @@ PlayerID = str(int(df[df['Name']==name]['PLAYER_ID']))
 #player = Image(url = "http://stats.nba.com/media/players/230x185/"+PlayerID+".png")
 player = Image(url = 'http://4.bp.blogspot.com/_f5MWZq1BJXI/TCDRy3v6m9I/AAAAAAAAACc/Ux8M7uiadoc/s400/cato.jpg',width=100)
 display(player)
-display(df[df['Name']==name])
+#display(df[df['Name']==name])
 display(cluster_locs[3:4])
 df[df['kmeans_label']==3]['Name'][:10]
 </code></pre>
 
 <p><img src="http://4.bp.blogspot.com/_f5MWZq1BJXI/TCDRy3v6m9I/AAAAAAAAACc/Ux8M7uiadoc/s400/cato.jpg" width="100"/></p>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-      <th>kmeans_label</th>
-      <th>PLAYER_ID</th>
-      <th>Name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>402</th>
-      <td>0</td>
-      <td>0.077</td>
-      <td>3.8</td>
-      <td>0.644</td>
-      <td>3</td>
-      <td>6.7</td>
-      <td>0.8</td>
-      <td>1</td>
-      <td>2.3</td>
-      <td>1.5</td>
-      <td>4.6</td>
-      <td>7.5</td>
-      <td>0.506667</td>
-      <td>3</td>
-      <td>1509</td>
-      <td>Cato, Kelvin</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
 
 <div>
 <table border="1" class="dataframe">
@@ -1366,62 +562,12 @@ PlayerID = str(int(df[df['Name']==name]['PLAYER_ID']))
 #player = Image(url = "http://stats.nba.com/media/players/230x185/"+PlayerID+".png")
 player = Image(url = 'http://www.thenolookpass.com/wp-content/uploads/2012/01/IMG-724x1024.jpg', width=100) #a photo just for fun
 display(player)
-display(df[df['Name']==name])
+#display(df[df['Name']==name])
 display(cluster_locs[4:5])
 df[df['kmeans_label']==4]['Name'][:10]
 </code></pre>
 
 <p><img src="http://www.thenolookpass.com/wp-content/uploads/2012/01/IMG-724x1024.jpg" width="100"/></p>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-      <th>kmeans_label</th>
-      <th>PLAYER_ID</th>
-      <th>Name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>674</th>
-      <td>0.3</td>
-      <td>0</td>
-      <td>3.7</td>
-      <td>0.709</td>
-      <td>2.6</td>
-      <td>4</td>
-      <td>2.6</td>
-      <td>0.7</td>
-      <td>1.2</td>
-      <td>2.4</td>
-      <td>3.9</td>
-      <td>7.8</td>
-      <td>0.397436</td>
-      <td>4</td>
-      <td>346</td>
-      <td>Edwards, Doug</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
 
 <div>
 <table border="1" class="dataframe">
@@ -1476,62 +622,12 @@ PlayerID = str(76993) #Two Gerald Hendersons!
 #player = Image(url = "http://stats.nba.com/media/players/230x185/"+PlayerID+".png", width=100)
 player = Image(url = 'http://cdn.fansided.com/wp-content/blogs.dir/18/files/2014/04/b__gerald_henderson_82.jpg', width=100)
 display(player)
-display(df[df['PLAYER_ID']==76993])
+#display(df[df['PLAYER_ID']==76993])
 display(cluster_locs[5:])
 df[df['kmeans_label']==5]['Name'][:10]
 </code></pre>
 
 <p><img src="http://cdn.fansided.com/wp-content/blogs.dir/18/files/2014/04/b__gerald_henderson_82.jpg" width="100"/></p>
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FG3A</th>
-      <th>FG3_PCT</th>
-      <th>FTA</th>
-      <th>FT_PCT</th>
-      <th>OREB</th>
-      <th>DREB</th>
-      <th>AST</th>
-      <th>STL</th>
-      <th>BLK</th>
-      <th>TOV</th>
-      <th>PF</th>
-      <th>FG2A</th>
-      <th>FG2_PCT</th>
-      <th>kmeans_label</th>
-      <th>PLAYER_ID</th>
-      <th>Name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>1028</th>
-      <td>1.2</td>
-      <td>0.332</td>
-      <td>3.5</td>
-      <td>0.776</td>
-      <td>1</td>
-      <td>1.8</td>
-      <td>6</td>
-      <td>1.8</td>
-      <td>0.2</td>
-      <td>3</td>
-      <td>3.7</td>
-      <td>11.3</td>
-      <td>0.486726</td>
-      <td>5</td>
-      <td>76993</td>
-      <td>Henderson, Gerald</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
 
 <div>
 <table border="1" class="dataframe">
