@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Plotting | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/plotting/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-02-21T15:48:51-05:00</updated>
+  <updated>2016-02-21T15:50:53-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -329,15 +329,15 @@ df[df['kmeans_label']==0]['Name'][:10] #first ten players in the cluster (alphab
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>Outside Skills</th>
+      <th>OutsideSkills </th>
       <th></th>
-      <th>Rim Scoring</th>
+      <th>RimScoring </th>
       <th></th>
-      <th>Pure Points</th>
+      <th>PurePoints </th>
       <th></th>
-      <th>Defensive Big Man</th>
+      <th>DefensiveBigMan </th>
       <th></th>
-      <th>Dead Eye</th>
+      <th>DeadEye </th>
     </tr>
   </thead>
   <tbody>
