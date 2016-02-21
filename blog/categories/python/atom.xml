@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-02-21T15:51:02-05:00</updated>
+  <updated>2016-02-21T15:54:38-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -329,15 +329,15 @@ df[df['kmeans_label']==0]['Name'][:10] #first ten players in the cluster (alphab
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>OutsideSkills </th>
+      <th>Outside Skills</th>
       <th></th>
-      <th>RimScoring </th>
+      <th>Rim Scoring</th>
       <th></th>
-      <th>PurePoints </th>
+      <th>Pure Points</th>
       <th></th>
-      <th>DefensiveBigMan </th>
+      <th>Defensive Big Man</th>
       <th></th>
-      <th>DeadEye </th>
+      <th>Dead Eye</th>
     </tr>
   </thead>
   <tbody>
@@ -398,20 +398,27 @@ df[df['kmeans_label']==1]['Name'][:10]
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th></th>
       <th>Outside Skills</th>
+      <th></th>
       <th>Rim Scoring</th>
+      <th></th>
       <th>Pure Points</th>
+      <th></th>
       <th>Defensive Big Man</th>
+      <th></th>
       <th>Dead Eye</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>-0.340177</td>
+      <th></th>
       <td>1.008111</td>
+      <th></th>
       <td>1.051622</td>
+      <th></th>
       <td>-0.150204</td>
+      <th></th>
       <td>0.599516</td>
     </tr>
   </tbody>
@@ -458,20 +465,27 @@ df[df['kmeans_label']==2]['Name'][:10]
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th></th>
       <th>Outside Skills</th>
+      <th></th>
       <th>Rim Scoring</th>
+      <th></th>
       <th>Pure Points</th>
+      <th></th>
       <th>Defensive Big Man</th>
+      <th></th>
       <th>Dead Eye</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>0.013618</td>
+      <th></th>
       <td>0.101054</td>
+      <th></th>
       <td>0.445377</td>
+      <th></th>
       <td>-0.347974</td>
+      <th></th>
       <td>-1.257634</td>
     </tr>
   </tbody>
@@ -516,20 +530,27 @@ df[df['kmeans_label']==3]['Name'][:10]
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th></th>
       <th>Outside Skills</th>
+      <th></th>
       <th>Rim Scoring</th>
+      <th></th>
       <th>Pure Points</th>
+      <th></th>
       <th>Defensive Big Man</th>
+      <th></th>
       <th>Dead Eye</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>-1.28655</td>
+      <th></th>
       <td>-0.467105</td>
+      <th></th>
       <td>-0.133546</td>
+      <th></th>
       <td>0.905368</td>
+      <th></th>
       <td>0.000679</td>
     </tr>
   </tbody>
@@ -576,20 +597,27 @@ df[df['kmeans_label']==4]['Name'][:10]
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th></th>
       <th>Outside Skills</th>
+      <th></th>
       <th>Rim Scoring</th>
+      <th></th>
       <th>Pure Points</th>
+      <th></th>
       <th>Defensive Big Man</th>
+      <th></th>
       <th>Dead Eye</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>-0.668445</td>
+      <th></th>
       <td>0.035927</td>
+      <th></th>
       <td>-0.917479</td>
+      <th></th>
       <td>-1.243347</td>
+      <th></th>
       <td>0.244897</td>
     </tr>
   </tbody>
@@ -635,20 +663,27 @@ df[df['kmeans_label']==5]['Name'][:10]
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th></th>
       <th>Outside Skills</th>
+      <th></th>
       <th>Rim Scoring</th>
+      <th></th>
       <th>Pure Points</th>
+      <th></th>
       <th>Defensive Big Man</th>
+      <th></th>
       <th>Dead Eye</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>0.890984</td>
+      <th></th>
       <td>0.846109</td>
+      <th></th>
       <td>-0.926444</td>
+      <th></th>
       <td>0.735306</td>
+      <th></th>
       <td>-0.092395</td>
     </tr>
   </tbody>
