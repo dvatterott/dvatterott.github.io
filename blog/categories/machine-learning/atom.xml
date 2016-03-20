@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Machine Learning | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/machine-learning/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-03-20T16:01:58-04:00</updated>
+  <updated>2016-03-20T16:14:03-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -232,12 +232,12 @@ plt.ylabel('Percent');
 <p>Here&rsquo;s a quick rehash of the groupings. See my <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">previous post</a> for more detail.</p>
 
 <ul>
-<li><b>Group 1:</b> These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li> 
-<li><b>Group 2:</b> These are the scorers who get to the free throw line, dish out assists, and carry a high usage.</li> 
-<li><b>Group 3:</b> These are the bench players who don't score...or do much in general.</li>
-<li><b>Group 4:</b> These are the 3 point shooters who shoot tons of 3 pointers, almost no free throws, and don't rebound well.</li>
-<li><b>Group 5:</b> These are the mid-range shooters who shoot well, but don't shoot threes or draw free throws</li>
-<li><b>Group 6:</b> These are the defensive big men who shoot no threes, rebound lots, and carry a low usage.</li>
+<li>**Group 1:** These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li> 
+<li>**Group 2:** These are the scorers who get to the free throw line, dish out assists, and carry a high usage.</li> 
+<li>**Group 3:** These are the bench players who don't score...or do much in general.</li>
+<li>**Group 4:** These are the 3 point shooters who shoot tons of 3 pointers, almost no free throws, and don't rebound well.</li>
+<li>**Group 5:** These are the mid-range shooters who shoot well, but don't shoot threes or draw free throws</li>
+<li>**Group 6:** These are the defensive big men who shoot no threes, rebound lots, and carry a low usage.</li>
 </ul>
 
 
