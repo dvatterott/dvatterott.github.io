@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Analytics | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/data-analytics/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-03-20T16:19:16-04:00</updated>
+  <updated>2016-03-20T17:38:59-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -414,7 +414,7 @@ draft_df['Name'][14] =  'Kelly Oubre Jr.' #annoying name inconsistencies
 plt.subplots(figsize=(14,6));
 plt.xticks(range(1,31),draft_df['Name'],rotation=90)
 
-draft_df = draft_df.drop(17, 0) #Sam Dekker has received little playing time making his prediction highly irratic
+draft_df = draft_df.drop(17, 0) #Sam Dekker has received little playing time making his prediction highly erratic
 draft_df = draft_df.drop(25, 0) #spurs' 1st round pick has not played yet
 
 for name in draft_df['Name']:
