@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Cognition | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/cognition/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-02-28T22:05:54-05:00</updated>
+  <updated>2016-03-20T08:36:10-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -186,10 +186,9 @@ df.columns = ['Sub#', 'Block', 'Trial#', 'TarCol', 'Tar_Iden','Tar_Loc', 'Col_Re
 <pre><code class="python">df[0:5]
 </code></pre>
 
-<div>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>Sub#</th>
       <th>Block</th>
@@ -283,7 +282,6 @@ df.columns = ['Sub#', 'Block', 'Trial#', 'TarCol', 'Tar_Iden','Tar_Loc', 'Col_Re
     </tr>
   </tbody>
 </table>
-</div>
 
 
 <p>I want to create a new variable.</p>
