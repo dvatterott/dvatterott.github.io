@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Machine Learning | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/machine-learning/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-03-20T16:14:22-04:00</updated>
+  <updated>2016-03-20T16:18:51-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -21,6 +21,8 @@
     <content type="html"><![CDATA[<p>As a huge t-wolves fan, I&rsquo;ve been curious all year by what we can infer from Karl-Anthony Towns' great rookie season. To answer this question, I&rsquo;ve create a simple linear regression model that uses rookie year performance to predict career performance.</p>
 
 <p>Many have attempted to predict NBA players' success via regression style approaches. Notable models I know of include <a href="http://laynevashro.com/basketball/predsFAQ.html">Layne Vashro&rsquo;s model</a> which uses combine and college performance to predict career performance. Layne Vashro&rsquo;s model is a quasi-poisson GLM. I tried a similar approach, but had the most success when using ws/48 and OLS. I will discuss this a little more at the end of the post.</p>
+
+<p>A jupyter notebook of this post can be found on my <a href="https://github.com/dvatterott/jupyter_notebooks/blob/master/nba_rookie_regression.ipynb">github</a>.</p>
 
 <pre><code class="python">#import some libraries and tell ipython we want inline figures rather than interactive figures. 
 import matplotlib.pyplot as plt, pandas as pd, numpy as np, matplotlib as mpl
