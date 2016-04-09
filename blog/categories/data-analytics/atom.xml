@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Analytics | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/data-analytics/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-04-08T21:26:34-04:00</updated>
+  <updated>2016-04-08T21:37:36-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -24,7 +24,7 @@
 
 <p>Because this post largely repeats a previous one, I haven&rsquo;t written quite as much about the code. If you would like to read more about the code, see my previous posts.</p>
 
-<p>As usual, I will post all code as a jupyter notebook on my <a href="https://github.com/dvatterott/jupyter_notebooks">github</a>.</p>
+<p>As usual, I will post all code as a jupyter notebook on my <a href="https://github.com/dvatterott/jupyter_notebooks/blob/master/nba_rookie_regression2.ipynb">github</a>.</p>
 
 <pre><code class="python">#import some libraries and tell ipython we want inline figures rather than interactive figures. 
 import matplotlib.pyplot as plt, pandas as pd, numpy as np, matplotlib as mpl
