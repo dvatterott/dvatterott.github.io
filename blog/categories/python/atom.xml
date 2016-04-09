@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-04-08T21:23:35-04:00</updated>
+  <updated>2016-04-08T21:25:32-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Revisiting NBA Career PredictionsFroom Rookie Performance]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictionsfroom-rookie-performance/"/>
+    <link href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/"/>
     <updated>2016-04-08T21:19:25-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictionsfroom-rookie-performance</id>
+    <id>http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance</id>
     <content type="html"><![CDATA[<p>In this post I wanted to do a quick follow up to a previous post about <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">predicting career nba performance from rookie year data</a>.</p>
 
 <p>After my previous post, I started to get a little worried about my career prediction model. Specifically, I started to wonder about whether my model was <a href="https://en.wikipedia.org/wiki/Bias%E2%80%93variance_tradeoff">underfitting or overfitting the data</a>. Underfitting occurs when the model has too much &ldquo;bias&rdquo; and cannot accomodate the data&rsquo;s shape. <a href="https://en.wikipedia.org/wiki/Overfitting">Overfitting</a> occurs when the model is too flexible and can account for all variance in a data set - even variance due to noise. In this post, I will quickly re-create my player prediction model, and investigate whether underfitting and overfitting are a problem.</p>
