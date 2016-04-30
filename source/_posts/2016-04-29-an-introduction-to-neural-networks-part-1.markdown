@@ -47,9 +47,11 @@ Above is our neural network. It has two input neurons and a single output neuron
 
 The input is the input unit's *activity.* This activity is sent to the Output unit, but the activity changes when traveling to the Output unit. The *weights* between the input and output units change the activity. A large positive weight between the input and output units causes the input unit to send a large positive (excitatory) signal. A large negative weight between the input and output units causes the input unit to send a large negative (inhibitory) signal. A weight near zero means the input unit does not influence the output unit. 
 
-In order to know the Output unit's activity, we need to know its input. I will refer to the output unit's input as $net_{Output}$. Here is how we can calculate $net_{Output}$
+In order to know the Output unit's activity, we need to know its input. I will refer to the output unit's input as $$net_{Output}$$. Here is how we can calculate $net_{Output}$
 
-$net_{Output} = Input_A * Weight_A + Input_B * Weight_B$
+$$
+net_{Output} = Input_A * Weight_A + Input_B * Weight_B
+$$
 
 a more general way of writing this is 
 
