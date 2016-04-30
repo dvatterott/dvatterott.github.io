@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Statistics | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/statistics/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-04-08T21:37:36-04:00</updated>
+  <updated>2016-04-29T22:40:20-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -18,23 +18,37 @@
     <link href="http://www.danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
     <updated>2016-02-28T21:52:03-05:00</updated>
     <id>http://www.danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
-    <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting&hellip;</p>
+    <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
 
 <p>In this post I show how to execute a repeated measures ANOVAs using the <a href="http://rpy2.bitbucket.org/">rpy2</a> library, which allows us to move data between python and R, and execute R commands from python. I use rpy2 to load the <a href="http://www.inside-r.org/packages/cran/car/docs/Anova">car</a> library and run the ANOVA.</p>
 
 <p>I will show how to run a one-way repeated measures ANOVA and a two-way repeated measures ANOVA.</p>
 
-<pre><code class="python">#first import the libraries I always use. 
-import numpy as np, scipy.stats, pandas as pd
-
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pylab as pl
-%matplotlib inline
-pd.options.display.mpl_style = 'default'
-plt.style.use('ggplot')
-mpl.rcParams['font.family'] = ['Bitstream Vera Sans']
-</code></pre>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#first import the libraries I always use. </span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">scipy.stats</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">pl</span>
+</span><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</span><span class='line'><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">mpl_style</span> <span class="o">=</span> <span class="err">‘</span><span class="n">default</span><span class="err">’</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="err">‘</span><span class="n">ggplot</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="err">‘</span><span class="n">font</span><span class="o">.</span><span class="n">family</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Bitstream</span> <span class="n">Vera</span> <span class="n">Sans</span><span class="err">’</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Below I use the random library to generate some fake data. I seed the random number generator with a one so that this analysis can be replicated.</p>
 
@@ -42,55 +56,88 @@ mpl.rcParams['font.family'] = ['Bitstream Vera Sans']
 
 <p>The data are generated from a gaussian distribution. The second condition has a higher mean than the other two conditions.</p>
 
-<pre><code class="python">import random
-
-random.seed(1) #seed random number generator
-cond_1 = [random.gauss(600,30) for x in range(30)] #condition 1 has a mean of 600 and standard deviation of 30
-cond_2 = [random.gauss(650,30) for x in range(30)] #u=650 and sd=30
-cond_3 = [random.gauss(600,30) for x in range(30)] #u=600 and sd=30
-
-plt.bar(np.arange(1,4),[np.mean(cond_1),np.mean(cond_2),np.mean(cond_3)],align='center') #plot data
-plt.xticks([1,2,3]);
-</code></pre>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">random</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c">#seed random number generator</span>
+</span><span class='line'><span class="n">cond_1</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#condition 1 has a mean of 600 and standard deviation of 30</span>
+</span><span class='line'><span class="n">cond_2</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">650</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#u=650 and sd=30</span>
+</span><span class='line'><span class="n">cond_3</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#u=600 and sd=30&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">),[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_2</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_3</span><span class="p">)],</span><span class="n">align</span><span class="o">=</span><span class="err">’</span><span class="n">center</span><span class="err">’</span><span class="p">)</span> <span class="c">#plot data</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p><img src="/images/rmANOVA_1.png" /></p>
 
 <p>Next, I load rpy2 for ipython. I am doing these analyses with ipython in a <a href="http://jupyter.org/">jupyter notebook</a> (highly recommended).</p>
 
-<pre><code class="python">%load_ext rpy2.ipython
-</code></pre>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span><span class="n">load_ext</span> <span class="n">rpy2</span><span class="o">.</span><span class="n">ipython</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>Here&rsquo;s how to run the ANOVA. Note that this is a one-way anova with 3 levels of the factor.</p>
+<p>Here’s how to run the ANOVA. Note that this is a one-way anova with 3 levels of the factor.</p>
 
-<pre><code class="python">#pop the data into R
-%Rpush cond_1 cond_2 cond_3 
-
-#label the conditions
-%R Factor &lt;- c('Cond1','Cond2','Cond3')
-#create a vector of conditions
-%R idata &lt;- data.frame(Factor) 
-
-#combine data into single matrix
-%R Bind &lt;- cbind(cond_1,cond_2,cond_3) 
-#generate linear model
-%R model &lt;- lm(Bind~1)
-
-#load the car library. note this library must be installed.
-%R library(car) 
-#run anova
-%R analysis &lt;- Anova(model,idata=idata,idesign=~Factor,type="III") 
-#create anova summary table
-%R anova_sum = summary(analysis) 
-
-#move the data from R to python
-%Rpull anova_sum 
-print anova_sum
-</code></pre>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#pop the data into R</span>
+</span><span class='line'><span class="o">%</span><span class="n">Rpush</span> <span class="n">cond_1</span> <span class="n">cond_2</span> <span class="n">cond_3</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;label-the-conditions&quot;</span><span class="o">&gt;</span><span class="n">label</span> <span class="n">the</span> <span class="n">conditions</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;%</span><span class="n">R</span> <span class="n">Factor</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">c</span><span class="p">(</span><span class="err">‘</span><span class="n">Cond1</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Cond2</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Cond3</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="c">#create a vector of conditions</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">idata</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">data</span><span class="o">.</span><span class="n">frame</span><span class="p">(</span><span class="n">Factor</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;combine-data-into-single-matrix&quot;</span><span class="o">&gt;</span><span class="n">combine</span> <span class="n">data</span> <span class="n">into</span> <span class="n">single</span> <span class="n">matrix</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;%</span><span class="n">R</span> <span class="n">Bind</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">cbind</span><span class="p">(</span><span class="n">cond_1</span><span class="p">,</span><span class="n">cond_2</span><span class="p">,</span><span class="n">cond_3</span><span class="p">)</span>
+</span><span class='line'><span class="c">#generate linear model</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">model</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">lm</span><span class="p">(</span><span class="n">Bind</span><span class="o">~</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;load-the-car-library-note-this-library-must-be-installed&quot;</span><span class="o">&gt;</span><span class="n">load</span> <span class="n">the</span> <span class="n">car</span> <span class="n">library</span><span class="o">.</span> <span class="n">note</span> <span class="n">this</span> <span class="n">library</span> <span class="n">must</span> <span class="n">be</span> <span class="n">installed</span><span class="o">.&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;%</span><span class="n">R</span> <span class="n">library</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
+</span><span class='line'><span class="c">#run anova</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">analysis</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">Anova</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">idata</span><span class="o">=</span><span class="n">idata</span><span class="p">,</span><span class="n">idesign</span><span class="o">=~</span><span class="n">Factor</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="err">”</span><span class="n">III</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="c">#create anova summary table</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">anova_sum</span> <span class="o">=</span> <span class="n">summary</span><span class="p">(</span><span class="n">analysis</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;move-the-data-from-r-to-python&quot;</span><span class="o">&gt;</span><span class="n">move</span> <span class="n">the</span> <span class="n">data</span> <span class="kn">from</span> <span class="nn">R</span> <span class="nn">to</span> <span class="nn">python</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;%</span><span class="n">Rpull</span> <span class="n">anova_sum</span>
+</span><span class='line'><span class="k">print</span> <span class="n">anova_sum</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>Type III Repeated Measures MANOVA Tests:
 
 ------------------------------------------
-
+ 
 Term: (Intercept) 
 
  Response transformation matrix:
@@ -117,7 +164,7 @@ Roy               1 1301.8736 37754.33      1     29 &lt; 2.22e-16 ***
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ------------------------------------------
-
+ 
 Term: Factor 
 
  Response transformation matrix:
@@ -172,51 +219,82 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Factor 1.03025 1.163294e-11
 </code></pre>
 
-<p>The ANOVA table isn&rsquo;t pretty, but it works. As you can see, the ANOVA was wildly significant.</p>
+<p>The ANOVA table isn’t pretty, but it works. As you can see, the ANOVA was wildly significant.</p>
 
 <p>Next, I generate data for a two-way (2x3) repeated measures ANOVA. Condition A is the same data as above. Condition B has a different pattern (2 is lower than 1 and 3), which should produce an interaction.</p>
 
-<pre><code class="python">random.seed(1)
-
-cond_1a = [random.gauss(600,30) for x in range(30)] #u=600,sd=30
-cond_2a = [random.gauss(650,30) for x in range(30)] #u=650,sd=30
-cond_3a = [random.gauss(600,30) for x in range(30)] #u=600,sd=30
-
-cond_1b = [random.gauss(600,30) for x in range(30)] #u=600,sd=30
-cond_2b = [random.gauss(550,30) for x in range(30)] #u=550,sd=30
-cond_3b = [random.gauss(650,30) for x in range(30)] #u=650,sd=30
-
-width = 0.25
-plt.bar(np.arange(1,4)-width,[np.mean(cond_1a),np.mean(cond_2a),np.mean(cond_3a)],width)
-plt.bar(np.arange(1,4),[np.mean(cond_1b),np.mean(cond_2b),np.mean(cond_3b)],width,color=plt.rcParams['axes.color_cycle'][0])
-plt.legend(['A','B'],loc=4)
-plt.xticks([1,2,3]);
-</code></pre>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">cond_1a</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#u=600,sd=30</span>
+</span><span class='line'><span class="n">cond_2a</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">650</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#u=650,sd=30</span>
+</span><span class='line'><span class="n">cond_3a</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#u=600,sd=30&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">cond_1b</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#u=600,sd=30</span>
+</span><span class='line'><span class="n">cond_2b</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">550</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#u=550,sd=30</span>
+</span><span class='line'><span class="n">cond_3b</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">650</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span> <span class="c">#u=650,sd=30&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">width</span> <span class="o">=</span> <span class="mf">0.25</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span><span class="o">-</span><span class="n">width</span><span class="p">,[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_1a</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_2a</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_3a</span><span class="p">)],</span><span class="n">width</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">),[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_1b</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_2b</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cond_3b</span><span class="p">)],</span><span class="n">width</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="err">‘</span><span class="n">axes</span><span class="o">.</span><span class="n">color_cycle</span><span class="err">’</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="err">‘</span><span class="n">A</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">B</span><span class="err">’</span><span class="p">],</span><span class="n">loc</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p><img src="/images/rmANOVA_2.png" /></p>
 
-<pre><code class="python">%Rpush cond_1a cond_1b cond_2a cond_2b cond_3a cond_3b
-
-%R Factor1 &lt;- c('A','A','A','B','B','B')
-%R Factor2 &lt;- c('Cond1','Cond2','Cond3','Cond1','Cond2','Cond3')
-%R idata &lt;- data.frame(Factor1, Factor2)
-
-#make sure the vectors appear in the same order as they appear in the dataframe
-%R Bind &lt;- cbind(cond_1a, cond_2a, cond_3a, cond_1b, cond_2b, cond_3b)
-%R model &lt;- lm(Bind~1)
-
-%R library(car)
-%R analysis &lt;- Anova(model, idata=idata, idesign=~Factor1*Factor2, type="III")
-%R anova_sum = summary(analysis)
-%Rpull anova_sum
-
-print anova_sum
-</code></pre>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span><span class="n">Rpush</span> <span class="n">cond_1a</span> <span class="n">cond_1b</span> <span class="n">cond_2a</span> <span class="n">cond_2b</span> <span class="n">cond_3a</span> <span class="n">cond_3b</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;%</span><span class="n">R</span> <span class="n">Factor1</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">c</span><span class="p">(</span><span class="err">‘</span><span class="n">A</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">A</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">A</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">B</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">B</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">B</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">Factor2</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">c</span><span class="p">(</span><span class="err">‘</span><span class="n">Cond1</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Cond2</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Cond3</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Cond1</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Cond2</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Cond3</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">idata</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">data</span><span class="o">.</span><span class="n">frame</span><span class="p">(</span><span class="n">Factor1</span><span class="p">,</span> <span class="n">Factor2</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;make-sure-the-vectors-appear-in-the-same-order-as-they-appear-in-the-dataframe&quot;</span><span class="o">&gt;</span><span class="n">make</span> <span class="n">sure</span> <span class="n">the</span> <span class="n">vectors</span> <span class="n">appear</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">same</span> <span class="n">order</span> <span class="k">as</span> <span class="n">they</span> <span class="n">appear</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">dataframe</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;%</span><span class="n">R</span> <span class="n">Bind</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">cbind</span><span class="p">(</span><span class="n">cond_1a</span><span class="p">,</span> <span class="n">cond_2a</span><span class="p">,</span> <span class="n">cond_3a</span><span class="p">,</span> <span class="n">cond_1b</span><span class="p">,</span> <span class="n">cond_2b</span><span class="p">,</span> <span class="n">cond_3b</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">model</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">lm</span><span class="p">(</span><span class="n">Bind</span><span class="o">~</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;%</span><span class="n">R</span> <span class="n">library</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">analysis</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">-</span> <span class="n">Anova</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">idata</span><span class="o">=</span><span class="n">idata</span><span class="p">,</span> <span class="n">idesign</span><span class="o">=~</span><span class="n">Factor1</span><span class="o">*</span><span class="n">Factor2</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="err">”</span><span class="n">III</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span><span class="n">R</span> <span class="n">anova_sum</span> <span class="o">=</span> <span class="n">summary</span><span class="p">(</span><span class="n">analysis</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span><span class="n">Rpull</span> <span class="n">anova_sum</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span> <span class="n">anova_sum</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>Type III Repeated Measures MANOVA Tests:
 
 ------------------------------------------
-
+ 
 Term: (Intercept) 
 
  Response transformation matrix:
@@ -246,7 +324,7 @@ Roy               1 2165.2575 62792.47      1     29 &lt; 2.22e-16 ***
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ------------------------------------------
-
+ 
 Term: Factor1 
 
  Response transformation matrix:
@@ -276,7 +354,7 @@ Roy               1 0.2702499 7.837247      1     29 0.0090091 **
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ------------------------------------------
-
+ 
 Term: Factor2 
 
  Response transformation matrix:
@@ -308,7 +386,7 @@ Roy               1 1.0988223 15.38351      2     28 3.107e-05 ***
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ------------------------------------------
-
+ 
 Term: Factor1:Factor2 
 
  Response transformation matrix:
@@ -371,9 +449,10 @@ Factor2         1.028657 4.420005e-07
 Factor1:Factor2 1.073774 2.965002e-22
 </code></pre>
 
-<p>Again, the anova table isn&rsquo;t too pretty.</p>
+<p>Again, the anova table isn’t too pretty.</p>
 
-<p>This obviously isn&rsquo;t the most exciting post in the world, but its a nice bit of code to have in your back pocket if you&rsquo;re doing experimental analyses in python.</p>
+<p>This obviously isn’t the most exciting post in the world, but its a nice bit of code to have in your back pocket if you’re doing experimental analyses in python.</p>
+
 ]]></content>
   </entry>
   

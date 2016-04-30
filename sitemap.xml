@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/</loc>
+    <lastmod>2016-04-29T19:17:07-04:00</lastmod>
+  </url>
+  <url>
     <loc>http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/</loc>
     <lastmod>2016-04-08T21:19:25-04:00</lastmod>
   </url>
@@ -25,22 +29,22 @@
     <lastmod>2015-12-12T13:10:09-05:00</lastmod>
   </url>
   <url>
-    <loc>http://www.danvatterott.com/</loc>
+    <loc>http://www.danvatterott.com/blog/archives/</loc>
   </url>
   <url>
     <loc>http://www.danvatterott.com/blog/</loc>
   </url>
   <url>
-    <loc>http://www.danvatterott.com/blog/archives/</loc>
+    <loc>http://www.danvatterott.com/</loc>
   </url>
   <url>
-    <loc>http://www.danvatterott.com/about-me/</loc>
+    <loc>http://www.danvatterott.com/cv/</loc>
   </url>
   <url>
     <loc>http://www.danvatterott.com/publications/</loc>
   </url>
   <url>
-    <loc>http://www.danvatterott.com/cv/</loc>
+    <loc>http://www.danvatterott.com/about-me/</loc>
   </url>
   <url>
     <loc>http://www.danvatterott.com/blog/categories/open-science/</loc>
@@ -71,5 +75,14 @@
   </url>
   <url>
     <loc>http://www.danvatterott.com/blog/categories/regression/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/neural-networks/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/ai/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/backpropogation/</loc>
   </url>
 </urlset>

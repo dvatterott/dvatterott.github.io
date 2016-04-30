@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="As a huge t-wolves fan, I&rsquo;ve been curious all year by what we can infer from Karl-Anthony Towns' great rookie season. To answer this question, &hellip;">
+  <meta name="description" content="As a huge t-wolves fan, I’ve been curious all year by what we can infer from Karl-Anthony Towns’ great rookie season. To answer this question, I’ve &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -30,7 +30,10 @@
   <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
 <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-
+<!--- MathJax Configuration -->
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
   
   <script type="text/javascript">
     var _gaq = _gaq || [];
@@ -101,104 +104,99 @@
   </header>
 
 
-<div class="entry-content"><p>As a huge t-wolves fan, I&rsquo;ve been curious all year by what we can infer from Karl-Anthony Towns' great rookie season. To answer this question, I&rsquo;ve create a simple linear regression model that uses rookie year performance to predict career performance.</p>
+<div class="entry-content"><p>As a huge t-wolves fan, I’ve been curious all year by what we can infer from Karl-Anthony Towns’ great rookie season. To answer this question, I’ve create a simple linear regression model that uses rookie year performance to predict career performance.</p>
 
-<p>Many have attempted to predict NBA players' success via regression style approaches. Notable models I know of include <a href="http://laynevashro.com/basketball/predsFAQ.html">Layne Vashro&rsquo;s model</a> which uses combine and college performance to predict career performance. Layne Vashro&rsquo;s model is a quasi-poisson GLM. I tried a similar approach, but had the most success when using ws/48 and OLS. I will discuss this a little more at the end of the post.</p>
+<p>Many have attempted to predict NBA players’ success via regression style approaches. Notable models I know of include <a href="http://laynevashro.com/basketball/predsFAQ.html">Layne Vashro’s model</a> which uses combine and college performance to predict career performance. Layne Vashro’s model is a quasi-poisson GLM. I tried a similar approach, but had the most success when using ws/48 and OLS. I will discuss this a little more at the end of the post.</p>
 
 <p>A jupyter notebook of this post can be found on my <a href="https://github.com/dvatterott/jupyter_notebooks/blob/master/nba_rookie_regression.ipynb">github</a>.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class='line'><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">mpl_style</span> <span class="o">=</span> <span class="s">&#39;default&#39;</span> <span class="c">#load matplotlib for plotting</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s">&#39;ggplot&#39;</span><span class="p">)</span> <span class="c">#im addicted to ggplot. so pretty.</span>
-</span><span class='line'><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;font.family&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Bitstream Vera Sans&#39;</span><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+</span><span class="line">
+</span><span class="line"><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+</span><span class="line">
+</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</span><span class="line"><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">mpl_style</span> <span class="o">=</span> <span class="s">&#39;default&#39;</span> <span class="c">#load matplotlib for plotting</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s">&#39;ggplot&#39;</span><span class="p">)</span> <span class="c">#im addicted to ggplot. so pretty.</span>
+</span><span class="line"><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;font.family&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Bitstream Vera Sans&#39;</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>I collected all the data for this project from basketball-reference.com. I posted the functions for collecting the data on my <a href="https://github.com/dvatterott/nba_project">github</a>. The data is also posted there. Beware, the data collection scripts take awhile to run.</p>
 
-<p>This data includes per 36 stats and advanced statistics such as usage percentage. I simply took all the per 36 and advanced statistics from a player&rsquo;s page on basketball-reference.com.</p>
+<p>This data includes per 36 stats and advanced statistics such as usage percentage. I simply took all the per 36 and advanced statistics from a player’s page on basketball-reference.com.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the career data. </span>
-</span><span class='line'><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the rookie year data</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the career data. </span>
+</span><span class="line"><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the rookie year data</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
+<p>The variable I am trying to predict is average <a href="http://www.basketball-reference.com/about/ws.html">WS/48</a> over a player’s career. There’s no perfect box-score statistic when it comes to quantifying a player’s peformance, but ws/48 seems relatively solid.</p>
 
-<p>The variable I am trying to predict is average <a href="http://www.basketball-reference.com/about/ws.html">WS/48</a> over a player&rsquo;s career. There&rsquo;s no perfect box-score statistic when it comes to quantifying a player&rsquo;s peformance, but ws/48 seems relatively solid.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">Games</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;G&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span> <span class="c">#only using players who played in more than 50 games.</span>
-</span><span class='line'><span class="n">Year</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span> <span class="c">#only using players after 1980 when they started keeping many important records such as games started</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Games</span> <span class="o">&amp;</span> <span class="n">Year</span><span class="p">][</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#predicted variable</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">Y</span><span class="p">);</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Bin Count&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;WS/48&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Games</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;G&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span> <span class="c">#only using players who played in more than 50 games.</span>
+</span><span class="line"><span class="n">Year</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span> <span class="c">#only using players after 1980 when they started keeping many important records such as games started</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Games</span> <span class="o">&amp;</span> <span class="n">Year</span><span class="p">][</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#predicted variable</span>
+</span><span class="line">
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">Y</span><span class="p">);</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Bin Count&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;WS/48&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/regressionNBA/predictor_hist.png" /></p>
 
-<p>The predicted variable looks pretty gaussian, so I can use ordinary least squares. This will be nice because while ols is not flexible, it&rsquo;s highly interpretable. At the end of the post I&rsquo;ll mention some more complex models that I will try.</p>
+<p>The predicted variable looks pretty gaussian, so I can use ordinary least squares. This will be nice because while ols is not flexible, it’s highly interpretable. At the end of the post I’ll mention some more complex models that I will try.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">rook_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Career Games&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span>
-</span><span class='line'><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
-</span><span class='line'>
-</span><span class='line'><span class="c">#remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair</span>
-</span><span class='line'><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
-</span><span class='line'><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">rook_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Career Games&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span>
+</span><span class="line"><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
+</span><span class="line">
+</span><span class="line"><span class="c">#remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair</span>
+</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
+</span><span class="line"><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>Above, I remove some predictors from the rookie data. Lets run the regression!</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="kn">as</span> <span class="nn">sm</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">X_rookie</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class='line'><span class="n">X_rookie</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X_rookie</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">estAll</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X_rookie</span><span class="p">)</span> <span class="c">#create ordinary least squares model</span>
-</span><span class='line'><span class="n">estAll</span> <span class="o">=</span> <span class="n">estAll</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span> <span class="c">#fit the model</span>
-</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">estAll</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="kn">as</span> <span class="nn">sm</span>
+</span><span class="line">
+</span><span class="line"><span class="n">X_rookie</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
+</span><span class="line"><span class="n">X_rookie</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X_rookie</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
+</span><span class="line">
+</span><span class="line"><span class="n">estAll</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X_rookie</span><span class="p">)</span> <span class="c">#create ordinary least squares model</span>
+</span><span class="line"><span class="n">estAll</span> <span class="o">=</span> <span class="n">estAll</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span> <span class="c">#fit the model</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">estAll</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <pre><code>                            OLS Regression Results                            
 ==============================================================================
@@ -275,130 +273,123 @@ Warnings:
 strong multicollinearity or other numerical problems.
 </code></pre>
 
-<p>There&rsquo;s a lot to look at in the regression output (especially with this many features). For an explanation of all the different parts of the regression take a look at this <a href="http://connor-johnson.com/2014/02/18/linear-regression-with-python/">post</a>. Below is a quick plot of predicted ws/48 against actual ws/48.</p>
+<p>There’s a lot to look at in the regression output (especially with this many features). For an explanation of all the different parts of the regression take a look at this <a href="http://connor-johnson.com/2014/02/18/linear-regression-with-python/">post</a>. Below is a quick plot of predicted ws/48 against actual ws/48.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">estAll</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_rookie</span><span class="p">),</span><span class="n">Y</span><span class="p">,</span><span class="s">&#39;o&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="s">&#39;b-&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Career WS/48&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Predicted WS/48&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">estAll</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_rookie</span><span class="p">),</span><span class="n">Y</span><span class="p">,</span><span class="s">&#39;o&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="s">&#39;b-&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Career WS/48&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Predicted WS/48&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/regressionNBA/regression1_predict.png" /></p>
 
-<p>The blue line above is NOT the best-fit line. It&rsquo;s the identity line. I plot it to help visualize where the model fails. The model seems to primarily fail in the extremes - it tends to overestimate the worst players.</p>
+<p>The blue line above is NOT the best-fit line. It’s the identity line. I plot it to help visualize where the model fails. The model seems to primarily fail in the extremes - it tends to overestimate the worst players.</p>
 
 <p>All in all, This model does a remarkably good job given its simplicity (linear regression), but it also leaves a lot of variance unexplained.</p>
 
-<p>One reason this model might miss some variance is there&rsquo;s more than one way to be a productive basketball player. For instance, Dwight Howard and Steph Curry find very different ways to contribute. One linear regression model is unlikely to succesfully predict both players.</p>
+<p>One reason this model might miss some variance is there’s more than one way to be a productive basketball player. For instance, Dwight Howard and Steph Curry find very different ways to contribute. One linear regression model is unlikely to succesfully predict both players.</p>
 
 <p>In a <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">previous post</a>, I grouped players according to their on-court performance. These player groupings might help predict career performance.</p>
 
 <p>Below, I will use the same player grouping I developed in my previous post, and examine how these groupings impact my ability to predict career performance.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;G&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span><span class="p">]</span>
-</span><span class='line'><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class='line'><span class="n">ScaleModel</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
+</span><span class="line">
+</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;G&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span><span class="p">]</span>
+</span><span class="line"><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
+</span><span class="line"><span class="n">ScaleModel</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">reduced_model</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">whiten</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data into the 5 PCA components space</span>
-</span><span class='line'><span class="n">final_fit</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#fit 6 clusters</span>
-</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span> <span class="c">#label each data point with its clusters</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
+</span><span class="line">
+</span><span class="line"><span class="n">reduced_model</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">whiten</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data into the 5 PCA components space</span>
+</span><span class="line"><span class="n">final_fit</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#fit 6 clusters</span>
+</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span> <span class="c">#label each data point with its clusters</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>See my other post for more details about this clustering procedure.</p>
 
-<p>Let&rsquo;s see how WS/48 varies across the groups.</p>
+<p>Let’s see how WS/48 varies across the groups.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">WS_48</span> <span class="o">=</span> <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span> <span class="c">#create a vector of ws/48. One for each cluster</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">WS_48</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">WS_48</span> <span class="o">=</span> <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span> <span class="c">#create a vector of ws/48. One for each cluster</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">WS_48</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/regressionNBA/boxwhisk_ws48.png" /></p>
 
-<p>Some groups perform better than others, but there&rsquo;s lots of overlap between the groups. Importantly, each group has a fair amount of variability. Each group spans at least 0.15 WS/48. This gives the regression enough room to successfully predict performance in each group.</p>
+<p>Some groups perform better than others, but there’s lots of overlap between the groups. Importantly, each group has a fair amount of variability. Each group spans at least 0.15 WS/48. This gives the regression enough room to successfully predict performance in each group.</p>
 
 <p>Now, lets get a bit of a refresher on what the groups are. Again, my previous post has a good description of these groups.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">TS</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;TS%&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span> <span class="c">#create vectors of each stat for each cluster</span>
-</span><span class='line'><span class="n">ThreeAr</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;3PAr&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
-</span><span class='line'><span class="n">FTr</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;FTr&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
-</span><span class='line'><span class="n">RBD</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;TRB%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
-</span><span class='line'><span class="n">AST</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;AST%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
-</span><span class='line'><span class="n">STL</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;STL%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
-</span><span class='line'><span class="n">TOV</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;TOV%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
-</span><span class='line'><span class="n">USG</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;USG%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">TS</span><span class="p">,</span><span class="n">ThreeAr</span><span class="p">,</span><span class="n">FTr</span><span class="p">,</span><span class="n">RBD</span><span class="p">,</span><span class="n">AST</span><span class="p">,</span><span class="n">STL</span><span class="p">,</span><span class="n">TOV</span><span class="p">,</span><span class="n">USG</span><span class="p">])</span>
-</span><span class='line'><span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">9</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span><span class="n">Data</span><span class="p">,</span><span class="s">&#39;o-&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">ind</span><span class="p">,(</span><span class="s">&#39;True Shooting&#39;</span><span class="p">,</span> <span class="s">&#39;3 point Attempt&#39;</span><span class="p">,</span> <span class="s">&#39;Free Throw Rate&#39;</span><span class="p">,</span> <span class="s">&#39;Rebound&#39;</span><span class="p">,</span> <span class="s">&#39;Assist&#39;</span><span class="p">,</span><span class="s">&#39;Steal&#39;</span><span class="p">,</span><span class="s">&#39;TOV&#39;</span><span class="p">,</span><span class="s">&#39;Usage&#39;</span><span class="p">),</span><span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="s">&#39;Group 1&#39;</span><span class="p">,</span><span class="s">&#39;Group 2&#39;</span><span class="p">,</span><span class="s">&#39;Group 3&#39;</span><span class="p">,</span><span class="s">&#39;Group 4&#39;</span><span class="p">,</span><span class="s">&#39;Group 5&#39;</span><span class="p">,</span><span class="s">&#39;Group 6&#39;</span><span class="p">))</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Percent&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">TS</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;TS%&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span> <span class="c">#create vectors of each stat for each cluster</span>
+</span><span class="line"><span class="n">ThreeAr</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;3PAr&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
+</span><span class="line"><span class="n">FTr</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;FTr&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
+</span><span class="line"><span class="n">RBD</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;TRB%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
+</span><span class="line"><span class="n">AST</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;AST%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
+</span><span class="line"><span class="n">STL</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;STL%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
+</span><span class="line"><span class="n">TOV</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;TOV%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
+</span><span class="line"><span class="n">USG</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;USG%&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">])]</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">TS</span><span class="p">,</span><span class="n">ThreeAr</span><span class="p">,</span><span class="n">FTr</span><span class="p">,</span><span class="n">RBD</span><span class="p">,</span><span class="n">AST</span><span class="p">,</span><span class="n">STL</span><span class="p">,</span><span class="n">TOV</span><span class="p">,</span><span class="n">USG</span><span class="p">])</span>
+</span><span class="line"><span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">9</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span><span class="n">Data</span><span class="p">,</span><span class="s">&#39;o-&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">ind</span><span class="p">,(</span><span class="s">&#39;True Shooting&#39;</span><span class="p">,</span> <span class="s">&#39;3 point Attempt&#39;</span><span class="p">,</span> <span class="s">&#39;Free Throw Rate&#39;</span><span class="p">,</span> <span class="s">&#39;Rebound&#39;</span><span class="p">,</span> <span class="s">&#39;Assist&#39;</span><span class="p">,</span><span class="s">&#39;Steal&#39;</span><span class="p">,</span><span class="s">&#39;TOV&#39;</span><span class="p">,</span><span class="s">&#39;Usage&#39;</span><span class="p">),</span><span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="s">&#39;Group 1&#39;</span><span class="p">,</span><span class="s">&#39;Group 2&#39;</span><span class="p">,</span><span class="s">&#39;Group 3&#39;</span><span class="p">,</span><span class="s">&#39;Group 4&#39;</span><span class="p">,</span><span class="s">&#39;Group 5&#39;</span><span class="p">,</span><span class="s">&#39;Group 6&#39;</span><span class="p">))</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Percent&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/regressionNBA/grouping_performance.png" /></p>
 
-<p>I&rsquo;ve plotted the groups across a number of useful categories. For information about these categories see <a href="http://www.basketball-reference.com/about/glossary.html">basketball reference&rsquo;s glossary</a>.</p>
+<p>I’ve plotted the groups across a number of useful categories. For information about these categories see <a href="http://www.basketball-reference.com/about/glossary.html">basketball reference’s glossary</a>.</p>
 
-<p>Here&rsquo;s a quick rehash of the groupings. See my <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">previous post</a> for more detail.</p>
+<p>Here’s a quick rehash of the groupings. See my <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">previous post</a> for more detail.</p>
 
 <ul>
 <li>**Group 1:** These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li> 
@@ -409,382 +400,371 @@ strong multicollinearity or other numerical problems.
 <li>**Group 6:** These are the defensive big men who shoot no threes, rebound lots, and carry a low usage.</li>
 </ul>
 
-
 <p>On to the regression.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class='line'><span class="n">ScaleRookie</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#scale data</span>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleRookie</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data to scale</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">reduced_model_rookie</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#create pca model of first 10 components. </span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
+</span><span class="line"><span class="n">ScaleRookie</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#scale data</span>
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleRookie</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data to scale</span>
+</span><span class="line">
+</span><span class="line"><span class="n">reduced_model_rookie</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#create pca model of first 10 components. </span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
+<p>You might have noticed the giant condition number in the regression above. This indicates significant <a href="https://en.wikipedia.org/wiki/Multicollinearity">multicollinearity</a> of the features, which isn’t surprising since I have many features that reflect the same abilities.</p>
 
-<p>You might have noticed the giant condition number in the regression above. This indicates significant <a href="https://en.wikipedia.org/wiki/Multicollinearity">multicollinearity</a> of the features, which isn&rsquo;t surprising since I have many features that reflect the same abilities.</p>
-
-<p>The multicollinearity doesn&rsquo;t prevent the regression model from making accurate predictions, but does it make the beta weight estimates irratic. With irratic beta weights, it&rsquo;s hard to tell whether the different clusters use different models when predicting career ws/48.</p>
+<p>The multicollinearity doesn’t prevent the regression model from making accurate predictions, but does it make the beta weight estimates irratic. With irratic beta weights, it’s hard to tell whether the different clusters use different models when predicting career ws/48.</p>
 
 <p>In the following regression, I put the predicting features through a PCA and keep only the first 10 PCA components. Using only the first 10 PCA components keeps the component score below 20, indicating that multicollinearity is not a problem. I then examine whether the different groups exhibit a different patterns of beta weights (whether different models predict success of the different groups).</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">][</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="c">#limit labels to players after 1980</span>
-</span><span class='line'><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span> <span class="c">#label each data point with its clusters</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">estHold</span> <span class="o">=</span> <span class="p">[[],[],[],[],[],[]]</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span><span class="p">)):</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Grouper</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span> <span class="c">#do regression one group at a time</span>
-</span><span class='line'>    <span class="n">Yearer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Group1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Grouper</span> <span class="o">&amp;</span> <span class="n">Yearer</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">Y</span> <span class="o">=</span> <span class="n">Group1</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#get predicted data</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span><span class="p">]</span> <span class="c">#get predictor data of group</span>
-</span><span class='line'>    <span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">X</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class='line'>    <span class="n">X</span> <span class="o">=</span> <span class="n">ScaleRookie</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#scale data</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">X</span> <span class="o">=</span> <span class="n">reduced_model_rookie</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data into the 10 PCA components space</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">X</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
-</span><span class='line'>    <span class="n">est</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span><span class="p">)</span> <span class="c">#create regression model</span>
-</span><span class='line'>    <span class="n">est</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-</span><span class='line'>    <span class="c">#print(est.summary())</span>
-</span><span class='line'>    <span class="n">estHold</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">est</span>
-</span><span class='line'>
-</span></code></pre></td></tr></table></div></figure>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">][</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="c">#limit labels to players after 1980</span>
+</span><span class="line"><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span> <span class="c">#label each data point with its clusters</span>
+</span><span class="line">
+</span><span class="line"><span class="n">estHold</span> <span class="o">=</span> <span class="p">[[],[],[],[],[],[]]</span>
+</span><span class="line">
+</span><span class="line"><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span><span class="p">)):</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Grouper</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span> <span class="c">#do regression one group at a time</span>
+</span><span class="line">    <span class="n">Yearer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Group1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Grouper</span> <span class="o">&amp;</span> <span class="n">Yearer</span><span class="p">]</span>
+</span><span class="line">    <span class="n">Y</span> <span class="o">=</span> <span class="n">Group1</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#get predicted data</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span><span class="p">]</span> <span class="c">#get predictor data of group</span>
+</span><span class="line">    <span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">X</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
+</span><span class="line">    <span class="n">X</span> <span class="o">=</span> <span class="n">ScaleRookie</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#scale data</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">X</span> <span class="o">=</span> <span class="n">reduced_model_rookie</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data into the 10 PCA components space</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">X</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
+</span><span class="line">    <span class="n">est</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span><span class="p">)</span> <span class="c">#create regression model</span>
+</span><span class="line">    <span class="n">est</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+</span><span class="line">    <span class="c">#print(est.summary())</span>
+</span><span class="line">    <span class="n">estHold</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">est</span>
+</span><span class="line">
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span> <span class="c">#plot the beta weights</span>
-</span><span class='line'><span class="n">width</span><span class="o">=</span><span class="mf">0.12</span>
-</span><span class='line'><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">est</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">estHold</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span><span class="o">+</span><span class="n">width</span><span class="o">*</span><span class="n">i</span><span class="p">,</span><span class="n">est</span><span class="o">.</span><span class="n">params</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span><span class="n">yerr</span><span class="o">=</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">est</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Principle Components&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="s">&#39;Group 1&#39;</span><span class="p">,</span><span class="s">&#39;Group 2&#39;</span><span class="p">,</span><span class="s">&#39;Group 3&#39;</span><span class="p">,</span><span class="s">&#39;Group 4&#39;</span><span class="p">,</span><span class="s">&#39;Group 5&#39;</span><span class="p">,</span><span class="s">&#39;Group 6&#39;</span><span class="p">))</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Beta Weights&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span> <span class="c">#plot the beta weights</span>
+</span><span class="line"><span class="n">width</span><span class="o">=</span><span class="mf">0.12</span>
+</span><span class="line"><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">est</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">estHold</span><span class="p">):</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span><span class="o">+</span><span class="n">width</span><span class="o">*</span><span class="n">i</span><span class="p">,</span><span class="n">est</span><span class="o">.</span><span class="n">params</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span><span class="n">yerr</span><span class="o">=</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">est</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Principle Components&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="s">&#39;Group 1&#39;</span><span class="p">,</span><span class="s">&#39;Group 2&#39;</span><span class="p">,</span><span class="s">&#39;Group 3&#39;</span><span class="p">,</span><span class="s">&#39;Group 4&#39;</span><span class="p">,</span><span class="s">&#39;Group 5&#39;</span><span class="p">,</span><span class="s">&#39;Group 6&#39;</span><span class="p">))</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Beta Weights&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/regressionNBA/beta_weights.png" /></p>
 
-<p>Above I plot the beta weights for each principle component across the groupings. This plot is a lot to look at, but I wanted to depict how the beta values changed across the groups. They are not drastically different, but they&rsquo;re also not identical. Error bars depict 95% confidence intervals.</p>
+<p>Above I plot the beta weights for each principle component across the groupings. This plot is a lot to look at, but I wanted to depict how the beta values changed across the groups. They are not drastically different, but they’re also not identical. Error bars depict 95% confidence intervals.</p>
 
-<p>Below I fit a regression to each group, but with all the features. Again, multicollinearity will be a problem, but this will not decrease the regression&rsquo;s accuracy, which is all I really care about.</p>
+<p>Below I fit a regression to each group, but with all the features. Again, multicollinearity will be a problem, but this will not decrease the regression’s accuracy, which is all I really care about.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">][</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span>
-</span><span class='line'><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span> <span class="c">#label each data point with its clusters</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">estHold</span> <span class="o">=</span> <span class="p">[[],[],[],[],[],[]]</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span><span class="p">)):</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Grouper</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span> <span class="c">#do one regression at a time</span>
-</span><span class='line'>    <span class="n">Yearer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Group1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Grouper</span> <span class="o">&amp;</span> <span class="n">Yearer</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">Y</span> <span class="o">=</span> <span class="n">Group1</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#get predictor data</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="c">#get predicted data</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">X</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe    </span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">X</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
-</span><span class='line'>    <span class="n">est</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span><span class="p">)</span> <span class="c">#fit with linear regression model</span>
-</span><span class='line'>    <span class="n">est</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">estHold</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">est</span>
-</span><span class='line'>    <span class="c">#print est.summary()</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="c">#plot each regression&#39;s prediction against actual data</span>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="n">Y</span><span class="p">,</span><span class="s">&#39;o&#39;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Group </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.15</span><span class="p">,</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span><span class="s">&#39;$r^2$=</span><span class="si">%.2f</span><span class="s">&#39;</span><span class="o">%</span><span class="n">est</span><span class="o">.</span><span class="n">rsquared</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">])</span>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
+</span><span class="line">
+</span><span class="line"><span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">][</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span>
+</span><span class="line"><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span> <span class="c">#label each data point with its clusters</span>
+</span><span class="line">
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span>
+</span><span class="line">
+</span><span class="line"><span class="n">estHold</span> <span class="o">=</span> <span class="p">[[],[],[],[],[],[]]</span>
+</span><span class="line">
+</span><span class="line"><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span><span class="p">)):</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Grouper</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span> <span class="c">#do one regression at a time</span>
+</span><span class="line">    <span class="n">Yearer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Group1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Grouper</span> <span class="o">&amp;</span> <span class="n">Yearer</span><span class="p">]</span>
+</span><span class="line">    <span class="n">Y</span> <span class="o">=</span> <span class="n">Group1</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#get predictor data</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span><span class="p">]</span>
+</span><span class="line">    <span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="c">#get predicted data</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">X</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe    </span>
+</span><span class="line">
+</span><span class="line">    <span class="n">X</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
+</span><span class="line">    <span class="n">est</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span><span class="p">)</span> <span class="c">#fit with linear regression model</span>
+</span><span class="line">    <span class="n">est</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+</span><span class="line">    <span class="n">estHold</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">est</span>
+</span><span class="line">    <span class="c">#print est.summary()</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="c">#plot each regression&#39;s prediction against actual data</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="n">Y</span><span class="p">,</span><span class="s">&#39;o&#39;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Group </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.15</span><span class="p">,</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span><span class="s">&#39;$r^2$=</span><span class="si">%.2f</span><span class="s">&#39;</span><span class="o">%</span><span class="n">est</span><span class="o">.</span><span class="n">rsquared</span><span class="p">)</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">])</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/regressionNBA/model2_predictions.png" /></p>
 
-<p>The plots above depict each regression&rsquo;s predictions against actual ws/48. I provide each model&rsquo;s r<sup>2</sup> in the plot too.</p>
+<p>The plots above depict each regression’s predictions against actual ws/48. I provide each model’s r^2 in the plot too.</p>
 
-<p>Some regressions are better than others. For instance, the regression model does a pretty awesome job predicting the bench warmers&hellip;I wonder if this is because they have shorter careers&hellip; The regression model does not do a good job predicting the 3-point shooters.</p>
+<p>Some regressions are better than others. For instance, the regression model does a pretty awesome job predicting the bench warmers…I wonder if this is because they have shorter careers… The regression model does not do a good job predicting the 3-point shooters.</p>
 
 <p>Now onto the fun stuff though.</p>
 
 <p>Below, create a function for predicting a players career WS/48. First, I write a function that finds what cluster a player would belong to, and what the regression model predicts for this players career (with 95% confidence intervals).</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">player_prediction__regressionModel</span><span class="p">(</span><span class="n">PlayerName</span><span class="p">):</span>
-</span><span class='line'>    <span class="kn">from</span> <span class="nn">statsmodels.sandbox.regression.predstd</span> <span class="kn">import</span> <span class="n">wls_prediction_std</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Mar_05.pkl&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="p">[</span><span class="n">clust_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">new_vect</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">clust_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
-</span><span class='line'>    <span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_vect</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">Group</span> <span class="o">=</span> <span class="n">final_fit</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">clust_df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="p">[</span><span class="n">Predrookie_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">predX</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class='line'>    <span class="n">predX</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">predX</span><span class="p">,</span><span class="n">has_constant</span><span class="o">=</span><span class="s">&#39;add&#39;</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
-</span><span class='line'>    <span class="n">prstd_ols</span><span class="p">,</span> <span class="n">iv_l_ols</span><span class="p">,</span> <span class="n">iv_u_ols</span> <span class="o">=</span> <span class="n">wls_prediction_std</span><span class="p">(</span><span class="n">estHold</span><span class="p">[</span><span class="n">Group</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span><span class="n">predX</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;Name&#39;</span><span class="p">:</span><span class="n">PlayerName</span><span class="p">,</span><span class="s">&#39;Group&#39;</span><span class="p">:</span><span class="n">Group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s">&#39;Prediction&#39;</span><span class="p">:</span><span class="n">estHold</span><span class="p">[</span><span class="n">Group</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">predX</span><span class="p">),</span><span class="s">&#39;Upper_CI&#39;</span><span class="p">:</span><span class="n">iv_u_ols</span><span class="p">,</span><span class="s">&#39;Lower_CI&#39;</span><span class="p">:</span><span class="n">iv_l_ols</span><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">player_prediction__regressionModel</span><span class="p">(</span><span class="n">PlayerName</span><span class="p">):</span>
+</span><span class="line">    <span class="kn">from</span> <span class="nn">statsmodels.sandbox.regression.predstd</span> <span class="kn">import</span> <span class="n">wls_prediction_std</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Mar_05.pkl&#39;</span><span class="p">)</span>
+</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="p">[</span><span class="n">clust_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
+</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span><span class="line">    <span class="n">new_vect</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">clust_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+</span><span class="line">    <span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_vect</span><span class="p">)</span>
+</span><span class="line">    <span class="n">Group</span> <span class="o">=</span> <span class="n">final_fit</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span>
+</span><span class="line">    <span class="n">clust_df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span>
+</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="p">[</span><span class="n">Predrookie_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
+</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span><span class="line">    <span class="n">predX</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
+</span><span class="line">    <span class="n">predX</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">predX</span><span class="p">,</span><span class="n">has_constant</span><span class="o">=</span><span class="s">&#39;add&#39;</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
+</span><span class="line">    <span class="n">prstd_ols</span><span class="p">,</span> <span class="n">iv_l_ols</span><span class="p">,</span> <span class="n">iv_u_ols</span> <span class="o">=</span> <span class="n">wls_prediction_std</span><span class="p">(</span><span class="n">estHold</span><span class="p">[</span><span class="n">Group</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span><span class="n">predX</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;Name&#39;</span><span class="p">:</span><span class="n">PlayerName</span><span class="p">,</span><span class="s">&#39;Group&#39;</span><span class="p">:</span><span class="n">Group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s">&#39;Prediction&#39;</span><span class="p">:</span><span class="n">estHold</span><span class="p">[</span><span class="n">Group</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">predX</span><span class="p">),</span><span class="s">&#39;Upper_CI&#39;</span><span class="p">:</span><span class="n">iv_u_ols</span><span class="p">,</span><span class="s">&#39;Lower_CI&#39;</span><span class="p">:</span><span class="n">iv_l_ols</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>Here I create a function that creates a list of all the first round draft picks from a given year.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">gather_draftData</span><span class="p">(</span><span class="n">Year</span><span class="p">):</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kn">import</span> <span class="nn">urllib2</span>
-</span><span class='line'>    <span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
-</span><span class='line'>    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-</span><span class='line'>    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">draft_len</span> <span class="o">=</span> <span class="mi">30</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">def</span> <span class="nf">convert_float</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
-</span><span class='line'>        <span class="k">try</span><span class="p">:</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-</span><span class='line'>            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://www.basketball-reference.com/draft/NBA_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">Year</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;.html&#39;</span>
-</span><span class='line'>    <span class="n">html</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span><span class="s">&quot;lxml&quot;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">draft_num</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
-</span><span class='line'>    <span class="n">draft_nam</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">draft_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">draft_num</span><span class="p">,</span><span class="n">draft_nam</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
-</span><span class='line'>    <span class="n">draft_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Number&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">draft_df</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">gather_draftData</span><span class="p">(</span><span class="n">Year</span><span class="p">):</span>
+</span><span class="line">
+</span><span class="line">    <span class="kn">import</span> <span class="nn">urllib2</span>
+</span><span class="line">    <span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+</span><span class="line">    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+</span><span class="line">    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">draft_len</span> <span class="o">=</span> <span class="mi">30</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">def</span> <span class="nf">convert_float</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+</span><span class="line">        <span class="k">try</span><span class="p">:</span>
+</span><span class="line">            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+</span><span class="line">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+</span><span class="line">            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://www.basketball-reference.com/draft/NBA_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">Year</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;.html&#39;</span>
+</span><span class="line">    <span class="n">html</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span class="line">    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span><span class="s">&quot;lxml&quot;</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">draft_num</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
+</span><span class="line">    <span class="n">draft_nam</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">draft_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">draft_num</span><span class="p">,</span><span class="n">draft_nam</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+</span><span class="line">    <span class="n">draft_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Number&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">]</span>
+</span><span class="line">    <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">draft_df</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
+<p>Below I create predictions for each first-round draft pick from 2015. The spurs’ first round pick, Nikola Milutinov, has yet to play so I do not create a prediction for him.</p>
 
-<p>Below I create predictions for each first-round draft pick from 2015. The spurs' first round pick, Nikola Milutinov, has yet to play so I do not create a prediction for him.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="kn">as</span> <span class="nn">mpatches</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">draft_df</span> <span class="o">=</span> <span class="n">gather_draftData</span><span class="p">(</span><span class="mi">2015</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">][</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span>  <span class="s">&#39;Kelly Oubre Jr.&#39;</span> <span class="c">#annoying name inconsistencies </span>
-</span><span class='line'>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">31</span><span class="p">),</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">draft_df</span> <span class="o">=</span> <span class="n">draft_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c">#Sam Dekker has received little playing time making his prediction highly erratic</span>
-</span><span class='line'><span class="n">draft_df</span> <span class="o">=</span> <span class="n">draft_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c">#spurs&#39; 1st round pick has not played yet</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]:</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">draft_num</span> <span class="o">=</span> <span class="n">draft_df</span><span class="p">[</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="s">&#39;Number&#39;</span><span class="p">]</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">predict_dict</span> <span class="o">=</span> <span class="n">player_prediction__regressionModel</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">yerr</span> <span class="o">=</span> <span class="p">(</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Upper_CI&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Lower_CI&#39;</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">draft_num</span><span class="p">,</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Prediction&#39;</span><span class="p">],</span><span class="n">fmt</span><span class="o">=</span><span class="s">&#39;o&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
-</span><span class='line'>                <span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Group&#39;</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">yerr</span><span class="o">=</span><span class="n">yerr</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mi">31</span><span class="p">)</span>
-</span><span class='line'><span class="n">patch</span> <span class="o">=</span> <span class="p">[</span><span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Group </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)]</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">patch</span><span class="p">,</span><span class="n">ncol</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Predicted WS/48&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Draft Position&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="kn">as</span> <span class="nn">mpatches</span>
+</span><span class="line">
+</span><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">gather_draftData</span><span class="p">(</span><span class="mi">2015</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">][</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span>  <span class="s">&#39;Kelly Oubre Jr.&#39;</span> <span class="c">#annoying name inconsistencies </span>
+</span><span class="line">
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">31</span><span class="p">),</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">draft_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c">#Sam Dekker has received little playing time making his prediction highly erratic</span>
+</span><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">draft_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c">#spurs&#39; 1st round pick has not played yet</span>
+</span><span class="line">
+</span><span class="line"><span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]:</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">draft_num</span> <span class="o">=</span> <span class="n">draft_df</span><span class="p">[</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="s">&#39;Number&#39;</span><span class="p">]</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">predict_dict</span> <span class="o">=</span> <span class="n">player_prediction__regressionModel</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span class="line">    <span class="n">yerr</span> <span class="o">=</span> <span class="p">(</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Upper_CI&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Lower_CI&#39;</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">draft_num</span><span class="p">,</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Prediction&#39;</span><span class="p">],</span><span class="n">fmt</span><span class="o">=</span><span class="s">&#39;o&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+</span><span class="line">                <span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Group&#39;</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">yerr</span><span class="o">=</span><span class="n">yerr</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mi">31</span><span class="p">)</span>
+</span><span class="line"><span class="n">patch</span> <span class="o">=</span> <span class="p">[</span><span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Group </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)]</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">patch</span><span class="p">,</span><span class="n">ncol</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Predicted WS/48&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Draft Position&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/regressionNBA/draft_2015_predict.png" /></p>
 
-<p>The plot above is ordered by draft pick. The error bars depict 95% confidence interbals&hellip;which are a little wider than I would like. It&rsquo;s interesting to look at what clusters these players fit into. Lots of 3-pt shooters! It could be that rookies play a limited role in the offense - just shooting 3s.</p>
+<p>The plot above is ordered by draft pick. The error bars depict 95% confidence interbals…which are a little wider than I would like. It’s interesting to look at what clusters these players fit into. Lots of 3-pt shooters! It could be that rookies play a limited role in the offense - just shooting 3s.</p>
 
-<p>As a t-wolves fan, I am relatively happy about the high prediction for Karl-Anthony Towns. His predicted ws/48 is between Marc Gasol and Elton Brand. Again, the CIs are quite wide, so the model says there&rsquo;s a 95% chance he is somewhere between Lebron James ever and a player that averages less than 0.1 ws/48.</p>
+<p>As a t-wolves fan, I am relatively happy about the high prediction for Karl-Anthony Towns. His predicted ws/48 is between Marc Gasol and Elton Brand. Again, the CIs are quite wide, so the model says there’s a 95% chance he is somewhere between Lebron James ever and a player that averages less than 0.1 ws/48.</p>
 
 <p>Karl-Anthony Towns would have the highest predicted ws/48 if it were not for Kevin Looney who the model loves. Kevin Looney has not seen much playing time though, which likely makes his prediction more erratic. Keep in mind I did not use draft position as a predictor in the model.</p>
 
 <p>Sam Dekker has a pretty huge error bar, likely because of his limited playing time this year.</p>
 
-<p>While I fed a ton of features into this model, it&rsquo;s still just a linear regression. The simplicity of the model might prevent me from making more accurate predictions.</p>
+<p>While I fed a ton of features into this model, it’s still just a linear regression. The simplicity of the model might prevent me from making more accurate predictions.</p>
 
-<p>I&rsquo;ve already started playing with some more complex models. If those work out well, I will post them here. I ended up sticking with a plain linear regression because my vast number of features is a little unwieldy in a more complex models. If you&rsquo;re interested (and the models produce better results) check back in the future.</p>
+<p>I’ve already started playing with some more complex models. If those work out well, I will post them here. I ended up sticking with a plain linear regression because my vast number of features is a little unwieldy in a more complex models. If you’re interested (and the models produce better results) check back in the future.</p>
 
-<p>For now, these models explain between 40 and 70% of the variance in career ws/48 from only a player&rsquo;s rookie year. Even predicting 30% of variance is pretty remarkable, so I don&rsquo;t want to trash on this part of the model. Explaining 65% of the variance is pretty awesome. The model gives us a pretty accurate idea of how these &ldquo;bench players&rdquo; will perform. For instance, the future does not look bright for players like Emmanuel Mudiay and Tyus Jones. Not to say these players are doomed. The model assumes that players will retain their grouping for the entire career. Emmanuel Mudiay and Tyus Jones might start performing more like distributors as their career progresses. This could result in a better career.</p>
+<p>For now, these models explain between 40 and 70% of the variance in career ws/48 from only a player’s rookie year. Even predicting 30% of variance is pretty remarkable, so I don’t want to trash on this part of the model. Explaining 65% of the variance is pretty awesome. The model gives us a pretty accurate idea of how these “bench players” will perform. For instance, the future does not look bright for players like Emmanuel Mudiay and Tyus Jones. Not to say these players are doomed. The model assumes that players will retain their grouping for the entire career. Emmanuel Mudiay and Tyus Jones might start performing more like distributors as their career progresses. This could result in a better career.</p>
 
-<p>One nice part about this model is it tells us where the predictions are less confident. For instance, it is nice to know that we&rsquo;re relatively confident when predicting bench players, but not when we&rsquo;re predicting 3-point shooters.</p>
+<p>One nice part about this model is it tells us where the predictions are less confident. For instance, it is nice to know that we’re relatively confident when predicting bench players, but not when we’re predicting 3-point shooters.</p>
 
 <p>For those curious, I output each groups regression summary below.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">[</span><span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">estHold</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="p">[</span><span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">estHold</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <pre><code>                            OLS Regression Results                            
 ==============================================================================
@@ -1159,6 +1139,7 @@ Warnings:
 [2] The condition number is large, 6.96e+05. This might indicate that there are
 strong multicollinearity or other numerical problems.
 </code></pre>
+
 </div>
 
 
@@ -1258,6 +1239,10 @@ strong multicollinearity or other numerical problems.
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/04/29/an-introduction-to-neural-networks-part-1/">An Introduction to Neural Networks: Part 1</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/">Revisiting NBA Career Predictions From Rookie Performance</a>
       </li>
     
@@ -1271,10 +1256,6 @@ strong multicollinearity or other numerical problems.
     
       <li class="post">
         <a href="/blog/2016/02/21/grouping-nba-players/">Grouping NBA Players</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/12/22/creating-nba-shot-charts/">Creating NBA Shot Charts</a>
       </li>
     
   </ul>
