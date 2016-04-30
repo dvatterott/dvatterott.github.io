@@ -47,7 +47,7 @@ Above is our neural network. It has two input neurons and a single output neuron
 
 The input is the input unit's *activity.* This activity is sent to the Output unit, but the activity changes when traveling to the Output unit. The *weights* between the input and output units change the activity. A large positive weight between the input and output units causes the input unit to send a large positive (excitatory) signal. A large negative weight between the input and output units causes the input unit to send a large negative (inhibitory) signal. A weight near zero means the input unit does not influence the output unit. 
 
-In order to know the Output unit's activity, we need to know its input. I will refer to the output unit's input as $$net_{Output}$$. Here is how we can calculate $net_{Output}$
+In order to know the Output unit's activity, we need to know its input. I will refer to the output unit's input as $$net_{Output}$$. Here is how we can calculate $$net_{Output}$$
 
 $$
 net_{Output} = Input_A * Weight_A + Input_B * Weight_B
@@ -55,11 +55,15 @@ $$
 
 a more general way of writing this is 
 
-$net = \displaystyle\sum_{i=1}^{Inputs}Input_i * Weight_i$
+$$
+net = \displaystyle\sum_{i=1}^{Inputs}Input_i * Weight_i
+$$
 
 Let's pretend the inputs are [0 1] and the Weights are [0.25 0.5]. Here is the input to the output neuron - 
 
-$net_{Output} = 0 * 0.25 + 1 * 0.5$
+$$
+net_{Output} = 0 * 0.25 + 1 * 0.5
+$$
 
 Thus, the input to the output neuron is 0.5. A quick way of programming this is through the function numpy.dot which finds the [dot product](https://en.wikipedia.org/wiki/Dot_product) of two vectors (or matrices). This might sound a little scary, but in this case its just multiplying the items by each other and then summing everything up - like we did above.
 
@@ -77,7 +81,9 @@ print net_Output
 
 All this is good, but we haven't actually calculated the output unit's activity we have only calculated its input. What makes neural networks able to solve complex problems is they include a non-linearity when translating the input into activity. In this case we will translate the input into activity by putting the input through a [logistic function](https://en.wikipedia.org/wiki/Logistic_function). 
 
-$Logistic = \frac{1}{1+e^{-x}}$
+$$
+Logistic = \frac{1}{1+e^{-x}}
+$$
 
 
 {% codeblock lang:python %}
@@ -158,17 +164,19 @@ Lets look at how backpropogation reduces the distance between our guesses and th
 
 First, we want to know how the amount of error changes with an adjustment to a given weight. We can write this as 
 
-$\partial Error \over \partial Weight_{Input_{1}\to.Output}$
+$$
+\partial Error \over \partial Weight_{Input_{1}\to.Output}
+$$
 
 This change in error with changes in the weights has a number of different sub components. 
 
-* Changes in error with changes in the output unit's activity: $\partial Error \over \partial Output$
-* Changes in the output unit's activity with changes in this unit's input: $\partial Output \over \partial net_{Output}$
-* Changes in the output unit's input with changes in the weight: $\partial net_{Output} \over \partial Weight_{Input_{1}\to.Output}$
+* Changes in error with changes in the output unit's activity: $$\partial Error \over \partial Output$$
+* Changes in the output unit's activity with changes in this unit's input: $$\partial Output \over \partial net_{Output}$$
+* Changes in the output unit's input with changes in the weight: $$\partial net_{Output} \over \partial Weight_{Input_{1}\to.Output}$$
 
 Through the [chain rule](https://en.wikipedia.org/wiki/Chain_rule) we know 
 
-$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}}$
+$$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}}$$
 
 This might look scary, but with a little thought it should make sense: (starting with the final term and moving left) When we change the weight of a connection to a unit, we change the input to that unit. When we change the input to a unit, we change its activity (written Output above). When we change a units activity, we change the amount of error.
 
@@ -176,29 +184,29 @@ Let's break this down using our example. During this portion, I am going to glos
 
 In the first example, the input is [1,0] and the correct answer is [0]. Our network's guess in this example was about 0.56.
 
-$\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)$ 
+$$\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)$$ 
 
-$\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)$ - Please note that this is specific to our example with a logistic activation function
+$$\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)$$ - Please note that this is specific to our example with a logistic activation function
 
-$\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1$
+$$\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1$$
 
 to summarize (the numbers used here are approximate)
 
-$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} = -(0-0.56) * 0.56(1-0.56) * 1 = 0.14$
+$$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} = -(0-0.56) * 0.56(1-0.56) * 1 = 0.14$$
 
-This is the direction we want to move in, but taking large steps in this direction can prevent us from finding the optimal weights. For this reason, we reduce our step size. We will reduce our step size with a parameter called the *learning rate* ($\alpha$). $\alpha$ is bound between 0 and 1. 
+This is the direction we want to move in, but taking large steps in this direction can prevent us from finding the optimal weights. For this reason, we reduce our step size. We will reduce our step size with a parameter called the *learning rate* ($$\alpha$$). $$\alpha$$ is bound between 0 and 1. 
 
 Here is how we can write our change in weights
 
-$\Delta Weight_{Input_{1}\to.Output} = \alpha * \frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}}$
+$$\Delta Weight_{Input_{1}\to.Output} = \alpha * \frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}}$$
 
 This is known as the [delta rule](https://en.wikipedia.org/wiki/Delta_rule). 
 
-We will set $\alpha$ to be 0.5. Here is how we will calculate the new $Weight_{Input_{1}\to.Output}$.
+We will set $$\alpha$$ to be 0.5. Here is how we will calculate the new $$Weight_{Input_{1}\to.Output}$$.
 
-$Weight_{Input_{1}\to.Output}^{\prime} = Weight_{Input_{1}\to.Output} - 0.5 * 0.14 = 0.25 - 0.5 * 0.14 = 0.18$
+$$Weight_{Input_{1}\to.Output}^{\prime} = Weight_{Input_{1}\to.Output} - 0.5 * 0.14 = 0.25 - 0.5 * 0.14 = 0.18$$
 
-Thus, $Weight_{Input_{1}\to.Output}$ is shrinking which will move the output towards 0. Below I write the code to implement our backpropogation. 
+Thus, $$Weight_{Input_{1}\to.Output}$$ is shrinking which will move the output towards 0. Below I write the code to implement our backpropogation. 
 
 
 {% codeblock lang:python %}
@@ -287,7 +295,7 @@ print Guesses
 <img src="{{ root_url }}/images/neural_net/net_guess2.png" />
 
 
-Not bad! Our guesses are much closer to the correct answers than before we started running the backpropogation procedure! Now, you might say, "HEY! But you haven't reached the *correct* answers." That's true, but note that acheiving the values of 0 and 1 with a logistic function are only possible at -$\infty$ and $\infty$, respectively. Because of this, we treat 0.05 as 0 and 0.95 as 1.
+Not bad! Our guesses are much closer to the correct answers than before we started running the backpropogation procedure! Now, you might say, "HEY! But you haven't reached the *correct* answers." That's true, but note that acheiving the values of 0 and 1 with a logistic function are only possible at -$$\infty$$ and $$\infty$$, respectively. Because of this, we treat 0.05 as 0 and 0.95 as 1.
 
 Okay, all this is great, but that was a really simple problem, and I said that neural networks could solve interesting problems! 
 
