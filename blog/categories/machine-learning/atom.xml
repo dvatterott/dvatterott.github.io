@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Machine Learning | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/machine-learning/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-04-29T22:51:04-04:00</updated>
+  <updated>2016-04-29T22:56:10-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -66,9 +66,9 @@
 
 <p>The input is the input unit’s <em>activity.</em> This activity is sent to the Output unit, but the activity changes when traveling to the Output unit. The <em>weights</em> between the input and output units change the activity. A large positive weight between the input and output units causes the input unit to send a large positive (excitatory) signal. A large negative weight between the input and output units causes the input unit to send a large negative (inhibitory) signal. A weight near zero means the input unit does not influence the output unit.</p>
 
-<p>In order to know the Output unit’s activity, we need to know its input. I will refer to the output unit’s input as $net_{Output}$. Here is how we can calculate $net_{Output}$</p>
+<p>In order to know the Output unit’s activity, we need to know its input. I will refer to the output unit’s input as <script type="math/tex">net_{Output}</script>. Here is how we can calculate $net_{Output}$</p>
 
-<p>$net_{Output} = Input_A * Weight_A + Input_B * Weight_B$</p>
+<script type="math/tex; mode=display">net_{Output} = Input_A * Weight_A + Input_B * Weight_B</script>
 
 <p>a more general way of writing this is</p>
 
