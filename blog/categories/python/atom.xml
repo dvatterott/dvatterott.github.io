@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-04-29T22:56:10-04:00</updated>
+  <updated>2016-04-29T23:02:08-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -66,17 +66,17 @@
 
 <p>The input is the input unit’s <em>activity.</em> This activity is sent to the Output unit, but the activity changes when traveling to the Output unit. The <em>weights</em> between the input and output units change the activity. A large positive weight between the input and output units causes the input unit to send a large positive (excitatory) signal. A large negative weight between the input and output units causes the input unit to send a large negative (inhibitory) signal. A weight near zero means the input unit does not influence the output unit.</p>
 
-<p>In order to know the Output unit’s activity, we need to know its input. I will refer to the output unit’s input as <script type="math/tex">net_{Output}</script>. Here is how we can calculate $net_{Output}$</p>
+<p>In order to know the Output unit’s activity, we need to know its input. I will refer to the output unit’s input as <script type="math/tex">net_{Output}</script>. Here is how we can calculate <script type="math/tex">net_{Output}</script></p>
 
 <script type="math/tex; mode=display">net_{Output} = Input_A * Weight_A + Input_B * Weight_B</script>
 
 <p>a more general way of writing this is</p>
 
-<p>$net = \displaystyle\sum_{i=1}^{Inputs}Input_i * Weight_i$</p>
+<script type="math/tex; mode=display">net = \displaystyle\sum_{i=1}^{Inputs}Input_i * Weight_i</script>
 
 <p>Let’s pretend the inputs are [0 1] and the Weights are [0.25 0.5]. Here is the input to the output neuron -</p>
 
-<p>$net_{Output} = 0 * 0.25 + 1 * 0.5$</p>
+<script type="math/tex; mode=display">net_{Output} = 0 * 0.25 + 1 * 0.5</script>
 
 <p>Thus, the input to the output neuron is 0.5. A quick way of programming this is through the function numpy.dot which finds the <a href="https://en.wikipedia.org/wiki/Dot_product">dot product</a> of two vectors (or matrices). This might sound a little scary, but in this case its just multiplying the items by each other and then summing everything up - like we did above.</p>
 
@@ -97,7 +97,7 @@
 
 <p>All this is good, but we haven’t actually calculated the output unit’s activity we have only calculated its input. What makes neural networks able to solve complex problems is they include a non-linearity when translating the input into activity. In this case we will translate the input into activity by putting the input through a <a href="https://en.wikipedia.org/wiki/Logistic_function">logistic function</a>.</p>
 
-<p>$Logistic = \frac{1}{1+e^{-x}}$</p>
+<script type="math/tex; mode=display">Logistic = \frac{1}{1+e^{-x}}</script>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -187,19 +187,19 @@
 
 <p>First, we want to know how the amount of error changes with an adjustment to a given weight. We can write this as</p>
 
-<p>$\partial Error \over \partial Weight_{Input_{1}\to.Output}$</p>
+<script type="math/tex; mode=display">\partial Error \over \partial Weight_{Input_{1}\to.Output}</script>
 
 <p>This change in error with changes in the weights has a number of different sub components.</p>
 
 <ul>
-  <li>Changes in error with changes in the output unit’s activity: $\partial Error \over \partial Output$</li>
-  <li>Changes in the output unit’s activity with changes in this unit’s input: $\partial Output \over \partial net_{Output}$</li>
-  <li>Changes in the output unit’s input with changes in the weight: $\partial net_{Output} \over \partial Weight_{Input_{1}\to.Output}$</li>
+  <li>Changes in error with changes in the output unit’s activity: <script type="math/tex">\partial Error \over \partial Output</script></li>
+  <li>Changes in the output unit’s activity with changes in this unit’s input: <script type="math/tex">\partial Output \over \partial net_{Output}</script></li>
+  <li>Changes in the output unit’s input with changes in the weight: <script type="math/tex">\partial net_{Output} \over \partial Weight_{Input_{1}\to.Output}</script></li>
 </ul>
 
 <p>Through the <a href="https://en.wikipedia.org/wiki/Chain_rule">chain rule</a> we know</p>
 
-<p>$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}}$</p>
+<script type="math/tex; mode=display">\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}}</script>
 
 <p>This might look scary, but with a little thought it should make sense: (starting with the final term and moving left) When we change the weight of a connection to a unit, we change the input to that unit. When we change the input to a unit, we change its activity (written Output above). When we change a units activity, we change the amount of error.</p>
 
@@ -207,29 +207,29 @@
 
 <p>In the first example, the input is [1,0] and the correct answer is [0]. Our network’s guess in this example was about 0.56.</p>
 
-<p>$\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)$</p>
+<script type="math/tex; mode=display">\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)</script>
 
-<p>$\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)$ - Please note that this is specific to our example with a logistic activation function</p>
+<p><script type="math/tex">\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)</script> - Please note that this is specific to our example with a logistic activation function</p>
 
-<p>$\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1$</p>
+<script type="math/tex; mode=display">\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1</script>
 
 <p>to summarize (the numbers used here are approximate)</p>
 
-<p>$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} = -(0-0.56) * 0.56(1-0.56) * 1 = 0.14$</p>
+<script type="math/tex; mode=display">\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} = -(0-0.56) * 0.56(1-0.56) * 1 = 0.14</script>
 
-<p>This is the direction we want to move in, but taking large steps in this direction can prevent us from finding the optimal weights. For this reason, we reduce our step size. We will reduce our step size with a parameter called the <em>learning rate</em> ($\alpha$). $\alpha$ is bound between 0 and 1.</p>
+<p>This is the direction we want to move in, but taking large steps in this direction can prevent us from finding the optimal weights. For this reason, we reduce our step size. We will reduce our step size with a parameter called the <em>learning rate</em> (<script type="math/tex">\alpha</script>). <script type="math/tex">\alpha</script> is bound between 0 and 1.</p>
 
 <p>Here is how we can write our change in weights</p>
 
-<p>$\Delta Weight_{Input_{1}\to.Output} = \alpha * \frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}}$</p>
+<script type="math/tex; mode=display">\Delta Weight_{Input_{1}\to.Output} = \alpha * \frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}}</script>
 
 <p>This is known as the <a href="https://en.wikipedia.org/wiki/Delta_rule">delta rule</a>.</p>
 
-<p>We will set $\alpha$ to be 0.5. Here is how we will calculate the new $Weight_{Input_{1}\to.Output}$.</p>
+<p>We will set <script type="math/tex">\alpha</script> to be 0.5. Here is how we will calculate the new <script type="math/tex">Weight_{Input_{1}\to.Output}</script>.</p>
 
-<p>$Weight_{Input_{1}\to.Output}^{\prime} = Weight_{Input_{1}\to.Output} - 0.5 * 0.14 = 0.25 - 0.5 * 0.14 = 0.18$</p>
+<script type="math/tex; mode=display">Weight_{Input_{1}\to.Output}^{\prime} = Weight_{Input_{1}\to.Output} - 0.5 * 0.14 = 0.25 - 0.5 * 0.14 = 0.18</script>
 
-<p>Thus, $Weight_{Input_{1}\to.Output}$ is shrinking which will move the output towards 0. Below I write the code to implement our backpropogation.</p>
+<p>Thus, <script type="math/tex">Weight_{Input_{1}\to.Output}</script> is shrinking which will move the output towards 0. Below I write the code to implement our backpropogation.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -361,7 +361,7 @@
 
 <p><img src="/images/neural_net/net_guess2.png" /></p>
 
-<p>Not bad! Our guesses are much closer to the correct answers than before we started running the backpropogation procedure! Now, you might say, “HEY! But you haven’t reached the <em>correct</em> answers.” That’s true, but note that acheiving the values of 0 and 1 with a logistic function are only possible at -$\infty$ and $\infty$, respectively. Because of this, we treat 0.05 as 0 and 0.95 as 1.</p>
+<p>Not bad! Our guesses are much closer to the correct answers than before we started running the backpropogation procedure! Now, you might say, “HEY! But you haven’t reached the <em>correct</em> answers.” That’s true, but note that acheiving the values of 0 and 1 with a logistic function are only possible at -<script type="math/tex">\infty</script> and <script type="math/tex">\infty</script>, respectively. Because of this, we treat 0.05 as 0 and 0.95 as 1.</p>
 
 <p>Okay, all this is great, but that was a really simple problem, and I said that neural networks could solve interesting problems!</p>
 
