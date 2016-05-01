@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-04-29T23:02:08-04:00</updated>
+  <updated>2016-05-01T11:02:44-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -215,7 +215,10 @@
 
 <p>to summarize (the numbers used here are approximate)</p>
 
-<script type="math/tex; mode=display">\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} = -(0-0.56) * 0.56(1-0.56) * 1 = 0.14</script>
+<script type="math/tex; mode=display">\begin{multline}
+\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} \\
+= -(0-0.56) * 0.56(1-0.56) * 1 = 0.14
+\end{multline}</script>
 
 <p>This is the direction we want to move in, but taking large steps in this direction can prevent us from finding the optimal weights. For this reason, we reduce our step size. We will reduce our step size with a parameter called the <em>learning rate</em> (<script type="math/tex">\alpha</script>). <script type="math/tex">\alpha</script> is bound between 0 and 1.</p>
 
