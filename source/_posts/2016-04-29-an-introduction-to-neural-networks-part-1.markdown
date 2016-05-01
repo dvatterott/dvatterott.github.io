@@ -186,11 +186,12 @@ In the first example, the input is [1,0] and the correct answer is [0]. Our netw
 
 $$\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)$$ 
 
-$$\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)$$ - Please note that this is specific to our example with a logistic activation function
+$$\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)$$ 
+Please note that this is specific to our example with a logistic activation function
 
 $$\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1$$
 
-to summarize (the numbers used here are approximate)
+To summarize:
 
 $$
 \begin{multline}

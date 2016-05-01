@@ -1,7 +1,8 @@
 1. use codeblock syntax for code. The new interpreter (kramdown) doesn't like '''python - http://octopress.org/docs/plugins/codeblock/
-2. remember to update the image file locations
-3. when calling sudo rake generate sudo loses the path to rake. this is some weird behavior definitely due to the hack job of ruby installations on my computer.
-4. call source ~/.profile then i just have to use sudo env PATH=$PATH rake...
+2  when using latex, i have to signal latex with 2 $$ instead of 1. 
+3. remember to update the image file locations
+4. when calling sudo rake generate sudo loses the path to rake. this is some weird behavior definitely due to the hack job of ruby installations on my computer.
+5. call source ~/.profile then i just have to use sudo env PATH=$PATH rake...
 
 To fix (some of) the ruby problems, I have added a couple lines to ~/.bashrc. Now ruby is automatically in the path. I still have to use sudo env PATH=$PATH ...
 
