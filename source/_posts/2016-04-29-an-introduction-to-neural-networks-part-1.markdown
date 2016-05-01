@@ -192,7 +192,12 @@ $$\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1
 
 to summarize (the numbers used here are approximate)
 
-$$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} = -(0-0.56) * 0.56(1-0.56) * 1 = 0.14$$
+$$
+\begin{multline}
+\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} \\
+= -(0-0.56) * 0.56(1-0.56) * 1 = 0.14
+\end{multline}
+$$
 
 This is the direction we want to move in, but taking large steps in this direction can prevent us from finding the optimal weights. For this reason, we reduce our step size. We will reduce our step size with a parameter called the *learning rate* ($$\alpha$$). $$\alpha$$ is bound between 0 and 1. 
 
