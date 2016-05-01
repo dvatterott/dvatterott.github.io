@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-05-01T19:19:53-04:00</updated>
+  <updated>2016-05-01T19:21:26-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -209,8 +209,9 @@
 
 <script type="math/tex; mode=display">\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)</script>
 
-<p><script type="math/tex">\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)</script> 
-Please note that this is specific to our example with a logistic activation function</p>
+<script type="math/tex; mode=display">\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)</script>
+
+<p>Please note that this is specific to our example with a logistic activation function</p>
 
 <script type="math/tex; mode=display">\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1</script>
 
