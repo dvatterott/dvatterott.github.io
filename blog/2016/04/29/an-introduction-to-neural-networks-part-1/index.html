@@ -291,11 +291,12 @@ src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorM
 
 <script type="math/tex; mode=display">\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)</script>
 
-<p><script type="math/tex">\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)</script> - Please note that this is specific to our example with a logistic activation function</p>
+<p><script type="math/tex">\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)</script> 
+Please note that this is specific to our example with a logistic activation function</p>
 
 <script type="math/tex; mode=display">\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1</script>
 
-<p>to summarize (the numbers used here are approximate)</p>
+<p>To summarize:</p>
 
 <script type="math/tex; mode=display">\begin{multline}
 \frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} \\
