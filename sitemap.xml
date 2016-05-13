@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.danvatterott.com/blog/2016/05/13/nba-shot-charts-updated/</loc>
+    <lastmod>2016-05-13T11:08:22-04:00</lastmod>
+  </url>
+  <url>
     <loc>http://www.danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2/</loc>
     <lastmod>2016-05-02T21:56:27-04:00</lastmod>
   </url>
@@ -88,5 +92,20 @@
   </url>
   <url>
     <loc>http://www.danvatterott.com/blog/categories/backpropogation/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/nba/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/plotting/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/python/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/open/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/source/</loc>
   </url>
 </urlset>
