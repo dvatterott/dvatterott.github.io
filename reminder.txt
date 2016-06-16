@@ -7,9 +7,13 @@
 To fix (some of) the ruby problems, I have added a couple lines to ~/.bashrc. Now ruby is automatically in the path. I still have to use sudo env PATH=$PATH ...
 
 Reminder on how to post 
+sudo env PATH=$PATH rake new_post['title']
 rake generate
 #rake preview?? Then call the location in another terminal. I have a bookmark for this
 rake deploy
 git add .
 git commit -m 'message'
 git push . 
+
+image example
+<img src="{{ root_url }}/images/shotChart_martin.png" />
