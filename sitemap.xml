@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/</loc>
+    <lastmod>2016-07-31T21:59:41-04:00</lastmod>
+  </url>
+  <url>
     <loc>http://www.danvatterott.com/blog/2016/06/16/creating-videos-of-nba-action-with-sportsvu-data/</loc>
     <lastmod>2016-06-16T08:11:47-04:00</lastmod>
   </url>
@@ -111,5 +115,8 @@
   </url>
   <url>
     <loc>http://www.danvatterott.com/blog/categories/source/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/classification/</loc>
   </url>
 </urlset>
