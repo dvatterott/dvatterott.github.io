@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future &hellip;">
+  <meta name="description" content="This summer I had the pleasure of attending the Brains, Minds, and Machines summer course at the Marine Biology Laboratory. While there, I saw cool &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -85,6 +85,77 @@ src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorM
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/09/20/attention-in-a-convolutional-neural-net/">Attention in a Convolutional Neural Net</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-09-20T19:51:01-04:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>7:51 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This summer I had the pleasure of attending the <a href="http://cbmm.mit.edu/">Brains, Minds, and Machines</a> summer course at the <a href="http://www.mbl.edu/">Marine Biology Laboratory</a>. While there, I saw cool research, met awesome scientists, and completed an independent project. In this blog post, I describe my project.</p>
+
+<p>In 2012, Krizhevsky et al. released a <a href="http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf">convolutional neural network</a> that completely blew away the field at the <a href="http://www.image-net.org/">imagenet challenge</a>. This model is called “Alexnet,” and 2012 marks the beginning of neural networks’ resurgence in the machine learning community.</p>
+
+<p>Alexnet’s domination was not only exciting for the machine learning community. It was also exciting for the visual neuroscience community whose descriptions of the visual system closely matched alexnet (e.g., <a href="http://maxlab.neuro.georgetown.edu/hmax">HMAX</a>). <a href="http://mcgovern.mit.edu/principal-investigators/james-dicarlo">Jim DiCarlo</a> gave an awesome talk at the summer course describing his research comparing the output of neurons in the visual system and the output of “neurons” in alexnet (you can find the article <a href="https://physics.ucsd.edu/neurophysics/courses/physics_171/DeCarlo_reprint.pdf">here</a>).</p>
+
+<p><img src="/images/BMM_CNN/visual_system_models.png" /></p>
+
+<p>I find the similarities between the visual system and convolutional neural networks exciting, but check out the depictions of alexnet and the visual system above. Alexnet is depicted in the upper image. The visual system is depicted in the lower image. Comparing the two images is not fair, but the visual system is obviously vastly more complex than alexnet.</p>
+
+<p>In my project, I applied a known complexity of the biological visual system to a convolutional neural network. Specifically, I incoporated visual attention into the network. <a href="https://en.wikipedia.org/wiki/Biased_Competition_Theory">Visual attention</a> refers to our ability to focus cognitive processing onto a subset of the environment. Check out <a href="https://www.youtube.com/watch?v=vJG698U2Mvo">this video</a> for an incredibly 90s demonstration of visual attention.</p>
+
+<p>In this post, I demonstrate that implementing a basic version of visual attention in a convolutional neural net improves performance of the CNN, but only when classifying noisy images, and not when classifying relatively noiseless images.</p>
+
+<p>Code for everything described in this post can be found on <a href="https://github.com/dvatterott/BMM_attentional_CNN">my github page</a>. In creating this model, I cribbed code from both <a href="http://jacobcv.blogspot.com/2016/08/class-activation-maps-in-keras.html">Jacob Gildenblat</a> and <a href="https://github.com/heuritech/convnets-keras">this implementation of alexnet</a>.</p>
+
+<p>I implemented my model using the <a href="https://keras.io/">Keras library</a> with a <a href="https://theano.readthedocs.io/en/latest/">Theano backend</a>, and I tested my model on the <a href="https://en.wikipedia.org/wiki/MNIST_database">MNIST database</a>. The MNIST database is composed of images of handwritten numbers. The task is to design a model that can accurately guess what number is written in the image. This is a relatively easy task, and the <a href="http://yann.lecun.com/exdb/mnist/">best models are over 99% accurate</a>.</p>
+
+<p>I chose MNIST because its an easy problem, which allows me to use a small network. A small network is both easy to train and easy to understand, which is good for an exploratory project like this one.</p>
+
+<p><img src="/images/BMM_CNN/att_model2.png" /></p>
+
+<p>Above, I depict my model. This model has two <a href="http://cs231n.github.io/convolutional-networks/">convolutional layers</a>. Following the convolutional layers is a feature averaging layer which borrows methods from a <a href="http://cnnlocalization.csail.mit.edu/">recent paper out of the Torralba lab</a> and computes the average activity of units covering each location. The output of this feature averaging layer is then passed along to a fully connected layer. The fully connected layer “guesses” what the most likely digit is. My goal when I first created this network was to use this “guess” to guide where the model focused processing (i.e., attention), but I found guided models are irratic during training.</p>
+
+<p>Instead, my current model directs attention to all locations that are predictive of all digits. I haven’t toyed too much with inbetween models - models that direct attention to locations that are predictive of the <em>N</em> most likely digits.</p>
+
+<p>So what does it mean to “direct attention” in this model. Here, directing attention means that neurons covering “attended” locations are more active than neurons covering the unattended locations. I apply attention to the input of the second convolutional layer. The attentionally weighted signal passes through the second convolutional layer and passes onto the feature averaging layer. The feature averaging layer feeds to the fully connected layer, which then produces a final guess about what digit is present.</p>
+
+<p>I first tested this model on the plain MNIST set. For testing, I wanted to compare my model to a model without attention. My comparison model is the same as the model with attention except that the attention directing signal is a matrix of ones - meaning that it doesn’t have any effect on the model’s activity. I use this comparison model because it has the same architecture as the model with attention.</p>
+
+<p>I depict the results of my attentional and comparison models below. On the X-axis is the test phase (10k trials) following each training epoch (60k trials). On the Y-axis is percent accuracy during the test phase. I did 3 training runs with both sets of models. All models gave fairly similar results, which led to small error bars (these depict standard error). The results are … dissapointing. As you can see both the model with attention and the comparison model perform similarly. There might be an initial impact of attention, but this impact is slight.</p>
+
+<p><img src="/images/BMM_CNN/model_performance_nonoise.png" /></p>
+
+<p>This result was a little dissapointing (since I’m an attention researcher and consider attention an important part of cognition), but it might not be so surprising given the task. If I gave you the task of naming digits, this task would be virtually effortless; probably so effortless that you would not have to pay very much attention to the task. You could probably talk on the phone or text while doing this task. Basically, I might have failed to find an effect of attention because this task is so easy that it does not require attention.</p>
+
+<p>I decided to try my network when the task was a little more difficult. To make the task more difficult, I added random noise to each image (thank you to Nancy Kanwisher for the suggestion). This trick of adding noise to images is one that’s frequently done in psychophysical attention expeirments, so it would be fitting if it worked here.</p>
+
+<p><img src="/images/BMM_CNN/model_performance_noise.png" /></p>
+
+<p>The figure above depicts model performance on noisy images. The models are the as before, but this time the model with attention is far superior to the comparison model. Good news for attention researchers! This work suggests that visual attentional mechanisms similar to those in the brain may be beneficial in convolutional neural networks, and this effect is particularly strong with the images are noisy.</p>
+
+<p>This work bears superficial similarity to recent <a href="http://arxiv.org/pdf/1603.01417.pdf">language translation and question answering models</a>. Models like the cited one report using a biologically inspired version of attention, and I agree they do, but they do not use attention in the same way that I am here. I believe this difference demonstrates a problem with what we call “attention.” Attention is not a single cognitive process. Instead, its a family of cognitive processes that we’ve simply given the same name. Thats not to say these forms of attention are completely distinct, but they likely involve different information transformations and probably even different brain regions.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -5388,400 +5459,6 @@ Name: Name, dtype: object
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/12/22/creating-nba-shot-charts/">Creating NBA Shot Charts</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-12-22T14:21:06-05:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2015</span></span> <span class='time'>2:21 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Here I create shot charts depicting both shooting percentage and the number of shots taken at different court locations, similar to those produced on Austin Clemens’ website (http://www.austinclemens.com/shotcharts/).</p>
-
-<p>To create the shooting charts, I looked to a post by Savvas Tjortjoglou (http://savvastjortjoglou.com/nba-shot-sharts.html). Savvas’ post is great, but his plots only depict the number of shots taken at different locations.</p>
-
-<p>I’m interested in both the number of shots AND the shooting percentage at different locations. This requires a little bit more work. Here’s how I did it.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
-</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>First, we have to acquire shooting data about each player. I retrieved the data from NBA.com’s API using code from Savvas Tjortjoglou’s post.</p>
-
-<p>I won’t show you the output of this function. If you’re interested in the details, I recommend Savvas Tjortjoglou’s post.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="n">Season</span><span class="p">):</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">requests</span>
-</span><span class="line">    <span class="n">shot_chart_url</span> <span class="o">=</span> <span class="s">&#39;http://stats.nba.com/stats/shotchartdetail?CFID=33&amp;CFPARAMS=&#39;</span><span class="o">+</span><span class="n">Season</span><span class="o">+</span><span class="s">&#39;&amp;ContextFilter=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;&amp;ContextMeasure=FGA&amp;DateFrom=&amp;DateTo=&amp;GameID=&amp;GameSegment=&amp;LastNGames=0&amp;LeagueID=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;00&amp;Location=&amp;MeasureType=Base&amp;Month=0&amp;OpponentTeamID=0&amp;Outcome=&amp;PaceAdjust=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;N&amp;PerMode=PerGame&amp;Period=0&amp;PlayerID=&#39;</span><span class="o">+</span><span class="n">PlayerID</span><span class="o">+</span><span class="s">&#39;&amp;PlusMinus=N&amp;Position=&amp;Rank=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;N&amp;RookieYear=&amp;Season=&#39;</span><span class="o">+</span><span class="n">Season</span><span class="o">+</span><span class="s">&#39;&amp;SeasonSegment=&amp;SeasonType=Regular+Season&amp;TeamID=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;0&amp;VsConference=&amp;VsDivision=&amp;mode=Advanced&amp;showDetails=0&amp;showShots=1&amp;showZones=0&#39;</span>
-</span><span class="line">    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">shot_chart_url</span><span class="p">)</span>
-</span><span class="line">    <span class="n">headers</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s">&#39;resultSets&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;headers&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">shots</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s">&#39;resultSets&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;rowSet&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">shot_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">shots</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">shot_df</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Next, we need to draw a basketball court which we can draw the shot chart on. This basketball court has to use the same coordinate system as NBA.com’s API. For instance, 3pt shots have to be X units from hoop and layups have to be Y units from the hoop. Again, I recycle code from Savvas Tjortjoglou (phew! figuring out NBA.com’s coordinate system would have taken me awhile).</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">draw_court</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">outer_lines</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Circle</span><span class="p">,</span> <span class="n">Rectangle</span><span class="p">,</span> <span class="n">Arc</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-</span><span class="line">        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-</span><span class="line">    <span class="n">hoop</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="mf">7.5</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">backboard</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.5</span><span class="p">),</span> <span class="mi">60</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">outer_box</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
-</span><span class="line">                          <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">inner_box</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
-</span><span class="line">                          <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">top_free_throw</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">142.5</span><span class="p">),</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
-</span><span class="line">                         <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">bottom_free_throw</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">142.5</span><span class="p">),</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span class="line">                            <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;dashed&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">restricted</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
-</span><span class="line">                     <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">corner_three_a</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">220</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
-</span><span class="line">                               <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">corner_three_b</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="mi">220</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">three_arc</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">475</span><span class="p">,</span> <span class="mi">475</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">22</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">158</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
-</span><span class="line">                    <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">center_outer_arc</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">422.5</span><span class="p">),</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span class="line">                           <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">center_inner_arc</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">422.5</span><span class="p">),</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span class="line">                           <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">court_elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">hoop</span><span class="p">,</span> <span class="n">backboard</span><span class="p">,</span> <span class="n">outer_box</span><span class="p">,</span> <span class="n">inner_box</span><span class="p">,</span> <span class="n">top_free_throw</span><span class="p">,</span>
-</span><span class="line">                      <span class="n">bottom_free_throw</span><span class="p">,</span> <span class="n">restricted</span><span class="p">,</span> <span class="n">corner_three_a</span><span class="p">,</span>
-</span><span class="line">                      <span class="n">corner_three_b</span><span class="p">,</span> <span class="n">three_arc</span><span class="p">,</span> <span class="n">center_outer_arc</span><span class="p">,</span>
-</span><span class="line">                      <span class="n">center_inner_arc</span><span class="p">]</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">outer_lines</span><span class="p">:</span>
-</span><span class="line">        <span class="n">outer_lines</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">250</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">470</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
-</span><span class="line">                                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">        <span class="n">court_elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outer_lines</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">court_elements</span><span class="p">:</span>
-</span><span class="line">        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">ax</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>We want to create an array of shooting percentages across the different locations in our plot. I decided to group locations into evenly spaced hexagons using matplotlib’s hexbin function (http://matplotlib.org/api/pyplot_api.html). This function will count the number of times a shot is taken from a location in each of the hexagons.</p>
-
-<p>The hexagons are evenly spaced across the xy grid. The variable “gridsize” controls the number of hexagons. The variable “extent” controls where the first hexagon and last hexagon are drawn (ordinarily the first hexagon is drawn based on the location of the first shot).</p>
-
-<p>Computing shooting percentages requires counting the number of made and taken shots in each hexagon, so I run hexbin once using all shots taken and once using only the location of made shots. Then I simply divide the number of made shots by taken shots at each location.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">find_shootingPcts</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">gridNum</span><span class="p">):</span>
-</span><span class="line">    <span class="n">x</span> <span class="o">=</span> <span class="n">shot_df</span><span class="o">.</span><span class="n">LOC_X</span><span class="p">[</span><span class="n">shot_df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">]</span> <span class="c">#i want to make sure to only include shots I can draw</span>
-</span><span class="line">    <span class="n">y</span> <span class="o">=</span> <span class="n">shot_df</span><span class="o">.</span><span class="n">LOC_Y</span><span class="p">[</span><span class="n">shot_df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">]</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">x_made</span> <span class="o">=</span> <span class="n">shot_df</span><span class="o">.</span><span class="n">LOC_X</span><span class="p">[(</span><span class="n">shot_df</span><span class="p">[</span><span class="s">&#39;SHOT_MADE_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">shot_df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">)]</span>
-</span><span class="line">    <span class="n">y_made</span> <span class="o">=</span> <span class="n">shot_df</span><span class="o">.</span><span class="n">LOC_Y</span><span class="p">[(</span><span class="n">shot_df</span><span class="p">[</span><span class="s">&#39;SHOT_MADE_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">shot_df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">)]</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#compute number of shots made and taken from each hexbin location</span>
-</span><span class="line">    <span class="n">hb_shot</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hexbin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">gridsize</span><span class="o">=</span><span class="n">gridNum</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">250</span><span class="p">,</span><span class="mi">250</span><span class="p">,</span><span class="mi">425</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">));</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="c">#don&#39;t want to show this figure!</span>
-</span><span class="line">    <span class="n">hb_made</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hexbin</span><span class="p">(</span><span class="n">x_made</span><span class="p">,</span> <span class="n">y_made</span><span class="p">,</span> <span class="n">gridsize</span><span class="o">=</span><span class="n">gridNum</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">250</span><span class="p">,</span><span class="mi">250</span><span class="p">,</span><span class="mi">425</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">),</span><span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Reds</span><span class="p">);</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#compute shooting percentage</span>
-</span><span class="line">    <span class="n">ShootingPctLocs</span> <span class="o">=</span> <span class="n">hb_made</span><span class="o">.</span><span class="n">get_array</span><span class="p">()</span> <span class="o">/</span> <span class="n">hb_shot</span><span class="o">.</span><span class="n">get_array</span><span class="p">()</span>
-</span><span class="line">    <span class="n">ShootingPctLocs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ShootingPctLocs</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#makes 0/0s=0</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">(</span><span class="n">ShootingPctLocs</span><span class="p">,</span> <span class="n">hb_shot</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>I really liked how Savvas Tjortjoglou included players’ pictures in his shooting charts, so I recycled this part of his code too. The picture will appear in the bottom right hand corner of the shooting chart</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">acquire_playerPic</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span> <span class="n">zoom</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">250</span><span class="p">,</span><span class="mi">400</span><span class="p">)):</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span>  <span class="n">offsetbox</span> <span class="k">as</span> <span class="n">osb</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">urllib</span>
-</span><span class="line">    <span class="n">pic</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="s">&quot;http://stats.nba.com/media/players/230x185/&quot;</span><span class="o">+</span><span class="n">PlayerID</span><span class="o">+</span><span class="s">&quot;.png&quot;</span><span class="p">,</span><span class="n">PlayerID</span><span class="o">+</span><span class="s">&quot;.png&quot;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">player_pic</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">pic</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span><span class="line">    <span class="n">img</span> <span class="o">=</span> <span class="n">osb</span><span class="o">.</span><span class="n">OffsetImage</span><span class="p">(</span><span class="n">player_pic</span><span class="p">,</span> <span class="n">zoom</span><span class="p">)</span>
-</span><span class="line">    <span class="c">#img.set_offset(offset)</span>
-</span><span class="line">    <span class="n">img</span> <span class="o">=</span> <span class="n">osb</span><span class="o">.</span><span class="n">AnnotationBbox</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span><span class="n">xycoords</span><span class="o">=</span><span class="s">&#39;data&#39;</span><span class="p">,</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">box_alignment</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">frameon</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">img</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>I want to depict shooting percentage using a sequential colormap - more red circles = better shooting percentage. The “reds” colormap looks great, but would depict a 0% shooting percentage as white (http://matplotlib.org/users/colormaps.html), and white circles will not appear in my plots. I want 0% shooting to be slight pink, so below I modify the reds colormap.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#cmap = plt.cm.Reds</span>
-</span><span class="line"><span class="c">#cdict = cmap._segmentdata</span>
-</span><span class="line"><span class="n">cdict</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class="line">    <span class="s">&#39;blue&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.6313725709915161</span><span class="p">,</span> <span class="mf">0.6313725709915161</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.4470588266849518</span><span class="p">,</span> <span class="mf">0.4470588266849518</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.29019609093666077</span><span class="p">,</span> <span class="mf">0.29019609093666077</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.11372549086809158</span><span class="p">,</span> <span class="mf">0.11372549086809158</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.05098039284348488</span><span class="p">,</span> <span class="mf">0.05098039284348488</span><span class="p">)],</span>
-</span><span class="line">    <span class="s">&#39;green&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.7333333492279053</span><span class="p">,</span> <span class="mf">0.7333333492279053</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.572549045085907</span><span class="p">,</span> <span class="mf">0.572549045085907</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.4156862795352936</span><span class="p">,</span> <span class="mf">0.4156862795352936</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.0941176488995552</span><span class="p">,</span> <span class="mf">0.0941176488995552</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)],</span>
-</span><span class="line">    <span class="s">&#39;red&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.9882352948188782</span><span class="p">,</span> <span class="mf">0.9882352948188782</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.9882352948188782</span><span class="p">,</span> <span class="mf">0.9882352948188782</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9843137264251709</span><span class="p">,</span> <span class="mf">0.9843137264251709</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.7960784435272217</span><span class="p">,</span> <span class="mf">0.7960784435272217</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.40392157435417175</span><span class="p">,</span> <span class="mf">0.40392157435417175</span><span class="p">)]</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="n">mymap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="s">&#39;my_colormap&#39;</span><span class="p">,</span> <span class="n">cdict</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Okay, now lets put it all together. The large function below will use the functions above to create a shot chart depicting shooting percentage as the color of a circle (more red = better shooting %) and the number of shots as the size of a circle (larger circle = more shots). One note about the circle sizes, the size of a circle can increase until they start to overlap. When they start to overlap, I prevent them from growing.</p>
-
-<p>In this function, I compute the shooting percentages and number of shots at each location. Then I draw circles depicting the number of shots taken at that location (circle size) and the shooting percentage at that location (circle color).</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">gridNum</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Circle</span>
-</span><span class="line">    <span class="n">x</span> <span class="o">=</span> <span class="n">shot_df</span><span class="o">.</span><span class="n">LOC_X</span><span class="p">[</span><span class="n">shot_df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">]</span>
-</span><span class="line">    <span class="n">y</span> <span class="o">=</span> <span class="n">shot_df</span><span class="o">.</span><span class="n">LOC_Y</span><span class="p">[</span><span class="n">shot_df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">]</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#compute shooting percentage and # of shots</span>
-</span><span class="line">    <span class="p">(</span><span class="n">ShootingPctLocs</span><span class="p">,</span> <span class="n">shotNumber</span><span class="p">)</span> <span class="o">=</span> <span class="n">find_shootingPcts</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">gridNum</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#draw figure and court</span>
-</span><span class="line">    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">plot_size</span><span class="p">)</span><span class="c">#(12,7)</span>
-</span><span class="line">    <span class="n">cmap</span> <span class="o">=</span> <span class="n">mymap</span> <span class="c">#my modified colormap</span>
-</span><span class="line">    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span> <span class="c">#where to place the plot within the figure</span>
-</span><span class="line">    <span class="n">draw_court</span><span class="p">(</span><span class="n">outer_lines</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">250</span><span class="p">,</span><span class="mi">250</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="o">-</span><span class="mi">25</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#draw player image</span>
-</span><span class="line">    <span class="n">zoom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">plot_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="mf">12.0</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span> <span class="c">#how much to zoom the player&#39;s pic. I have this hackily dependent on figure size</span>
-</span><span class="line">    <span class="n">img</span> <span class="o">=</span> <span class="n">acquire_playerPic</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span> <span class="n">zoom</span><span class="p">)</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#draw circles</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">shots</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ShootingPctLocs</span><span class="p">):</span>
-</span><span class="line">        <span class="n">restricted</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">(</span><span class="n">shotNumber</span><span class="o">.</span><span class="n">get_offsets</span><span class="p">()[</span><span class="n">i</span><span class="p">],</span> <span class="n">radius</span><span class="o">=</span><span class="n">shotNumber</span><span class="o">.</span><span class="n">get_array</span><span class="p">()[</span><span class="n">i</span><span class="p">],</span>
-</span><span class="line">                            <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="n">shots</span><span class="p">),</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-</span><span class="line">        <span class="k">if</span> <span class="n">restricted</span><span class="o">.</span><span class="n">radius</span> <span class="o">&gt;</span> <span class="mi">240</span><span class="o">/</span><span class="n">gridNum</span><span class="p">:</span> <span class="n">restricted</span><span class="o">.</span><span class="n">radius</span><span class="o">=</span><span class="mi">240</span><span class="o">/</span><span class="n">gridNum</span>
-</span><span class="line">        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">restricted</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#draw color bar</span>
-</span><span class="line">    <span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.92</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span>
-</span><span class="line">    <span class="n">cb</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ColorbarBase</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s">&#39;vertical&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s">&#39;Shooting %&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">cb</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
-</span><span class="line">    <span class="n">cb</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">([</span><span class="s">&#39;0%&#39;</span><span class="p">,</span><span class="s">&#39;25%&#39;</span><span class="p">,</span> <span class="s">&#39;50%&#39;</span><span class="p">,</span><span class="s">&#39;75%&#39;</span><span class="p">,</span> <span class="s">&#39;100%&#39;</span><span class="p">])</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">ax</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Ok, thats it! Now, because I’m a t-wolves fan, I’ll output the shot charts of top 6 t-wolves in minutes this year.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">PlayerID</span> <span class="o">=</span> <span class="s">&#39;203952&#39;</span> <span class="c">#andrew wiggins</span>
-</span><span class="line"><span class="n">shot_df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/shotChart_wiggins.png" /></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">PlayerID</span> <span class="o">=</span> <span class="s">&#39;1626157&#39;</span> <span class="c">#karl anthony towns</span>
-</span><span class="line"><span class="n">shot_df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/shotChart_towns.png" /></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">PlayerID</span> <span class="o">=</span> <span class="s">&#39;203897&#39;</span> <span class="c">#zach lavine</span>
-</span><span class="line"><span class="n">shot_df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/shotChart_lavine.png" /></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">PlayerID</span> <span class="o">=</span> <span class="s">&#39;203476&#39;</span> <span class="c">#gorgui deing</span>
-</span><span class="line"><span class="n">shot_df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/shotChart_dieng.png" /></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">PlayerID</span> <span class="o">=</span> <span class="s">&#39;2755&#39;</span> <span class="c">#kevin martin</span>
-</span><span class="line"><span class="n">shot_df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/shotChart_martin.png" /></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">PlayerID</span> <span class="o">=</span> <span class="s">&#39;201937&#39;</span> <span class="c">#ricky rubio</span>
-</span><span class="line"><span class="n">shot_df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/shotChart_rubio.png" /></p>
-
-<p>One concern with my plots is the use of hexbin. It’s a bit hacky. In particular, it does not account for the nonlinearity produced by the 3 point line (some hexbins include both long 2-pt shots and 3-pt shots). It would be nice to limit some bins to 3-pt shots, but I can’t think of a way to do this without hardcoding the locations. One advantage with the hexbin method is I can easily change the number of bins. I’m not sure I could produce equivalent flexibility with a plot that bins 2-pt and 3-pt shots seperately.</p>
-
-<p>Another concern is my plots treat all shots as equal, which is not fair. Shooting 40% from the restricted area and behind the 3-pt line are very different. Austin Clemens accounts for this by plotting shooting percentage relative to league average. Maybe I’ll implement something similar in the future.</p>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -5830,6 +5507,10 @@ Name: Name, dtype: object
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/09/20/attention-in-a-convolutional-neural-net/">Attention in a Convolutional Neural Net</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/">Revisting NBA Career Predictions From Rookie Performance...again</a>
       </li>
     
@@ -5843,10 +5524,6 @@ Name: Name, dtype: object
     
       <li class="post">
         <a href="/blog/2016/05/02/an-introduction-to-neural-networks-part-2/">An Introduction to Neural Networks: Part 2</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/04/29/an-introduction-to-neural-networks-part-1/">An Introduction to Neural Networks: Part 1</a>
       </li>
     
   </ul>

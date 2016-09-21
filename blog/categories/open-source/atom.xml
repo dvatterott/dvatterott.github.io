@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Open Source | Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/blog/categories/open-source/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2016-07-31T22:14:31-04:00</updated>
+  <updated>2016-09-21T15:36:29-04:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,57 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Attention in a Convolutional Neural Net]]></title>
+    <link href="http://www.danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net/"/>
+    <updated>2016-09-20T19:51:01-04:00</updated>
+    <id>http://www.danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net</id>
+    <content type="html"><![CDATA[<p>This summer I had the pleasure of attending the <a href="http://cbmm.mit.edu/">Brains, Minds, and Machines</a> summer course at the <a href="http://www.mbl.edu/">Marine Biology Laboratory</a>. While there, I saw cool research, met awesome scientists, and completed an independent project. In this blog post, I describe my project.</p>
+
+<p>In 2012, Krizhevsky et al. released a <a href="http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf">convolutional neural network</a> that completely blew away the field at the <a href="http://www.image-net.org/">imagenet challenge</a>. This model is called “Alexnet,” and 2012 marks the beginning of neural networks’ resurgence in the machine learning community.</p>
+
+<p>Alexnet’s domination was not only exciting for the machine learning community. It was also exciting for the visual neuroscience community whose descriptions of the visual system closely matched alexnet (e.g., <a href="http://maxlab.neuro.georgetown.edu/hmax">HMAX</a>). <a href="http://mcgovern.mit.edu/principal-investigators/james-dicarlo">Jim DiCarlo</a> gave an awesome talk at the summer course describing his research comparing the output of neurons in the visual system and the output of “neurons” in alexnet (you can find the article <a href="https://physics.ucsd.edu/neurophysics/courses/physics_171/DeCarlo_reprint.pdf">here</a>).</p>
+
+<p><img src="/images/BMM_CNN/visual_system_models.png" /></p>
+
+<p>I find the similarities between the visual system and convolutional neural networks exciting, but check out the depictions of alexnet and the visual system above. Alexnet is depicted in the upper image. The visual system is depicted in the lower image. Comparing the two images is not fair, but the visual system is obviously vastly more complex than alexnet.</p>
+
+<p>In my project, I applied a known complexity of the biological visual system to a convolutional neural network. Specifically, I incoporated visual attention into the network. <a href="https://en.wikipedia.org/wiki/Biased_Competition_Theory">Visual attention</a> refers to our ability to focus cognitive processing onto a subset of the environment. Check out <a href="https://www.youtube.com/watch?v=vJG698U2Mvo">this video</a> for an incredibly 90s demonstration of visual attention.</p>
+
+<p>In this post, I demonstrate that implementing a basic version of visual attention in a convolutional neural net improves performance of the CNN, but only when classifying noisy images, and not when classifying relatively noiseless images.</p>
+
+<p>Code for everything described in this post can be found on <a href="https://github.com/dvatterott/BMM_attentional_CNN">my github page</a>. In creating this model, I cribbed code from both <a href="http://jacobcv.blogspot.com/2016/08/class-activation-maps-in-keras.html">Jacob Gildenblat</a> and <a href="https://github.com/heuritech/convnets-keras">this implementation of alexnet</a>.</p>
+
+<p>I implemented my model using the <a href="https://keras.io/">Keras library</a> with a <a href="https://theano.readthedocs.io/en/latest/">Theano backend</a>, and I tested my model on the <a href="https://en.wikipedia.org/wiki/MNIST_database">MNIST database</a>. The MNIST database is composed of images of handwritten numbers. The task is to design a model that can accurately guess what number is written in the image. This is a relatively easy task, and the <a href="http://yann.lecun.com/exdb/mnist/">best models are over 99% accurate</a>.</p>
+
+<p>I chose MNIST because its an easy problem, which allows me to use a small network. A small network is both easy to train and easy to understand, which is good for an exploratory project like this one.</p>
+
+<p><img src="/images/BMM_CNN/att_model2.png" /></p>
+
+<p>Above, I depict my model. This model has two <a href="http://cs231n.github.io/convolutional-networks/">convolutional layers</a>. Following the convolutional layers is a feature averaging layer which borrows methods from a <a href="http://cnnlocalization.csail.mit.edu/">recent paper out of the Torralba lab</a> and computes the average activity of units covering each location. The output of this feature averaging layer is then passed along to a fully connected layer. The fully connected layer “guesses” what the most likely digit is. My goal when I first created this network was to use this “guess” to guide where the model focused processing (i.e., attention), but I found guided models are irratic during training.</p>
+
+<p>Instead, my current model directs attention to all locations that are predictive of all digits. I haven’t toyed too much with inbetween models - models that direct attention to locations that are predictive of the <em>N</em> most likely digits.</p>
+
+<p>So what does it mean to “direct attention” in this model. Here, directing attention means that neurons covering “attended” locations are more active than neurons covering the unattended locations. I apply attention to the input of the second convolutional layer. The attentionally weighted signal passes through the second convolutional layer and passes onto the feature averaging layer. The feature averaging layer feeds to the fully connected layer, which then produces a final guess about what digit is present.</p>
+
+<p>I first tested this model on the plain MNIST set. For testing, I wanted to compare my model to a model without attention. My comparison model is the same as the model with attention except that the attention directing signal is a matrix of ones - meaning that it doesn’t have any effect on the model’s activity. I use this comparison model because it has the same architecture as the model with attention.</p>
+
+<p>I depict the results of my attentional and comparison models below. On the X-axis is the test phase (10k trials) following each training epoch (60k trials). On the Y-axis is percent accuracy during the test phase. I did 3 training runs with both sets of models. All models gave fairly similar results, which led to small error bars (these depict standard error). The results are … dissapointing. As you can see both the model with attention and the comparison model perform similarly. There might be an initial impact of attention, but this impact is slight.</p>
+
+<p><img src="/images/BMM_CNN/model_performance_nonoise.png" /></p>
+
+<p>This result was a little dissapointing (since I’m an attention researcher and consider attention an important part of cognition), but it might not be so surprising given the task. If I gave you the task of naming digits, this task would be virtually effortless; probably so effortless that you would not have to pay very much attention to the task. You could probably talk on the phone or text while doing this task. Basically, I might have failed to find an effect of attention because this task is so easy that it does not require attention.</p>
+
+<p>I decided to try my network when the task was a little more difficult. To make the task more difficult, I added random noise to each image (thank you to Nancy Kanwisher for the suggestion). This trick of adding noise to images is one that’s frequently done in psychophysical attention expeirments, so it would be fitting if it worked here.</p>
+
+<p><img src="/images/BMM_CNN/model_performance_noise.png" /></p>
+
+<p>The figure above depicts model performance on noisy images. The models are the as before, but this time the model with attention is far superior to the comparison model. Good news for attention researchers! This work suggests that visual attentional mechanisms similar to those in the brain may be beneficial in convolutional neural networks, and this effect is particularly strong with the images are noisy.</p>
+
+<p>This work bears superficial similarity to recent <a href="http://arxiv.org/pdf/1603.01417.pdf">language translation and question answering models</a>. Models like the cited one report using a biologically inspired version of attention, and I agree they do, but they do not use attention in the same way that I am here. I believe this difference demonstrates a problem with what we call “attention.” Attention is not a single cognitive process. Instead, its a family of cognitive processes that we’ve simply given the same name. Thats not to say these forms of attention are completely distinct, but they likely involve different information transformations and probably even different brain regions.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Revisting NBA Career Predictions From Rookie Performance...again]]></title>
@@ -1885,335 +1936,6 @@ Output
 <p>Okay, all this is great, but that was a really simple problem, and I said that neural networks could solve interesting problems!</p>
 
 <p>Well… this post is already longer than I anticipated. I will follow-up this post with another post explaining how we can expand neural networks to solve more interesting problems.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Revisiting NBA Career Predictions From Rookie Performance]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/"/>
-    <updated>2016-04-08T21:19:25-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance</id>
-    <content type="html"><![CDATA[<p>In this post I wanted to do a quick follow up to a previous post about <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">predicting career nba performance from rookie year data</a>.</p>
-
-<p>After my previous post, I started to get a little worried about my career prediction model. Specifically, I started to wonder about whether my model was <a href="https://en.wikipedia.org/wiki/Bias%E2%80%93variance_tradeoff">underfitting or overfitting the data</a>. Underfitting occurs when the model has too much “bias” and cannot accomodate the data’s shape. <a href="https://en.wikipedia.org/wiki/Overfitting">Overfitting</a> occurs when the model is too flexible and can account for all variance in a data set - even variance due to noise. In this post, I will quickly re-create my player prediction model, and investigate whether underfitting and overfitting are a problem.</p>
-
-<p>Because this post largely repeats a previous one, I haven’t written quite as much about the code. If you would like to read more about the code, see my previous posts.</p>
-
-<p>As usual, I will post all code as a jupyter notebook on my <a href="https://github.com/dvatterott/jupyter_notebooks/blob/master/nba_rookie_regression2.ipynb">github</a>.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">from</span> <span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">future</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span> <span class="kn">import</span> <span class="nn">print_function</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class='line'><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">mpl_style</span> <span class="o">=</span> <span class="err">‘</span><span class="n">default</span><span class="err">’</span> <span class="c">#load matplotlib for plotting</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="err">‘</span><span class="n">ggplot</span><span class="err">’</span><span class="p">)</span> <span class="c">#im addicted to ggplot. so pretty.</span>
-</span><span class='line'><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="err">‘</span><span class="n">font</span><span class="o">.</span><span class="n">family</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Bitstream</span> <span class="n">Vera</span> <span class="n">Sans</span><span class="err">’</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Load the data. Reminder - this data is still available on my <a href="https://github.com/dvatterott/nba_project">github</a>.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="err">‘</span><span class="n">nba_bballref_rookie_stats_2016_Mar_15</span><span class="o">.</span><span class="n">pkl</span><span class="err">’</span><span class="p">)</span> <span class="c">#here’s the rookie year data&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rook_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="err">‘</span><span class="n">Career</span> <span class="n">Games</span><span class="err">’</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">50</span>
-</span><span class='line'><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">1980</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;remove-rookies-from-before-1980-and-who-have-played-less-than-50-games-i-also-remove-some-features-that-seem-irrelevant-or-unfair&quot;</span><span class="o">&gt;</span><span class="n">remove</span> <span class="n">rookies</span> <span class="kn">from</span> <span class="nn">before</span> <span class="mi">1980</span> <span class="ow">and</span> <span class="n">who</span> <span class="n">have</span> <span class="n">played</span> <span class="n">less</span> <span class="n">than</span> <span class="mi">50</span> <span class="n">games</span><span class="o">.</span> <span class="n">I</span> <span class="n">also</span> <span class="n">remove</span> <span class="n">some</span> <span class="n">features</span> <span class="n">that</span> <span class="n">seem</span> <span class="n">irrelevant</span> <span class="ow">or</span> <span class="n">unfair</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
-</span><span class='line'><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Career</span> <span class="n">Games</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Name</span><span class="err">’</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Load more data, and normalize it data for the <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">PCA transformation</a>.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="err">‘</span><span class="n">nba_bballref_career_stats_2016_Mar_15</span><span class="o">.</span><span class="n">pkl</span><span class="err">’</span><span class="p">)</span>
-</span><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">G</span><span class="err">’</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">50</span><span class="p">]</span>
-</span><span class='line'><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Name</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">G</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">GS</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">MP</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">FG</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">FGA</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">FG</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="mi">3</span><span class="n">P</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="mi">2</span><span class="n">P</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">FT</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">TRB</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">PTS</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">ORtg</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">DRtg</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">PER</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">TS</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="mi">3</span><span class="n">PAr</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">FTr</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">ORB</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">DRB</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">TRB</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">AST</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">STL</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">BLK</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">TOV</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">USG</span><span class="o">%</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">OWS</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">DWS</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">WS</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">WS</span><span class="o">/</span><span class="mi">48</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">OBPM</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">DBPM</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">BPM</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">VORP</span><span class="err">’</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class='line'><span class="n">ScaleModel</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Use <a href="https://en.wikipedia.org/wiki/K-means_clustering">k-means</a> to group players according to their performance. See my post on <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">grouping players</a> for more info.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">reduced_model</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">whiten</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data into the 5 PCA components space</span>
-</span><span class='line'><span class="n">final_fit</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#fit 6 clusters</span>
-</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">kmeans_label</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span> <span class="c">#label each data point with its clusters</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Run a separate regression on each group of players. I calculate mean absolute error (a variant of <a href="https://en.wikipedia.org/wiki/Mean_squared_error">mean squared error</a>) for each model. I used mean absolute error because it’s on the same scale as the data, and easier to interpret. I will use this later to evaluate just how accurate these models are. Quick reminder - I am trying to predict career WS/48 with MANY predictor variables from rookie year performance such rebounding and scoring statistics.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="kn">as</span> <span class="nn">sm</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span> <span class="c">#import function for calculating mean squared error.&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">1980</span><span class="p">][</span><span class="err">‘</span><span class="n">kmeans_label</span><span class="err">’</span><span class="p">]</span>
-</span><span class='line'><span class="n">rookie_df_drop</span><span class="p">[</span><span class="err">‘</span><span class="n">kmeans_label</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span> <span class="c">#label each data point with its clusters&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">estHold</span> <span class="o">=</span> <span class="p">[[],[],[],[],[],[]]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">score</span> <span class="o">=</span> <span class="p">[]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span><span class="p">)):</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Grouper</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span> <span class="c">#do one regression at a time</span>
-</span><span class='line'><span class="n">Yearer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">1980</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Group1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Grouper</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">Yearer</span><span class="p">]</span>
-</span><span class='line'><span class="n">Y</span> <span class="o">=</span> <span class="n">Group1</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#get predictor data</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span><span class="p">]</span>
-</span><span class='line'><span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="c">#get predicted data</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe    </span>
-</span><span class='line'>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
-</span><span class='line'><span class="n">est</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span><span class="p">)</span> <span class="c">#fit with linear regression model</span>
-</span><span class='line'><span class="n">est</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-</span><span class='line'><span class="n">estHold</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">est</span>
-</span><span class='line'><span class="n">score</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)))</span> <span class="c">#calculate the mean squared error</span>
-</span><span class='line'><span class="c">#print est.summary()</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="c">#plot each regression&#39;s prediction against actual data</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="n">Y</span><span class="p">,</span><span class="s">&#39;o&#39;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.01</span><span class="p">),</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Group </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.15</span><span class="p">,</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span><span class="s">&#39;$r^2$=</span><span class="si">%.2f</span><span class="s">&#39;</span><span class="o">%</span><span class="n">est</span><span class="o">.</span><span class="n">rsquared</span><span class="p">)</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">])</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure>
-</code></pre>
-
-<p><img src="/images/regression2NBA/original_model.png" /></p>
-
-<p>More quick reminders - predicted performances are on the Y-axis, actual performances are on the X-axis, and the red line is the <a href="https://en.wikipedia.org/wiki/Identity_line">identity line</a>. Thus far, everything has been exactly the same as my previous post (although my group labels are different).</p>
-
-<p>I want to investigate whether the model is overfitting the data. If the data is overfitting the data, then the error should go up when training and testing with different datasets (because the model was fitting itself to noise and noise changes when the datasets change). To investigate whether the model overfits the data, I will evaluate whether the model “generalizes” via <a href="https://en.wikipedia.org/wiki/Cross-validation_%28statistics%29">cross-validation</a>.</p>
-
-<p>The reason I’m worried about overfitting is I used a LOT of predictors in these models and the number of predictors might have allowed the model the model to fit noise in the predictors.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span> <span class="c">#I am using sklearns linear regression because it plays well with their cross validation function</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">cross_validation</span> <span class="c">#import the cross validation function&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">1980</span><span class="p">][</span><span class="err">‘</span><span class="n">kmeans_label</span><span class="err">’</span><span class="p">]</span>
-</span><span class='line'><span class="n">rookie_df_drop</span><span class="p">[</span><span class="err">‘</span><span class="n">kmeans_label</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span> <span class="c">#label each data point with its clusters&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span><span class="p">)):</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Grouper</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span> <span class="c">#do one regression at a time</span>
-</span><span class='line'><span class="n">Yearer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">1980</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Group1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Grouper</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">Yearer</span><span class="p">]</span>
-</span><span class='line'><span class="n">Y</span> <span class="o">=</span> <span class="n">Group1</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#get predictor data</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span><span class="p">]</span>
-</span><span class='line'><span class="n">Group1_rookie</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="c">#get predicted data</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">Group1_rookie</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe    </span>
-</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c"># Adds a constant term to the predictor</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">est</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span> <span class="c">#fit with linear regression model</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">this_scores</span> <span class="o">=</span> <span class="n">cross_validation</span><span class="o">.</span><span class="n">cross_val_score</span><span class="p">(</span><span class="n">est</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span><span class="n">cv</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s">&#39;mean_absolute_error&#39;</span><span class="p">)</span> <span class="c">#find mean square error across different datasets via cross validations</span>
-</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;Group &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
-</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;Initial Mean Absolute Error: &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">])</span>
-</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;Cross Validation MAE: &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">this_scores</span><span class="p">)))[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">])</span> <span class="c">#find the mean MSE across validations </span>
-</span></code></pre></td></tr></table></div></figure>
-
-Group 0
-Initial Mean Absolute Error: 0.0161
-Cross Validation MAE: 0.0520
-Group 1
-Initial Mean Absolute Error: 0.0251
-Cross Validation MAE: 0.0767
-Group 2
-Initial Mean Absolute Error: 0.0202
-Cross Validation MAE: 0.0369
-Group 3
-Initial Mean Absolute Error: 0.0200
-Cross Validation MAE: 0.0263
-Group 4
-Initial Mean Absolute Error: 0.0206
-Cross Validation MAE: 0.0254
-Group 5
-Initial Mean Absolute Error: 0.0244
-Cross Validation MAE: 0.0665
-</code></pre>
-
-<p>Above I print out the model’s initial mean absolute error and median absolute error when fitting cross-validated data.</p>
-
-<p>The models definitely have more error when cross validated. The change in error is worse in some groups than others. For instance, error dramatically increases in Group 1. Keep in mind that the scoring measure here is mean absolute error, so error is in the same scale as WS/48. An average error of 0.04 in WS/48 is sizable, leaving me worried that the models overfit the data.</p>
-
-<p>Unfortunately, Group 1 is the “scorers” group, so the group with most the interesting players is where the model fails most…</p>
-
-<p>Next, I will look into whether my models underfit the data. I am worried that my models underfit the data because I used linear regression, which has very little flexibility. To investigate this, I will plot the <a href="https://en.wikipedia.org/wiki/Errors_and_residuals">residuals</a> of each model. Residuals are the error between my model’s prediction and the actual performance.</p>
-
-<p>Linear regression assumes that residuals are uncorrelated and evenly distributed around 0. If this is not the case, then the linear regression is underfitting the data.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#plot the residuals. there’s obviously a problem with under/over prediction&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">final_fit</span><span class="o">.</span><span class="n">labels_</span><span class="p">)):</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Grouper</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">group</span> <span class="c">#do one regression at a time</span>
-</span><span class='line'><span class="n">Yearer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">1980</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Group1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Grouper</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">Yearer</span><span class="p">]</span>
-</span><span class='line'><span class="n">Y</span> <span class="o">=</span> <span class="n">Group1</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="c">#get predictor data</span>
-</span><span class='line'><span class="n">resid</span> <span class="o">=</span> <span class="n">estHold</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">resid</span> <span class="c">#extract residuals</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="c">#plot each regression&#39;s prediction against actual data</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">resid</span><span class="p">,</span><span class="s">&#39;o&#39;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;axes.color_cycle&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Group </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">])</span>
-</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.1</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure>
-</code></pre>
-
-<p><img src="/images/regression2NBA/residuals.png" /></p>
-
-<p>Residuals are on the Y-axis and career performances are on the X-axis. Negative residuals are over predictions (the player is worse than my model predicts) and postive residuals are under predictions (the player is better than my model predicts). I don’t test this, but the residuals appear VERY correlated. That is, the model tends to over estimate bad players (players with WS/48 less than 0.0) and under estimate good players. Just to clarify, non-correlated residuals would have no apparent slope.</p>
-
-<p>This means the model is making systematic errors and not fitting the actual shape of the data. I’m not going to say the model is damned, but this is an obvious sign that the model needs more flexibility.</p>
-
-<p>No model is perfect, but this model definitely needs more work. I’ve been playing with more flexible models and will post these models here if they do a better job predicting player performance.</p>
 ]]></content>
   </entry>
   
