@@ -334,3 +334,5 @@ plt.close('all') #close the plot
 {% endcodeblock %}
 
 {% video {{ root_url }}/images/Event_41.mp4 %}
+
+I've been told this video does not work for all users. I've also posted it on [youtube](https://youtu.be/ZPvQOorvVtI).
