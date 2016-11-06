@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Tutorial | Dan Vatterott]]></title>
+  <link href="http://www.danvatterott.com/blog/categories/tutorial/atom.xml" rel="self"/>
+  <link href="http://www.danvatterott.com/"/>
+  <updated>2016-11-06T14:10:47-05:00</updated>
+  <id>http://www.danvatterott.com/</id>
+  <author>
+    <name><![CDATA[Dan Vatterott]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[PCA Tutorial]]></title>
+    <link href="http://www.danvatterott.com/blog/2016/11/06/pca-tutorial/"/>
+    <updated>2016-11-06T13:33:50-05:00</updated>
+    <id>http://www.danvatterott.com/blog/2016/11/06/pca-tutorial</id>
+    <content type="html"><![CDATA[<p><a href="http://setosa.io/ev/principal-component-analysis/">Principal Component Analysis</a> (PCA) is an important method for dimensionality reduction and data cleaning. I have used PCA in the past on this blog for estimating the latent variables that underlie player statistics. For example, I might have two features: average number of offensive rebounds and average number of defensive rebounds. The two features are highly correlated because a latent variable, the player’s <em>rebounding ability</em>, explains common variance in the two features. PCA is a method for extracting these latent variables that explain common variance across features.</p>
+
+<p>In this tutorial I generate fake data in order to help gain insight into the mechanics underlying PCA.</p>
+
+<p>Below I create my first feature by sampling from a normal distribution. I create a second feature by adding a noisy normal distribution to the first feature multiplied by two. Because I generated the data here, I know it’s composed to two latent variables, and PCA should be able to identify these latent variables.</p>
+
+<p>I generate the data and plot it below.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</span><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="err">‘</span><span class="n">ggplot</span><span class="err">’</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c">#make sure we’re all working with the same numbers&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">2.0</span><span class="p">,[</span><span class="mi">100</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="n">X</span><span class="p">,</span><span class="n">X</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">8.0</span><span class="p">,[</span><span class="mi">100</span><span class="p">,</span><span class="mi">1</span><span class="p">])]</span>
+</span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="err">’</span><span class="n">o</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Feature</span> <span class="mi">1</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Feature</span> <span class="mi">2</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="err">‘</span><span class="n">Raw</span> <span class="n">Data</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span><span class="mi">30</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/images/PCA/original_data.png" /></p>
+
+<p>The first step before doing PCA is to normalize the data. This centers each feature (each feature will have a mean of 0) and divides data by its standard deviation (changing the standard deviation to 1). Normalizing the data puts all features on the same scale. Having features on the same scale is important because features might be more or less variable because of measurement rather than the latent variables producing the feature. For example, in basketball, points are often accumulated in sets of 2s and 3s, while rebounds are accumulated one at a time. The nature of basketball puts points and rebounds on a different scales, but this doesn’t mean that the latent variables <em>scoring ability</em> and <em>rebounding ability</em> are more or less variable.</p>
+
+<p>Below I normalize and plot the data.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">stats</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">X</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">mstats</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="err">’</span><span class="n">o</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Feature</span> <span class="mi">1</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Feature</span> <span class="mi">2</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="err">‘</span><span class="n">Standardized</span> <span class="n">Data</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/images/PCA/stand_data.png" /></p>
+
+<p>After standardizing the data, I need to find the <a href="http://setosa.io/ev/eigenvectors-and-eigenvalues/">eigenvectors and eigenvalues</a>. The eigenvectors point in the direction of a component and eigenvalues represent the amount of variance explained by the component. Below, I plot the standardized data with the eigenvectors ploted with their eigenvalues as the vectors distance from the origin.</p>
+
+<p>As you can see, the blue eigenvector is longer and points in the direction with the most variability. The purple eigenvector is shorter and points in the direction with less variability.</p>
+
+<p>As expected, one component explains far more variability than the other component (becaus both my features share variance from a single latent gaussian distribution).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">X</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'><span class="p">[</span><span class="n">V</span><span class="p">,</span><span class="n">PC</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">C</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="err">’</span><span class="n">o</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">]],[</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span><span class="err">’</span><span class="n">o</span><span class="o">-</span><span class="err">‘</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">V</span><span class="p">[</span><span class="mi">1</span><span class="p">]],[</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">V</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span><span class="err">’</span><span class="n">o</span><span class="o">-</span><span class="err">‘</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Feature</span> <span class="mi">1</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Feature</span> <span class="mi">2</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="err">‘</span><span class="n">Standardized</span> <span class="n">Data</span> <span class="k">with</span> <span class="n">Eigenvectors</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/images/PCA/eigen_data.png" /></p>
+
+<p>Next I order the eigenvectors according to the magnitude of their eigenvalues. This orders the components so that the components that explain more variability occur first. I then transform the data so that they’re axis aligned. This means the first component explain variability on the x-axis and the second component explains variance on the y-axis.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">V</span><span class="p">)</span>
+</span><span class='line'><span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+</span><span class='line'><span class="n">PC</span> <span class="o">=</span> <span class="n">PC</span><span class="p">[</span><span class="n">indices</span><span class="p">,:]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">X_rotated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">PC</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_rotated</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">X_rotated</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="err">’</span><span class="n">o</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">]],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="err">’</span><span class="n">o</span><span class="o">-</span><span class="err">‘</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">V</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span><span class="err">’</span><span class="n">o</span><span class="o">-</span><span class="err">‘</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Feature</span> <span class="mi">1</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Feature</span> <span class="mi">2</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="err">‘</span><span class="n">Data</span> <span class="n">Projected</span> <span class="n">into</span> <span class="n">PC</span> <span class="n">space</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/images/PCA/trans_data.png" /></p>
+
+<p>Finally, just to make sure the PCA was done correctly, I will call PCA from the sklearn library, run it, and make sure it produces the same results as my analysis.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">()</span> <span class="c">#create PCA object</span>
+</span><span class='line'><span class="n">test</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="c">#pull out principle components&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">X_rotated</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">test</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">X_rotated</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">test</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<pre><code>(-1.0, 0.0)
+(-1.0, 0.0)
+</code></pre>
+
+]]></content>
+  </entry>
+  
+</feed>
