@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.danvatterott.com/blog/2016/11/15/sfn-2016-presentation/</loc>
+    <lastmod>2016-11-15T13:43:53-05:00</lastmod>
+  </url>
+  <url>
     <loc>http://www.danvatterott.com/blog/2016/11/06/pca-tutorial/</loc>
     <lastmod>2016-11-06T13:33:50-05:00</lastmod>
   </url>
@@ -135,5 +139,14 @@
   </url>
   <url>
     <loc>http://www.danvatterott.com/blog/categories/pca/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/neuroscience/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/sfn/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/neurophys/</loc>
   </url>
 </urlset>
