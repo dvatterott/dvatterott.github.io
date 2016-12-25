@@ -10,7 +10,7 @@ Reminder on how to post
 sudo env PATH=$PATH rake new_post['title']
 rake generate
 #rake preview?? Then call the location in another terminal. I have a bookmark for this
-mkdir ~/octopress/_posts
+mkdir ~/octopress/public/_posts
 cp -rf ~/octopress/_posts/.directory ~/octopress/public/_posts/
 rake deploy
 git add .

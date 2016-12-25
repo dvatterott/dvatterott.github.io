@@ -59,7 +59,7 @@ plt.bar([0.5,1.5],[np.mean(change),np.mean(no_change)],width=1.0)
 plt.xlim((0,3))
 plt.ylim((0,1))
 plt.ylabel('Proportion Correct Choice')
-plt.xticks((1.0,2.0),['Change Choice', 'Do not chance choice'])
+plt.xticks((1.0,2.0),['Change Choice', 'Do not change choice'])
 
 import scipy.stats as stats
 obs = np.array([[np.sum(change), np.sum(no_change)], [samples, samples]])
@@ -106,7 +106,7 @@ plt.bar([0.5,1.5],[np.mean(change),np.mean(no_change)],width=1.0)
 plt.xlim((0,3))
 plt.ylim((0,1))
 plt.ylabel('Proportion Correct Choice')
-plt.xticks((1.0,2.0),['Change Choice', 'Do not chance choice'])
+plt.xticks((1.0,2.0),['Change Choice', 'Do not change choice'])
 
 obs = np.array([[np.sum(change), np.sum(no_change)], [samples, samples]])
 print('Probability of choosing correctly if change choice: %0.2f' % np.mean(change))
