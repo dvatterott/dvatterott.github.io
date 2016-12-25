@@ -10,6 +10,8 @@ Reminder on how to post
 sudo env PATH=$PATH rake new_post['title']
 rake generate
 #rake preview?? Then call the location in another terminal. I have a bookmark for this
+mkdir ~/octopress/_posts
+cp -rf ~/octopress/_posts/.directory ~/octopress/public/_posts/
 rake deploy
 git add .
 git commit -m 'message'
@@ -23,3 +25,9 @@ To start using RVM you need to run `source /home/dan-laptop/.rvm/scripts/rvm`
 
 In 10/2016 I installed kde neon. Not sure how much of this is true with the new install (I installed ruby with rvm... and this was easy, but still need more testing)
 I changed the permissions so the sudo stuff is no longer required. Encountering other errors though...
+
+It seems that I have to copy the posts folder into the public file. Not sure why, but its not hard to do. Just copy it over. Make sure just to post the _posts folder and the .directory file though. Not the other posts. 
+
+rake preview
+netstat -tanp|grep 4000
+http://127.0.0.1:4000
