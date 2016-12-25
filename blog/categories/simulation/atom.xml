@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Simulation | Dan Vatterott]]></title>
+  <link href="http://www.danvatterott.com/blog/categories/simulation/atom.xml" rel="self"/>
+  <link href="http://www.danvatterott.com/"/>
+  <updated>2016-12-25T12:25:40-05:00</updated>
+  <id>http://www.danvatterott.com/</id>
+  <author>
+    <name><![CDATA[Dan Vatterott]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Simulating the Monty Hall Problem]]></title>
+    <link href="http://www.danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
+    <updated>2016-12-25T11:19:53-05:00</updated>
+    <id>http://www.danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
+    <content type="html"><![CDATA[<p>I’ve been hearing about the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty Hall problem</a> for years and its never quite made sense to me, so I decided to program up a quick simulation.</p>
+
+<p>In the Monty Hall problem, there is a car behind one of three doors. There are goats behind the other two doors. The contestant picks one of the three doors. Monty Hall (the game show host) then reveals that one of the two unchosen doors has a goat behind it. The question is whether the constestant should change the door they picked or keep their choice.</p>
+
+<p>My first intuition was that it doesn’t matter whether the contestant changes their choice because its equally probable that the car is behind either of the two unopened doors, but I’ve been told this is incorrect! Instead, the contestant is more likely to win the car if they change their choice.</p>
+
+<p>How can this be? Well, I decided to create a simple simulation of the Monty Hall problem in order to prove to myself that there really is an advantage to changing the chosen door and (hopefully) gain an intuition into how this works.</p>
+
+<p>Below I’ve written my little simulation. A jupyter notebook with this code is available on my <a href="https://github.com/dvatterott/jupyter_notebooks">github</a>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">copy</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">start_vect</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="c">#doors&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">samples</span> <span class="o">=</span> <span class="mi">5000</span> <span class="c">#number of simulations to run&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">change</span><span class="p">,</span> <span class="n">no_change</span> <span class="o">=</span> <span class="p">[],[]</span>
+</span><span class='line'><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c">#shuffle data</span>
+</span><span class='line'><span class="n">vect</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">start_vect</span><span class="p">)</span>
+</span><span class='line'><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#make choice</span>
+</span><span class='line'><span class="n">choice</span> <span class="o">=</span> <span class="n">vect</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+</span><span class='line'><span class="n">no_change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="c">#outcome if do not change choice</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#show bad door</span>
+</span><span class='line'><span class="k">try</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">bad</span> <span class="o">=</span> <span class="n">vect</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+</span><span class='line'><span class="k">except</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">bad</span> <span class="o">=</span> <span class="n">vect</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span> <span class="c">#outcome if change choice </span>
+</span></code></pre></td></tr></table></div></figure>
+</code></pre>
+
+<p>Here I plot the results</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</span><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="err">‘</span><span class="n">ggplot</span><span class="err">’</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">change</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">no_change</span><span class="p">)],</span><span class="n">width</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Proportion</span> <span class="n">Correct</span> <span class="n">Choice</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">2.0</span><span class="p">),[</span><span class="err">‘</span><span class="n">Change</span> <span class="n">Choice</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Do</span> <span class="ow">not</span> <span class="n">chance</span> <span class="n">choice</span><span class="err">’</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">stats</span>
+</span><span class='line'><span class="n">obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">change</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">no_change</span><span class="p">)],</span> <span class="p">[</span><span class="n">samples</span><span class="p">,</span> <span class="n">samples</span><span class="p">]])</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="err">‘</span><span class="n">Probability</span> <span class="n">of</span> <span class="n">choosing</span> <span class="n">correctly</span> <span class="k">if</span> <span class="n">change</span> <span class="n">choice</span><span class="p">:</span> <span class="o">%</span><span class="mf">0.2</span><span class="n">f</span><span class="err">’</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">change</span><span class="p">))</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="err">‘</span><span class="n">Probability</span> <span class="n">of</span> <span class="n">choosing</span> <span class="n">correctly</span> <span class="k">if</span> <span class="n">do</span> <span class="ow">not</span> <span class="n">change</span> <span class="n">choice</span><span class="p">:</span> <span class="o">%</span><span class="mf">0.2</span><span class="n">f</span><span class="err">’</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">no_change</span><span class="p">))</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="err">‘</span><span class="n">Probability</span> <span class="n">of</span> <span class="n">difference</span> <span class="n">arising</span> <span class="kn">from</span> <span class="nn">chance</span><span class="p">:</span> <span class="o">%</span><span class="mf">0.5</span><span class="n">f</span><span class="err">’</span> <span class="o">%</span> <span class="n">stats</span><span class="o">.</span><span class="n">chi2_contingency</span><span class="p">(</span><span class="n">obs</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<pre><code>Probability of choosing correctly if change choice: 0.67
+Probability of choosing correctly if do not change choice: 0.33
+Probability of difference arising from chance: 0.00000
+</code></pre>
+
+<p><img src="/images/montyhall/montyhall1.png" /></p>
+
+<p>Clearly, the contestant should change their choice!</p>
+
+<p>So now, just to make sure I am not crazy, I decided to simulate the Monty Hall problem with the contestant choosing what door to open after Monty Hall opens a door with a goat.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">change</span><span class="p">,</span> <span class="n">no_change</span> <span class="o">=</span> <span class="p">[],[]</span>
+</span><span class='line'><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+</span><span class='line'>    <span class="c">#shuffle data</span>
+</span><span class='line'>    <span class="n">vect</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">start_vect</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c">#show bad door</span>
+</span><span class='line'><span class="n">bad</span> <span class="o">=</span> <span class="n">vect</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#make choice</span>
+</span><span class='line'><span class="n">choice</span> <span class="o">=</span> <span class="n">vect</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+</span><span class='line'><span class="n">no_change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">change</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">no_change</span><span class="p">)],</span><span class="n">width</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="err">‘</span><span class="n">Proportion</span> <span class="n">Correct</span> <span class="n">Choice</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">2.0</span><span class="p">),[</span><span class="err">‘</span><span class="n">Change</span> <span class="n">Choice</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Do</span> <span class="ow">not</span> <span class="n">chance</span> <span class="n">choice</span><span class="err">’</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">change</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">no_change</span><span class="p">)],</span> <span class="p">[</span><span class="n">samples</span><span class="p">,</span> <span class="n">samples</span><span class="p">]])</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="err">‘</span><span class="n">Probability</span> <span class="n">of</span> <span class="n">choosing</span> <span class="n">correctly</span> <span class="k">if</span> <span class="n">change</span> <span class="n">choice</span><span class="p">:</span> <span class="o">%</span><span class="mf">0.2</span><span class="n">f</span><span class="err">’</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">change</span><span class="p">))</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="err">‘</span><span class="n">Probability</span> <span class="n">of</span> <span class="n">choosing</span> <span class="n">correctly</span> <span class="k">if</span> <span class="n">do</span> <span class="ow">not</span> <span class="n">change</span> <span class="n">choice</span><span class="p">:</span> <span class="o">%</span><span class="mf">0.2</span><span class="n">f</span><span class="err">’</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">no_change</span><span class="p">))</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="err">‘</span><span class="n">Probability</span> <span class="n">of</span> <span class="n">difference</span> <span class="n">arising</span> <span class="kn">from</span> <span class="nn">chance</span><span class="p">:</span> <span class="o">%</span><span class="mf">0.5</span><span class="n">f</span><span class="err">’</span> <span class="o">%</span> <span class="n">stats</span><span class="o">.</span><span class="n">chi2_contingency</span><span class="p">(</span><span class="n">obs</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<pre><code>Probability of choosing correctly if change choice: 0.51
+Probability of choosing correctly if do not change choice: 0.49
+Probability of difference arising from chance: 0.57546
+</code></pre>
+
+<p><img src="/images/montyhall/montyhall2.png" /></p>
+
+<p>Now, there is clearly no difference between whether the contestant changes their choice or not.</p>
+
+<p>So what is different about these two scenarios?</p>
+
+<p>In the first scenario, the contestant makes a choice before Monty Hall reveals which of the two unchosen options is incorrect. Here’s the intution I’ve gained by doing this - because Monty Hall cannot reveal what is behind the chosen door, when Monty Hall reveals what is behind one of the unchosen doors, this has no impact on how likely the car is to appear behind the chosen door. Yet, the probability that the car is behind the revealed door drops to 0 (because Monty Hall shows there’s a goat behind it), and the total probability must be conserved so the second unchosen door receives any belief that the car was behind the revealed door! Thus, the unchosen and unrevealed door becomes 66% likely to contain the car! I am still not 100% convinced of this new intuition, but it seems correct given these simulations!</p>
+]]></content>
+  </entry>
+  
+</feed>
