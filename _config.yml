@@ -4,11 +4,11 @@
 
 url: http://www.danvatterott.com
 title: Dan Vatterott
-subtitle: Cognitive Neuroscientist
+subtitle: Data Scientist
 author: Dan Vatterott
 simple_search: https://duckduckgo.com/
-description: Dan Vatterott is a cognitive neuroscientist studying visual attention in Jacqueline Gottlieb's lab at Columbia University. Dan Vatterott uses tools such as psychophysics, eye-tracking, and electrophysiology to study attention. 
-keywords: Dan Vatterott, Columbia, Iowa, Psychology, Neuroscience
+description: Dan Vatterott is a data scientist working as a fellow at Insight in New York. Dan Vatterott uses python and other data science tools to unlock meaning from data.
+keywords: Dan Vatterott, Columbia, Iowa, Psychology, Neuroscience, Data Science, Python, Insight, Open Source
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
 # http://www.ruby-doc.org/core-1.9.2/Time.html#method-i-strftime
@@ -65,7 +65,7 @@ default_asides: [asides/about.html, asides/recent_posts.html]
 # ----------------------- #
 
 facebook_user: dan.vatterott
-linkedin_user: dan-vatterott-41a83314
+linkedin_user: dan-vatterott
 gscholar_user: -S7mhDQAAAAJ&hl
 rgate_user: Daniel_Vatterott
 email_user: dvatterott@gmail.com

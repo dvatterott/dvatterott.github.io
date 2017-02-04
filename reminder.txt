@@ -1,21 +1,26 @@
 1. use codeblock syntax for code. The new interpreter (kramdown) doesn't like '''python - http://octopress.org/docs/plugins/codeblock/
-2  when using latex, i have to signal latex with 2 $$ instead of 1. 
+2  when using latex, i have to signal latex with 2 $$ instead of 1.
 3. remember to update the image file locations
 4. when calling sudo rake generate sudo loses the path to rake. this is some weird behavior definitely due to the hack job of ruby installations on my computer.
 5. call source ~/.profile then i just have to use sudo env PATH=$PATH rake...
 
 To fix (some of) the ruby problems, I have added a couple lines to ~/.bashrc. Now ruby is automatically in the path. I still have to use sudo env PATH=$PATH ...
 
-Reminder on how to post 
+Reminder on how to post
 sudo env PATH=$PATH rake new_post['title']
 rake generate
 #rake preview?? Then call the location in another terminal. I have a bookmark for this
 mkdir ~/octopress/public/_posts
-cp -rf ~/octopress/_posts/.directory ~/octopress/public/_posts/
+
+dan-laptop:~/octopress$ cp -r source/_includes/ public/_includes
+dan-laptop:~/octopress$ cp -r source/_posts/ public/_posts
+
+
+cp -rf ~/octopress/source/_posts/.directory ~/octopress/public/_posts/
 rake deploy
 git add .
 git commit -m 'message'
-git push . 
+git push .
 
 image example
 <img src="{{ root_url }}/images/shotChart_martin.png" />
@@ -26,7 +31,7 @@ To start using RVM you need to run `source /home/dan-laptop/.rvm/scripts/rvm`
 In 10/2016 I installed kde neon. Not sure how much of this is true with the new install (I installed ruby with rvm... and this was easy, but still need more testing)
 I changed the permissions so the sudo stuff is no longer required. Encountering other errors though...
 
-It seems that I have to copy the posts folder into the public file. Not sure why, but its not hard to do. Just copy it over. Make sure just to post the _posts folder and the .directory file though. Not the other posts. 
+It seems that I have to copy the posts folder into the public file. Not sure why, but its not hard to do. Just copy it over. Make sure just to post the _posts folder and the .directory file though. Not the other posts.
 
 rake preview
 netstat -tanp|grep 4000

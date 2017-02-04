@@ -3,28 +3,28 @@ layout: post
 title: "An Introduction to Neural Networks: Part 2"
 date: 2016-05-02 21:56:27 -0400
 comments: true
-categories: [Python, Open Source, Machine Learning, Neural Networks, AI, backpropogation] 
+categories: [Python, Open Source, Machine Learning, Neural Networks, AI, backpropogation]
 ---
 
-In a previous [post](http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/), I described how to do [backpropogation](https://en.wikipedia.org/wiki/Backpropagation) with a 2-layer [neural network](https://en.wikipedia.org/wiki/Artificial_neural_network). I've written this post assuming some familiarity with the previous post. 
+In a previous [post](http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/), I described how to do [backpropogation](https://en.wikipedia.org/wiki/Backpropagation) with a 1-layer [neural network](https://en.wikipedia.org/wiki/Artificial_neural_network). I've written this post assuming some familiarity with the previous post.
 
-When first created, 2-layer neural networks [brought about quite a bit of excitement](https://en.wikipedia.org/wiki/Perceptron), but this excitement quickly dissipated when researchers realized that 2-layer [neural networks could only solve a limited set of problems](https://en.wikipedia.org/wiki/Perceptrons_%28book%29). 
+When first created, 1-layer neural networks [brought about quite a bit of excitement](https://en.wikipedia.org/wiki/Perceptron), but this excitement quickly dissipated when researchers realized that 1-layer [neural networks could only solve a limited set of problems](https://en.wikipedia.org/wiki/Perceptrons_%28book%29).
 
 Researchers knew that adding an extra layer to the neural networks enabled neural networks to solve much more complex problems, but they didn't know how to train these more complex networks.
 
-In the previous post, I described "backpropogation," but this wasn't the portion of backpropogation that really changed the history of neural networks. What really changed neural networks is backpropogation with an extra layer. This extra layer enabled researchers to train more complex networks. The extra layer(s) is(are) called the *hidden layer(s)*. In this post, I will describe backpropogation with a hidden layer. 
+In the previous post, I described "backpropogation," but this wasn't the portion of backpropogation that really changed the history of neural networks. What really changed neural networks is backpropogation with an extra layer. This extra layer enabled researchers to train more complex networks. The extra layer(s) is(are) called the *hidden layer(s)*. In this post, I will describe backpropogation with a hidden layer.
 
 To describe backpropogation with a hidden layer, I will demonstrate how neural networks can solve the [XOR problem](https://en.wikipedia.org/wiki/Exclusive_or).
 
 In this example of the XOR problem there are four items. Each item is defined by two values. If these two values are the same, then the item belongs to one group (blue here). If the two values are different, then the item belongs to another group (red here).
 
-Below, I have depicted the XOR problem. The goal is to find a model that can distinguish between the blue and red groups based on an item's values. 
+Below, I have depicted the XOR problem. The goal is to find a model that can distinguish between the blue and red groups based on an item's values.
 
-This code is also available as a jupyter notebook on [my github](https://github.com/dvatterott/jupyter_notebooks). 
+This code is also available as a jupyter notebook on [my github](https://github.com/dvatterott/jupyter_notebooks).
 
 
 {% codeblock lang:python %}
-import numpy as np #import important libraries. 
+import numpy as np #import important libraries.
 from matplotlib import pyplot as plt
 import pandas as pd
 %matplotlib inline
@@ -42,13 +42,13 @@ plt.axis([-0.5,1.5,-0.5,1.5]);
 
 Again, each item has two values. An item's first value is represented on the x-axis. An items second value is represented on the y-axis. The red items belong to one category and the blue items belong to another.
 
-This is a non-linear problem because no linear function can segregate the groups. For instance, a horizontal line could segregate the upper and lower items and a vertical line could segregate the left and right items, but no single linear function can segregate the red and blue items. 
+This is a non-linear problem because no linear function can segregate the groups. For instance, a horizontal line could segregate the upper and lower items and a vertical line could segregate the left and right items, but no single linear function can segregate the red and blue items.
 
-We need a non-linear function to seperate the groups, and neural networks can emulate a non-linear function that segregates them. 
+We need a non-linear function to seperate the groups, and neural networks can emulate a non-linear function that segregates them.
 
 While this problem may seem relatively simple, it gave the initial neural networks quite a hard time. In fact, this is the problem that depleted much of the original enthusiasm for neural networks.
 
-Neural networks can easily solve this problem, but they require an extra layer. Below I depict a network with an extra layer (a 3-layer network). To depict the network, I use a repository available on my [github](https://github.com/dvatterott/visualise_neural_network). 
+Neural networks can easily solve this problem, but they require an extra layer. Below I depict a network with an extra layer (a 2-layer network). To depict the network, I use a repository available on my [github](https://github.com/dvatterott/visualise_neural_network).
 
 
 {% codeblock lang:python %}
@@ -67,13 +67,13 @@ network.draw()
 
 Notice that this network now has 5 total neurons. The two units at the bottom are the *input layer*. The activity of input units is the value of the inputs (same as the inputs in my previous post). The two units in the middle are the *hidden layer*. The activity of hidden units are calculated in the same manner as the output units from my previous post. The unit at the top is the *output layer*. The activity of this unit is found in the same manner as in my previous post, but the activity of the hidden units replaces the input units.  
 
-Thus, when the neural network makes its guess, the only difference is we have to compute an extra layer's activity. 
+Thus, when the neural network makes its guess, the only difference is we have to compute an extra layer's activity.
 
 The goal of this network is for the output unit to have an activity of 0 when presented with an item from the blue group (inputs are same) and to have an activity of 1 when presented with an item from the red group (inputs are different).
 
-One additional aspect of neural networks that I haven't discussed is each non-input unit can have a *bias*. You can think about bias as a propensity for the unit to become active or not to become active. For instance, a unit with a postitive bias is more likely to be active than a unit with no bias. 
+One additional aspect of neural networks that I haven't discussed is each non-input unit can have a *bias*. You can think about bias as a propensity for the unit to become active or not to become active. For instance, a unit with a postitive bias is more likely to be active than a unit with no bias.
 
-I will implement bias as an extra line feeding into each unit. The weight of this line is the bias, and the bias line is always active, meaning this bias is always present. 
+I will implement bias as an extra line feeding into each unit. The weight of this line is the bias, and the bias line is always active, meaning this bias is always present.
 
 Below, I seed this 3-layer neural network with a random set of weights.
 
@@ -108,7 +108,7 @@ network.draw()
 Above we have out network. The depiction of $$Weight_{Input_{1}\to.Hidden_{2}}$$ and $$Weight_{Input_{2}\to.Hidden_{1}}$$ are confusing. -0.8 belongs to $$Weight_{Input_{1}\to.Hidden_{2}}$$. -0.5 belongs to $$Weight_{Input_{2}\to.Hidden_{1}}$$.  
 
 Lets go through one example of our network receiving an input and making a guess. Lets say the input is [0 1].
-This means $$Input_{1} = 0$$ and $$Input_{2} = 1$$. The correct answer in this case is 1. 
+This means $$Input_{1} = 0$$ and $$Input_{2} = 1$$. The correct answer in this case is 1.
 
 First, we have to calculate $$Hidden _{1}$$'s input. Remember we can write input as
 
@@ -122,7 +122,7 @@ Specifically for $$Hidden_{1}$$
 
 $$net_{Hidden_{1}} = -0.78 + -0.25*0 + -0.5*1 = -1.28$$
 
-Remember the first term in the equation above is the bias term. Lets see what this looks like in code. 
+Remember the first term in the equation above is the bias term. Lets see what this looks like in code.
 
 
 {% codeblock lang:python %}
@@ -134,11 +134,11 @@ print net_Hidden
     [-1.27669634 -1.07035845]
 
 
-Note that by using np.dot, I can calculate both hidden unit's input in a single line of code. 
+Note that by using np.dot, I can calculate both hidden unit's input in a single line of code.
 
-Next, we have to find the activity of units in the hidden layer. 
+Next, we have to find the activity of units in the hidden layer.
 
-I will translate input into activity with a logistic function, as I did in the previous post. 
+I will translate input into activity with a logistic function, as I did in the previous post.
 
 $$Logistic = \frac{1}{1+e^{-x}}$$
 
@@ -156,9 +156,9 @@ print Hidden_Units
     [ 0.2181131   0.25533492]
 
 
-So far so good, the logistic function has transformed the negative inputs into values near 0. 
+So far so good, the logistic function has transformed the negative inputs into values near 0.
 
-Now we have to compute the output unit's acitivity. 
+Now we have to compute the output unit's acitivity.
 
 $$net_{Output} = Bias + Hidden_{1}*Weight_{Hidden_{1}\to.Output} + Hidden_{2}*Weight_{Hidden_{2}\to.Output}$$
 
@@ -166,7 +166,7 @@ plugging in the numbers
 
 $$net_{Output} = -0.37 + 0.22*-0.23 + 0.26*-0.98 = -0.67$$
 
-Now the code for computing $$net_{Output}$$ and the Output unit's activity. 
+Now the code for computing $$net_{Output}$$ and the Output unit's activity.
 
 
 {% codeblock lang:python %}
@@ -184,7 +184,7 @@ print Output
     [ 0.33933346]
 
 
-Okay, thats the network's guess for one input.... no where near the correct answer (1). Let's look at what the network predicts for the other input patterns. Below I create a feedfoward, 2-layer neural network and plot the neural nets' guesses to the four input patterns. 
+Okay, thats the network's guess for one input.... no where near the correct answer (1). Let's look at what the network predicts for the other input patterns. Below I create a feedfoward, 1-layer neural network and plot the neural nets' guesses to the four input patterns.
 
 
 {% codeblock lang:python %}
@@ -193,14 +193,14 @@ def layer_InputOutput(Inputs,Weights): #find a layers input and activity
     return logistic(np.dot(Inputs_with_bias,Weights.T))
 
 def neural_net(Input,Weights_1,Weights_2,Training=False): #this function creates and runs the neural net    
-        
+
     target = 1 #set target value
     if np.array(Input[0])==np.array([Input[1]]): target = 0 #change target value if needed
-    
+
     #forward pass
     Hidden_Units = layer_InputOutput(Input,Weights_1) #find hidden unit activity
     Output = layer_InputOutput(Hidden_Units,Weights_2) #find Output layer actiity
-        
+
     return {'output':Output,'target':target,'input':Input} #record trial output
 
 Train_Set = [[1.0,1.0],[0.0,1.0],[1.0,0.0],[0.0,0.0]] #the four input patterns
@@ -225,9 +225,9 @@ In the plot above, I have Input 1 on the x-axis and Input 2 on the y-axis. So if
 
 So how do we update the weights in order to reduce the error between our guess and the correct answer?
 
-First, we will do backpropogation between the output and hidden layers. This is exactly the same as backpropogation in the previous post. 
+First, we will do backpropogation between the output and hidden layers. This is exactly the same as backpropogation in the previous post.
 
-In the previous post I described how our goal was to decrease error by changing the weights between units. This is the equation we used to describe changes in error with changes in the weights. The equation below expresses changes in error with changes to weights between the $$Hidden_{1}$$ and the Output unit. 
+In the previous post I described how our goal was to decrease error by changing the weights between units. This is the equation we used to describe changes in error with changes in the weights. The equation below expresses changes in error with changes to weights between the $$Hidden_{1}$$ and the Output unit.
 
 $$\frac{\partial Error}{\partial Weight_{Hidden_{1}\to.Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Weight_{Hidden_{1}\to.Output}}$$
 
@@ -262,9 +262,9 @@ print Weights_2 + alpha*np.outer(delta_out,Hidden_Units) #apply weight change
     [[-0.21252673 -0.96033892 -0.29229558]]
 
 
-The hidden layer changes things when we do backpropogation. Above, we computed the new weights using the output unit's error. Now, we want to find how adjusting a weight changes the error, but this weight connects an input to the hidden layer rather than connecting to the output layer. This means we have to propogate the error backwards to the hidden layer. 
+The hidden layer changes things when we do backpropogation. Above, we computed the new weights using the output unit's error. Now, we want to find how adjusting a weight changes the error, but this weight connects an input to the hidden layer rather than connecting to the output layer. This means we have to propogate the error backwards to the hidden layer.
 
-We will describe backpropogation for the line connecting $$Input_{1}$$ and $$Hidden_{1}$$ as 
+We will describe backpropogation for the line connecting $$Input_{1}$$ and $$Hidden_{1}$$ as
 
 $$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Hidden_{1}}} = \frac{\partial Error}{\partial Hidden_{1}} * \frac{\partial Hidden_{1}}{\partial net_{Hidden_{1}}} * \frac{\partial net_{Hidden_{1}}}{\partial Weight_{Input_{1}\to.Hidden_{1}}}$$
 
@@ -272,7 +272,7 @@ Pretty similar. We just replaced Output with $$Hidden_{1}$$. The interpretation 
 
 $$\frac{\partial Error}{\partial Hidden_{1}} = \frac{\partial Error}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Hidden_{1}}$$
 
-Changing $$Hidden_{1}$$'s activity changes changes the input to the Output unit. Changing the output unit's input changes the error. hmmmm still not quite there yet. Lets look at how changes to the output unit's input changes the error. 
+Changing $$Hidden_{1}$$'s activity changes changes the input to the Output unit. Changing the output unit's input changes the error. hmmmm still not quite there yet. Lets look at how changes to the output unit's input changes the error.
 
 $$\frac{\partial Error}{\partial net_{Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}}$$
 
@@ -292,7 +292,7 @@ and
 
 $$\frac{\partial net_{Hidden_{1}}}{\partial Weight_{1}} = Input_{1}$$
 
-Lets try and write this out. 
+Lets try and write this out.
 
 $$
 \begin{multline}
@@ -309,9 +309,9 @@ Not too bad. Now lets see the code.
 
 {% codeblock lang:python %}
 delta_hidden = delta_out.dot(Weights_2)*(Hidden_Units*(1-Hidden_Units)) #find delta portion of weight update
-                       
+
 delta_hidden = np.delete(delta_hidden,2) #remove the bias input
-print Weights_1 + alpha*np.outer(delta_hidden,np.append(Input,1.0)) #append bias input and multiply input by delta portion 
+print Weights_1 + alpha*np.outer(delta_hidden,np.append(Input,1.0)) #append bias input and multiply input by delta portion
 {% endcodeblock %}
 
     [[-0.25119612 -0.50149299 -0.77809147]
@@ -323,37 +323,37 @@ Alright! Lets implement all of this into a single model and train the model on t
 
 {% codeblock lang:python %}
 def neural_net(Input,Weights_1,Weights_2,Training=False): #this function creates and runs the neural net    
-        
+
     target = 1 #set target value
     if np.array(Input[0])==np.array([Input[1]]): target = 0 #change target value if needed
-    
+
     #forward pass
     Hidden_Units = layer_InputOutput(Input,Weights_1) #find hidden unit activity
     Output = layer_InputOutput(Hidden_Units,Weights_2) #find Output layer actiity
-        
+
     if Training == True:
         alpha = 0.5 #learning rate
-        
+
         Weights_2 = np.atleast_2d(Weights_2) #make sure this weight vector is 2d.
-        
+
         error = target - Output #error
         delta_out = np.atleast_2d(error*(Output*(1-Output))) #delta between output and hidden
-        
+
         Hidden_Units = np.append(Hidden_Units,1.0) #append an input for the bias
         delta_hidden = delta_out.dot(np.atleast_2d(Weights_2))*(Hidden_Units*(1-Hidden_Units)) #delta between hidden and input
-               
+
         Weights_2 += alpha*np.outer(delta_out,Hidden_Units) #update weights
-        
+
         delta_hidden = np.delete(delta_hidden,2) #remove bias activity
         Weights_1 += alpha*np.outer(delta_hidden,np.append(Input,1.0))  #update weights
-            
-    if Training == False: 
+
+    if Training == False:
         return {'output':Output,'target':target,'input':Input} #record trial output
     elif Training == True:
         return {'Weights_1':Weights_1,'Weights_2':Weights_2,'target':target,'output':Output,'error':error}
 {% endcodeblock %}
 
-Okay, thats the network. Below, I train the network until its answers are very close to the correct answer. 
+Okay, thats the network. Below, I train the network until its answers are very close to the correct answer.
 
 
 {% codeblock lang:python %}
@@ -362,7 +362,7 @@ np.random.seed(seed=10) #seed random number generator for reproducibility
 
 Weights_2 = np.random.rand(1,3)-0.5*2 #connections between hidden and output
 Weights_1 = np.random.rand(2,3)-0.5*2 #connections between input and hidden
-                      
+
 Weight_Dict = {'Weights_1':Weights_1,'Weights_2':Weights_2}
 
 Train_Set = [[1.0,1.0],[0.0,0.0],[0.0,1.0],[1.0,0.0]] #train set
@@ -370,7 +370,7 @@ Train_Set = [[1.0,1.0],[0.0,0.0],[0.0,1.0],[1.0,0.0]] #train set
 Error = []
 while True: #train the neural net
     Train_Dict = neural_net(choice(Train_Set),Weight_Dict['Weights_1'],Weight_Dict['Weights_2'],Training=True)
-    
+
     Error.append(abs(Train_Dict['error']))
     if len(Error) > 6 and np.mean(Error[-10:]) < 0.025: break #tell the code to stop iterating when recent mean error is small
 {% endcodeblock %}
@@ -389,7 +389,7 @@ plt.xlabel('Iteration #');
 <img src="{{ root_url }}/images/neural_net/net_learn1_1.png" />
 
 
-Really cool. The network start with volatile error - sometimes being nearly correct ans sometimes being completely incorrect. Then After about 5000 iterations, the network starts down the slow path of perfecting an answer scheme. Below, I create a plot depicting the networks' activity for the different input patterns. 
+Really cool. The network start with volatile error - sometimes being nearly correct ans sometimes being completely incorrect. Then After about 5000 iterations, the network starts down the slow path of perfecting an answer scheme. Below, I create a plot depicting the networks' activity for the different input patterns.
 
 
 {% codeblock lang:python %}
@@ -435,11 +435,11 @@ network.draw()
 <img src="{{ root_url }}/images/neural_net/3_layer_weights1.png" />
 
 
-The network finds a pretty cool solution. Both hidden units are relatively active, but one hidden unit sends a strong postitive signal and the other sends a strong negative signal. The output unit has a negative bias, so if neither input is on, it will have an activity around 0. If both Input units are on, then the hidden unit that sends a postitive signal will be inhibited, and the output unit will have activity near 0. Otherwise, the hidden unit with a positive signal gives the output unit an acitivty near 1. 
+The network finds a pretty cool solution. Both hidden units are relatively active, but one hidden unit sends a strong postitive signal and the other sends a strong negative signal. The output unit has a negative bias, so if neither input is on, it will have an activity around 0. If both Input units are on, then the hidden unit that sends a postitive signal will be inhibited, and the output unit will have activity near 0. Otherwise, the hidden unit with a positive signal gives the output unit an acitivty near 1.
 
-This is all well and good, but if you try to train this network with random weights you might find that it produces an incorrect set of weights sometimes. This is because the network runs into a [local minima](https://en.wikipedia.org/wiki/Maxima_and_minima). A local minima is an instance when any change in the weights would increase the error, so the network is left with a sub-optimal set of weights. 
+This is all well and good, but if you try to train this network with random weights you might find that it produces an incorrect set of weights sometimes. This is because the network runs into a [local minima](https://en.wikipedia.org/wiki/Maxima_and_minima). A local minima is an instance when any change in the weights would increase the error, so the network is left with a sub-optimal set of weights.
 
-Below I hand-pick of set of weights that produce a local optima. 
+Below I hand-pick of set of weights that produce a local optima.
 
 
 {% codeblock lang:python %}
@@ -463,7 +463,7 @@ network.draw()
 <img src="{{ root_url }}/images/neural_net/local_minimaWeights.png" />
 
 
-Using these weights as the start of the training set, lets see what the network will do with training. 
+Using these weights as the start of the training set, lets see what the network will do with training.
 
 
 {% codeblock lang:python %}
@@ -472,10 +472,10 @@ Train_Set = [[1.0,1.0],[0.0,0.0],[0.0,1.0],[1.0,0.0]] #train set
 Error = []
 while True:
     Train_Dict = neural_net(choice(Train_Set),Weight_Dict['Weights_1'],Weight_Dict['Weights_2'],Training=True)
-    
+
     Error.append(abs(Train_Dict['error']))
     if len(Error) > 6 and np.mean(Error[-10:]) < 0.025: break
-        
+
 Error_vec = np.array(Error)[:]
 plt.plot(Error_vec)
 plt.ylabel('Error')
@@ -535,8 +535,8 @@ network.draw()
 <img src="{{ root_url }}/images/neural_net/local_minimaWeights1.png" />
 
 
-This network was unable to push itself out of the local optima. While local optima are a problem, they're are a couple things we can do to avoid them. First, we should always train a network multiple times with different random weights in order to test for local optima. If the network continually finds local optima, then we can increase the learning rate. By increasing the learning rate, the network can escape local optima in some cases. This should be done with care though as too big of a learning rate can also prevent finding the global minima. 
+This network was unable to push itself out of the local optima. While local optima are a problem, they're are a couple things we can do to avoid them. First, we should always train a network multiple times with different random weights in order to test for local optima. If the network continually finds local optima, then we can increase the learning rate. By increasing the learning rate, the network can escape local optima in some cases. This should be done with care though as too big of a learning rate can also prevent finding the global minima.
 
-Alright, that's it. Obviously the neural network behind [alpha go](https://en.wikipedia.org/wiki/AlphaGo) is much more complex than this one, but I would guess that while alpha go is much larger the basic computations underlying it are similar. 
+Alright, that's it. Obviously the neural network behind [alpha go](https://en.wikipedia.org/wiki/AlphaGo) is much more complex than this one, but I would guess that while alpha go is much larger the basic computations underlying it are similar.
 
 Hopefully these posts have given you an idea for how neural networks function and why they're so cool!

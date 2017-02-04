@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Vatterott_CV_June2015.pdf"
+title: "Vatterott_Resume.pdf"
 date: false
 comments: false
 sharing: false
