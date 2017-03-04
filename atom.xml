@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
   <link href="http://www.danvatterott.com/"/>
-  <updated>2017-02-08T16:11:19-05:00</updated>
+  <updated>2017-03-04T11:13:45-05:00</updated>
   <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,19 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Sifting the Overflow]]></title>
+    <link href="http://www.danvatterott.com/blog/2017/03/04/sifting-the-overflow/"/>
+    <updated>2017-03-04T10:11:45-05:00</updated>
+    <id>http://www.danvatterott.com/blog/2017/03/04/sifting-the-overflow</id>
+    <content type="html"><![CDATA[<p>In January 2017, I started a fellowship at <a href="http://insightdatascience.com/">Insight Data Science</a>. Insight is a 7 week program for helping academics transition from academia to careers in data science. In the first 4 weeks, fellows build data science products, and fellows present these products to different companies in the last 3 weeks.</p>
+
+<p>At Insight, I built <a href="http://siftingtheoverflow.com/">Sifting the Overflow</a>, a chrome extension which you can install from the <a href="https://chrome.google.com/webstore/detail/sifting-the-overflow/japbeffaagcpbjilckaoigpocdgncind?hl=en-US&amp;gl=US">google chrome store</a>. Sifting the Overflow identifies the most helpful parts of answers to questions about the programming language Python on <a href="http://stackoverflow.com/">StackOverflow.com</a>. To created Sifting the Overflow, I trained a recurrent neural net (RNN) to identify “helpful” answers, and when you use the browser extension on a stackoverflow page, this RNN rates the helpfulness of each sentence of each answer. The sentences that my model believes to be helpful are highlighted so that users can quickly find the most helpful parts of these pages.</p>
+
+<p>I wrote a quick post <a href="http://siftingtheoverflow.com/">here</a> about how I built Sifting the Overflow, so check it out if you’re interested. The code is also available on my <a href="https://github.com/dvatterott/stackex_sum">github</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Simulating the Monty Hall Problem]]></title>
