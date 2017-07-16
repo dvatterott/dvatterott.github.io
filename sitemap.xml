@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/</loc>
+    <lastmod>2017-07-15T16:12:26-04:00</lastmod>
+  </url>
+  <url>
     <loc>http://www.danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/</loc>
     <lastmod>2017-03-11T13:21:03-05:00</lastmod>
   </url>
@@ -175,5 +179,25 @@
   </url>
   <url>
     <loc>http://www.danvatterott.com/blog/categories/htpc/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/tv/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/movies/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/datavis/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/opensource/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/images/tv_movies/index_movie.html</loc>
+    <lastmod>2017-07-16T14:09:58-04:00</lastmod>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/images/tv_movies/index_tv.html</loc>
+    <lastmod>2017-07-16T13:39:32-04:00</lastmod>
   </url>
 </urlset>
