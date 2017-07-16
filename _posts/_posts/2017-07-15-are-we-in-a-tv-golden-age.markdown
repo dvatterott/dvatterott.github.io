@@ -18,7 +18,7 @@ Below, I plot the ratings of TV shows and movies across time. Each show is a dot
 
 Here's a plot of all TV shows across time.
 
-<iframe src="{{ root_url }}/images/tv_movies/index_tv.html" marginwidth="0" marginheight="0" scrolling="no" width="100%" height="100%"></iframe>
+<iframe src="{{ root_url }}/images/tv_movies/index_tv.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
 
 To test the "golden age of TV" hypothesis, I coded up a linear regression in javascript (below). I put the regression's output as a comment at the end of the code.
 Before stating whether the hypothesis was rejected or not, I should note that that I removed shows with less than 10 votes because these shows had erratic ratings.
@@ -66,7 +66,7 @@ var lr = linearRegression(yval,xval);
 
 I wanted to include movies as a comparison to TV. Here's a plot of all movies across time.
 
-<iframe src="{{ root_url }}/images/tv_movies/index_movie.html" marginwidth="0" marginheight="0" scrolling="no" width="100%" height="100%"></iframe>
+<iframe src="{{ root_url }}/images/tv_movies/index_movie.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
 
 It's important to note that I removed all movies with less than 1000 votes. This is completely 100% unfair, BUT I am very proud of my figures here and things get a little laggy when including too many movies in the plot. Nonetheless, movies seem to be getting worse over time! More dramatically than TV shows!
 
