@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/</loc>
+    <lastmod>2017-09-01T18:04:17-04:00</lastmod>
+  </url>
+  <url>
     <loc>http://www.danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/</loc>
     <lastmod>2017-07-15T16:12:26-04:00</lastmod>
   </url>
@@ -76,22 +80,22 @@
     <loc>http://www.danvatterott.com/</loc>
   </url>
   <url>
-    <loc>http://www.danvatterott.com/blog/</loc>
-  </url>
-  <url>
     <loc>http://www.danvatterott.com/blog/archives/</loc>
   </url>
   <url>
-    <loc>http://www.danvatterott.com/resume/</loc>
+    <loc>http://www.danvatterott.com/blog/</loc>
   </url>
   <url>
-    <loc>http://www.danvatterott.com/publications/</loc>
+    <loc>http://www.danvatterott.com/resume/</loc>
   </url>
   <url>
     <loc>http://www.danvatterott.com/my-reads/</loc>
   </url>
   <url>
     <loc>http://www.danvatterott.com/about-me/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/publications/</loc>
   </url>
   <url>
     <loc>http://www.danvatterott.com/blog/categories/open-science/</loc>
@@ -193,11 +197,20 @@
     <loc>http://www.danvatterott.com/blog/categories/data-visualization/</loc>
   </url>
   <url>
+    <loc>http://www.danvatterott.com/blog/categories/ubuntu/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/cron/</loc>
+  </url>
+  <url>
+    <loc>http://www.danvatterott.com/blog/categories/automation/</loc>
+  </url>
+  <url>
     <loc>http://www.danvatterott.com/images/tv_movies/index_movie.html</loc>
-    <lastmod>2017-07-16T14:09:58-04:00</lastmod>
+    <lastmod>2017-10-05T20:47:45-04:00</lastmod>
   </url>
   <url>
     <loc>http://www.danvatterott.com/images/tv_movies/index_tv.html</loc>
-    <lastmod>2017-07-16T13:39:32-04:00</lastmod>
+    <lastmod>2017-10-05T20:47:45-04:00</lastmod>
   </url>
 </urlset>
