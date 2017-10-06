@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Attention | Dan Vatterott]]></title>
-  <link href="http://www.danvatterott.com/blog/categories/attention/atom.xml" rel="self"/>
-  <link href="http://www.danvatterott.com/"/>
-  <updated>2017-10-05T22:13:17-04:00</updated>
-  <id>http://www.danvatterott.com/</id>
+  <link href="https://danvatterott.com/blog/categories/attention/atom.xml" rel="self"/>
+  <link href="https://danvatterott.com/"/>
+  <updated>2017-10-06T07:55:25-04:00</updated>
+  <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Attention in a Convolutional Neural Net]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net/"/>
+    <link href="https://danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net/"/>
     <updated>2016-09-20T19:51:01-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net</id>
+    <id>https://danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net</id>
     <content type="html"><![CDATA[<p>This summer I had the pleasure of attending the <a href="http://cbmm.mit.edu/">Brains, Minds, and Machines</a> summer course at the <a href="http://www.mbl.edu/">Marine Biology Laboratory</a>. While there, I saw cool research, met awesome scientists, and completed an independent project. In this blog post, I describe my project.</p>
 
 <p>In 2012, Krizhevsky et al. released a <a href="http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf">convolutional neural network</a> that completely blew away the field at the <a href="http://www.image-net.org/">imagenet challenge</a>. This model is called “Alexnet,” and 2012 marks the beginning of neural networks’ resurgence in the machine learning community.</p>

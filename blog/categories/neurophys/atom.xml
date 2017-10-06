@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Neurophys | Dan Vatterott]]></title>
-  <link href="http://www.danvatterott.com/blog/categories/neurophys/atom.xml" rel="self"/>
-  <link href="http://www.danvatterott.com/"/>
-  <updated>2017-10-05T22:13:17-04:00</updated>
-  <id>http://www.danvatterott.com/</id>
+  <link href="https://danvatterott.com/blog/categories/neurophys/atom.xml" rel="self"/>
+  <link href="https://danvatterott.com/"/>
+  <updated>2017-10-06T07:55:25-04:00</updated>
+  <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[SFN 2016 Presentation]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/11/15/sfn-2016-presentation/"/>
+    <link href="https://danvatterott.com/blog/2016/11/15/sfn-2016-presentation/"/>
     <updated>2016-11-15T13:43:53-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/11/15/sfn-2016-presentation</id>
+    <id>https://danvatterott.com/blog/2016/11/15/sfn-2016-presentation</id>
     <content type="html"><![CDATA[<p><img src="/images/sfn/sfn_2016_vatterott.png" /></p>
 
 <p>I recently presented at the annual meeting of the society for neuroscience, so I wanted to do a quick post describing my findings.</p>
