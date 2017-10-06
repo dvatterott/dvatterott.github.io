@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Kodi | Dan Vatterott]]></title>
-  <link href="http://danvatterott.com/blog/categories/kodi/atom.xml" rel="self"/>
-  <link href="http://danvatterott.com/"/>
-  <updated>2017-10-05T21:44:10-04:00</updated>
-  <id>http://danvatterott.com/</id>
+  <link href="http://www.danvatterott.com/blog/categories/kodi/atom.xml" rel="self"/>
+  <link href="http://www.danvatterott.com/"/>
+  <updated>2017-10-05T21:55:13-04:00</updated>
+  <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[My First Kodi Addon - PBS NewsHour (a Tutorial)]]></title>
-    <link href="http://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
+    <link href="http://www.danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
     <updated>2017-03-11T13:21:03-05:00</updated>
-    <id>http://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
+    <id>http://www.danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
     <content type="html"><![CDATA[<p>I’ve been using <a href="https://kodi.tv/">Kodi/XBMC</a> since 2010. It provides a flexible and (relatively) intuitive interface for interacting with content through your TV (much like an apple TV). One of the best parts of Kodi is the addons - these are apps that you can build or download. For instance, I use the NBA League Pass addon for watching Wolves games. I’ve been looking for a reason to build my own Kodi addon for years.</p>
 
 <p>Enter <a href="http://www.pbs.org/newshour/">PBS NewsHour</a>. If you’re not watching PBS NewsHour, I’m not sure what you’re doing with your life because it’s the shit. It rocks. PBS NewsHour disseminates all their content on youtube and their website. For the past couple years, I’ve been watching their broadcasts every morning through the <a href="http://kodi.wiki/view/Add-on:YouTube">Youtube addon</a>. This works fine, but it’s clunky. I decided to stream line watching the NewsHour by building a Kodi addon for it.</p>

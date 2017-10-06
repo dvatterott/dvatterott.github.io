@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Source | Dan Vatterott]]></title>
-  <link href="http://danvatterott.com/blog/categories/source/atom.xml" rel="self"/>
-  <link href="http://danvatterott.com/"/>
-  <updated>2017-10-05T21:44:10-04:00</updated>
-  <id>http://danvatterott.com/</id>
+  <link href="http://www.danvatterott.com/blog/categories/source/atom.xml" rel="self"/>
+  <link href="http://www.danvatterott.com/"/>
+  <updated>2017-10-05T21:55:13-04:00</updated>
+  <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[NBA Shot Charts: Updated]]></title>
-    <link href="http://danvatterott.com/blog/2016/05/13/nba-shot-charts-updated/"/>
+    <link href="http://www.danvatterott.com/blog/2016/05/13/nba-shot-charts-updated/"/>
     <updated>2016-05-13T11:08:22-04:00</updated>
-    <id>http://danvatterott.com/blog/2016/05/13/nba-shot-charts-updated</id>
+    <id>http://www.danvatterott.com/blog/2016/05/13/nba-shot-charts-updated</id>
     <content type="html"><![CDATA[<p>For some reason I recently got it in my head that I wanted to go back and create more NBA shot charts. <a href="http://www.danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/">My previous shotcharts</a> used colored circles to depict the frequency and effectiveness of shots at different locations. This is an extremely efficient method of representing shooting profiles, but I thought it would be fun to create shot charts that represent a player’s shooting profile continously across the court rather than in discrete hexagons.</p>
 
 <p>By depicting the shooting data continously, I lose the ability to represent one dimenion - I can no longer use the size of circles to depict shot frequency at a location. Nonetheless, I thought it would be fun to create these charts.</p>

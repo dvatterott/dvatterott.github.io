@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Simulation | Dan Vatterott]]></title>
-  <link href="http://danvatterott.com/blog/categories/simulation/atom.xml" rel="self"/>
-  <link href="http://danvatterott.com/"/>
-  <updated>2017-10-05T21:44:10-04:00</updated>
-  <id>http://danvatterott.com/</id>
+  <link href="http://www.danvatterott.com/blog/categories/simulation/atom.xml" rel="self"/>
+  <link href="http://www.danvatterott.com/"/>
+  <updated>2017-10-05T21:55:13-04:00</updated>
+  <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Simulating the Monty Hall Problem]]></title>
-    <link href="http://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
+    <link href="http://www.danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
     <updated>2016-12-25T11:19:53-05:00</updated>
-    <id>http://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
+    <id>http://www.danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
     <content type="html"><![CDATA[<p>I’ve been hearing about the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty Hall problem</a> for years and its never quite made sense to me, so I decided to program up a quick simulation.</p>
 
 <p>In the Monty Hall problem, there is a car behind one of three doors. There are goats behind the other two doors. The contestant picks one of the three doors. Monty Hall (the game show host) then reveals that one of the two unchosen doors has a goat behind it. The question is whether the constestant should change the door they picked or keep their choice.</p>

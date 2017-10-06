@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Open Science | Dan Vatterott]]></title>
-  <link href="http://danvatterott.com/blog/categories/open-science/atom.xml" rel="self"/>
-  <link href="http://danvatterott.com/"/>
-  <updated>2017-10-05T21:44:10-04:00</updated>
-  <id>http://danvatterott.com/</id>
+  <link href="http://www.danvatterott.com/blog/categories/open-science/atom.xml" rel="self"/>
+  <link href="http://www.danvatterott.com/"/>
+  <updated>2017-10-05T21:55:13-04:00</updated>
+  <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Repeated Measures ANOVA in Python (Kinda)]]></title>
-    <link href="http://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
+    <link href="http://www.danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
     <updated>2016-02-28T21:52:03-05:00</updated>
-    <id>http://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
+    <id>http://www.danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
     <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
 
 <p>In this post I show how to execute a repeated measures ANOVAs using the <a href="http://rpy2.bitbucket.org/">rpy2</a> library, which allows us to move data between python and R, and execute R commands from python. I use rpy2 to load the <a href="http://www.inside-r.org/packages/cran/car/docs/Anova">car</a> library and run the ANOVA.</p>
@@ -458,9 +458,9 @@ Factor1:Factor2 1.073774 2.965002e-22
   
   <entry>
     <title type="html"><![CDATA[Complete Amnesia for Object Attributes?]]></title>
-    <link href="http://danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes/"/>
+    <link href="http://www.danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes/"/>
     <updated>2015-12-12T13:10:09-05:00</updated>
-    <id>http://danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes</id>
+    <id>http://www.danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes</id>
     <content type="html"><![CDATA[<h3 id="reanalysis-of-chen--wyble-2015">Reanalysis of Chen &amp; Wyble, 2015</h3>
 
 <p>Chen and Wyble published an interesting paper (2015) where they demonstrate that participants cannot report attributes of attended stimuli unless the participants are previously informed that this attribute is important. For instance, you wouldn’t remember the color of the apple if you had had just told someone the shape. I would have expected the opposite, so … cool!</p>

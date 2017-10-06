@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Statistics | Dan Vatterott]]></title>
-  <link href="http://danvatterott.com/blog/categories/statistics/atom.xml" rel="self"/>
-  <link href="http://danvatterott.com/"/>
-  <updated>2017-10-05T21:44:10-04:00</updated>
-  <id>http://danvatterott.com/</id>
+  <link href="http://www.danvatterott.com/blog/categories/statistics/atom.xml" rel="self"/>
+  <link href="http://www.danvatterott.com/"/>
+  <updated>2017-10-05T21:55:13-04:00</updated>
+  <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Repeated Measures ANOVA in Python (Kinda)]]></title>
-    <link href="http://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
+    <link href="http://www.danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
     <updated>2016-02-28T21:52:03-05:00</updated>
-    <id>http://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
+    <id>http://www.danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
     <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
 
 <p>In this post I show how to execute a repeated measures ANOVAs using the <a href="http://rpy2.bitbucket.org/">rpy2</a> library, which allows us to move data between python and R, and execute R commands from python. I use rpy2 to load the <a href="http://www.inside-r.org/packages/cran/car/docs/Anova">car</a> library and run the ANOVA.</p>

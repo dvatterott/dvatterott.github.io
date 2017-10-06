@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Tv | Dan Vatterott]]></title>
-  <link href="http://danvatterott.com/blog/categories/tv/atom.xml" rel="self"/>
-  <link href="http://danvatterott.com/"/>
-  <updated>2017-10-05T21:44:10-04:00</updated>
-  <id>http://danvatterott.com/</id>
+  <link href="http://www.danvatterott.com/blog/categories/tv/atom.xml" rel="self"/>
+  <link href="http://www.danvatterott.com/"/>
+  <updated>2017-10-05T21:55:13-04:00</updated>
+  <id>http://www.danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Are We in a TV Golden Age?]]></title>
-    <link href="http://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/"/>
+    <link href="http://www.danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/"/>
     <updated>2017-07-15T16:12:26-04:00</updated>
-    <id>http://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age</id>
+    <id>http://www.danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age</id>
     <content type="html"><![CDATA[<p>I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 years ago. My wife contended that there was simply more TV content being produced, and that this led to more good shows, but shows are not inherently any better.</p>
 
 <p>This struck me as a great opportunity to do some quick data science. For this post, I scraped the names (from wikipedia) and ratings (from <a href="https://www.themoviedb.org/">TMDb</a>) of all American TV shows. I did the same for major American movies, so that I could have a comparison group (maybe all content is better or worse). The ratings are given by TMDb’s users and are scores between 1 and 10 (where 10 is a great show/movie and 1 is a lousy show/movie).</p>
