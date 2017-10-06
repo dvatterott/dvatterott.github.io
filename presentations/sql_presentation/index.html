@@ -1,0 +1,485 @@
+<! doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>SQL Tutorial</title>
+
+		<meta name="description" content="A quick tutorial about sql.">
+		<meta name="author" content="Dan Vatterott">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<!-- <link rel="stylesheet" href="css/theme/black.css" id="theme"> -->
+		<link rel="stylesheet" href="css/style.css" id="theme">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+		<style>
+			.vert_dots:after {
+				content: '\2807';
+				font-size: 100px;
+				}
+			td {
+				height: 50px;
+			  width:50px;
+				}
+
+			#cssTable td
+			{
+				text-align:center;
+			  vertical-align:middle;
+			}
+			#cssTable th
+			{
+				text-align:center;
+			  vertical-align:middle;
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h2>SQL Tutorial</h2>
+					<p>How I learned to stop worring and love the join</p>
+					<p>
+						<small>Created by <a href="https://danvatterott.com">Dan Vatterott</a> / <a href="http://twitter.com/dvatterott">@dvatterott</a></small>
+					</p>
+				</section>
+
+				<section>
+					<h3>SQL is hard.</h3>
+					<p>
+						<img height=500 width=500 src="https://media0.giphy.com/media/Vu8nIaC6rSVi/200.gif"></img>
+					</p>
+				</section>
+				<!-- Why it's hard - multiple sub-types. Write order != run order -->
+
+				<section>
+					<h3>Syntax</h3>
+						<pre><code class="hljs" data-trim contenteditable>
+							SELECT
+							    *
+							FROM
+							    my_table
+							LIMIT 5
+						</code></pre>
+				</section>
+
+				<section>
+					<h3>Buy_table</h3>
+						<table id="cssTable">
+							<thead>
+								<tr>
+									<th>Customer_id</th>
+									<th>buy_date</th>
+									<th>tool_category</th>
+									<th>tool_id</th>
+							</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>1</td>
+									<td>'2017-11-01'</td>
+									<td>Hammer'</td>
+									<td>1.0</td>
+								</tr>
+								<tr>
+									<td>2</td>
+									<td>'2017-11-01'</td>
+									<td>'Wrench'</td>
+									<td>7.0</td>
+								</tr>
+								<tr>
+									<td>2</td>
+									<td>'2017-11-02'</td>
+									<td>'Hammer'</td>
+									<td>7.0</td>
+								</tr>
+								<tr>
+									<td><div class="vert_dots"></div></td>
+									<td><div class="vert_dots"></div></td>
+									<td><div class="vert_dots"></div></td>
+									<td><div class="vert_dots"></div></td>
+							</tr>
+							</tbody>
+						</table>
+				</section>
+
+				<section>
+					<section>
+						<h3>Where statement</h3>
+							<p>Create a list of people bought a "Hammer".</p>
+							<pre class=fragment><code class="hljs" data-trim contenteditable>
+								SELECT
+								    DISTINCT(user_id)
+								FROM
+								    buy_table
+								WHERE
+								    tool_category = "Hammer"
+							</code></pre>
+					</section>
+					<section>
+	 				 <h3>Where statement: Reloaded</h3>
+					 	 <p>Create a list of people bought a "screw" or "Screw driver"?</p>
+						 <pre class=fragment><code class="hljs" data-trim contenteditable>
+							 SELECT
+							     DISTINCT(user_id)
+							 FROM
+							     buy_table
+							 WHERE
+							     tool_category ILIKE "screw%"
+						 </code></pre>
+						 <p class=fragment>Note: sql alchemy (python api) gets angry about % signs (use %%)
+	 			 </section>
+			 </section>
+
+			 <section>
+				 <section>
+					 <h3>Group By Statement</h3>
+						 <p>Create a list of the 10 people that bought the most "Hammers" where the id number is 1.</p>
+						 <pre class=fragment><code class="hljs" data-trim contenteditable>
+							 SELECT
+							     user_id,
+							     COUNT(tool_id) AS buy_count
+							 FROM
+							     buy_table
+							 WHERE
+							     tool_category = "Hammer"
+							     AND
+							     tool_id = 1.0
+							 GROUP BY
+							     user_id
+							 ORDER BY
+							     buy_count DESC
+							 LIMIT 10
+						 </code></pre>
+				 </section>
+				 <section>
+					<h3>Group By Statement: The Return</h3>
+						<p>Create a list of the people that bought more than 7 "screws".</p>
+						<pre class=fragment><code class="hljs" data-trim contenteditable>
+							SELECT
+							    user_id,
+							    COUNT(tool_id) AS buy_count
+							FROM
+							    buy_table
+							WHERE
+							    tool_category = "screws"
+							GROUP BY
+							    user_id
+							HAVING
+							    COUNT(tool_id) > 7
+						</code></pre>
+						<p class=fragment>Note: Can't use select alias in where/having :/</p>
+				</section>
+			</section>
+
+			<section>
+				<section>
+					<h3>The Join</h3>
+					<img height=531 width=750 src="https://i.stack.imgur.com/3bs7C.png"></img>
+				</section>
+				<section>
+					<h3>Tables are not circles</h3>
+					<img src="https://media.giphy.com/media/r1AJtSlmhdvP2/giphy.gif"></img>
+					<p>In joins the important question is what happens to missing/repeated values</p>
+				</section>
+
+				<section>
+					<h3>tool_table</h3>
+					<table id="cssTable">
+						<thead>
+							<tr>
+								<th>tool_category</th>
+								<th>hand_tool</th>
+								<th>mechanical</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>'Hammer'</td>
+								<td>1</td>
+								<td>0</td>
+							</tr>
+							<tr>
+								<td>'Wrench'</td>
+								<td>1</td>
+								<td>0</td>
+							</tr>
+							<tr>
+								<td>'Screw'</td>
+								<td>0</td>
+								<td>0</td>
+							</tr>
+							<tr>
+								<td><div class="vert_dots"></div></td>
+								<td><div class="vert_dots"></div></td>
+								<td><div class="vert_dots"></div></td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+				<section>
+					<h3>Join Question</h3>
+					<p>Create a list of the ten people who bought the most "hand tools".</p>
+					<pre class=fragment><code class="hljs" data-trim contenteditable>
+						SELECT
+						    bt.user_id,
+						    COUNT(DISTINCT(bt.tool_id)) AS buy_count
+						FROM
+						    buy_table AS bt
+						    INNER JOIN tool_table AS tt
+						      ON bt.tool_category = tt.tool_category
+						WHERE
+						    tt.hand_tool = 1
+						GROUP BY
+						    bt.user_id
+						ORDER BY
+						    buy_count
+						LIMIT 10
+					</code></pre>
+				</section>
+			</section>
+
+			<section>
+				<section>
+					<h3>Sub-Queries</h3>
+					<p>Create a list of the ten people who bought an item from the most distinct "hand tool" categories.</p>
+					<pre class=fragment><code class="hljs" data-trim contenteditable>
+						SELECT
+						    bt.user_id,
+						    COUNT(tt.tool_category) AS tool_count
+						FROM
+						    (SELECT
+						         DISTINCT(user_id, tool_category)
+						     FROM
+						         buy_table
+						    ) AS bt
+						    INNER JOIN tool_table AS tt
+						      ON bt.seies_name = tt.tool_category
+						WHERE
+						    tt.hand_tool = 1
+						GROUP BY
+						    bt.user_id
+						ORDER BY
+						    tool_count
+						LIMIT 10
+					</code></pre>
+				</section>
+				<section>
+					<h3>SQL makes my head hurt</h3>
+					<img height=500 width=500 src="https://media0.giphy.com/media/Vu8nIaC6rSVi/200.gif"></img>
+				</section>
+				<section>
+					<h3>Sub-Queries with a temp table</h3>
+					<p>Create a list of the ten people who bought an item from the most distinct "hand tool" categories.</p>
+					<pre class=fragment><code class="hljs" data-trim contenteditable>
+						WITH temp_table AS (
+						    SELECT
+						        DISTINCT(user_id, tool_category)
+						    FROM
+						        buy_table
+						)
+						SELECT
+						    tt.user_id,
+						    COUNT(tt.tool_category) AS tool_count
+						FROM
+						    temp_table AS tt
+						    INNER JOIN tool_table AS tt3
+						      ON tt.seies_name = tt2.tool_category
+						WHERE
+						    tt2.hand_tool = 0
+						GROUP BY
+						    tt.user_id
+						ORDER BY
+						    tool_count
+						LIMIT 10
+					</code></pre>
+				</section>
+				<section>
+					<h3>Much better!</h3>
+					<img height=500 width=500 src="https://media.giphy.com/media/bTzFnjHPuVvva/giphy.gif"></img>
+				</section>
+			</section>
+
+			<section>
+				<section>
+					<h3>Exist Statements</h3>
+					<p>Create a list of people who bought a "Wrench" and a "Hammer".</p>
+					<pre class=fragment><code class="hljs" data-trim contenteditable>
+						WITH temp_table AS (
+						    SELECT
+						        DISTINCT(user_id) AS user_id
+						    FROM
+						        buy_table
+						    WHERE
+						        tool_category = 'Hammer'
+						)
+						SELECT
+						    DISTINCT(user_id) AS user_id
+						FROM
+						    buy_table AS bt
+						WHERE
+						    tool_category = 'Wrench'
+						    AND
+						    EXISTS (
+							SELECT
+					              1
+						        FROM
+						            temp_table
+						        WHERE
+						            temp_table.user_id = bt.user_id)
+					</code></pre>
+				</section>
+				<section>
+					<h3>In Statements</h3>
+					<p>Create a list of people who bought a "Wrench" and a "Hammer".</p>
+					<pre><code class="hljs" data-trim contenteditable>
+						WITH temp_table AS (
+						    SELECT
+						        DISTINCT(user_id) AS user_id
+						    FROM
+						        buy_table
+						    WHERE
+						        tool_category = 'Hammer'
+						)
+						SELECT
+						    DISTINCT(user_id) AS user_id
+						FROM
+						    buy_table
+						WHERE
+						    tool_category = 'Wrench'
+						    AND
+						    user_id IN (SELECT user_id FROM temp_table)
+					</code></pre>
+				</section>
+			</section>
+
+			<section>
+				<h3>Case Statements</h3>
+				<p>Count whether more items are bought on the weekends or weekdays.</p>
+				<pre><code class="hljs" data-trim contenteditable>
+					SELECT
+          CASE
+              WHEN extract('isodow' from buy_date) > 5 THEN 'weekend'
+              ELSE 'weekday'
+          END AS weekend_or_not,
+          COUNT(*)
+					FROM
+					    buy_table AS vt
+					GROUP BY
+					    weekend_or_not
+				</code></pre>
+			</section>
+
+			<section>
+				<h3>Window Functions</h3>
+				<p>Create a list of users and the first item they bought.</p>
+				<pre><code class="hljs" data-trim contenteditable>
+					WITH temp_table AS (
+	        SELECT
+					        user_id,
+					        tool_category,
+					        rank() OVER (PARTITION BY user_id ORDER BY buy_date ASC)
+					    FROM
+					        buy_table
+					)
+					SELECT
+					    user_id,
+					    tool_category
+					FROM
+					    temp_table
+					WHERE
+					    rank = 1
+				</code></pre>
+			</section>
+
+			<section>
+				<h3>Optimization/Run Order</h3>
+				<ol>
+					<li>FROM</li>
+					<li>ON</li>
+					<li>OUTER</li>
+					<li>WHERE</li>
+					<li>GROUP BY</li>
+					<li>HAVING</li>
+					<li>SELECT</li>
+					<li>DISTINCT</li>
+					<li>ORDER BY</li>
+					<li>LIMIT/TOP</li>
+				</ol>
+				<p class="fragment">Temp tables are faster when many tables. Joins are faster when using fewer tables.</p>
+			</section>
+
+			<section>
+				<h3>Resources</h3>
+				<ul>
+					<li><a href="http://sqlzoo.net/">SQL Zoo</a></li>
+					<li><a href="https://stackoverflow.com/questions/11427300/self-join-to-get-employee-manager-name">Self-Join Problem</a></li>
+					<li><a href="https://community.modeanalytics.com/sql/tutorial/introduction-to-sql/">Mode Analytics</a></li>
+					<li><a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html">Spark SQL</a></li>
+				</ul>
+			</section>
+
+			<section>
+				<h3>SQL can be fun!</h3>
+				<img height=500 width=500 src="https://media.giphy.com/media/RO8u908r6PsOc/giphy.gif"></img>
+			</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'lib/js/classLitt.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>

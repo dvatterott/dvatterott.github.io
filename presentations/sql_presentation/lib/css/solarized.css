@@ -1,0 +1,78 @@
+/*
+
+Solarized style that I tried to hack together - dvatterott
+*/
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: #002b36;
+  color: #839496;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-tag {
+  color: #d33682;
+}
+
+.hljs-template-tag {
+  color: #839496;
+}
+
+.hljs-number {
+  color: #2aa198;
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attribute {
+  color: #268bd2;
+}
+
+.hljs-literal {
+  color: #b58900;
+}
+
+.hljs-subst {
+  color: #859900;
+}
+
+.hljs-title,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-section,
+.hljs-type {
+  color: #cb4b16;
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link {
+  color: #d33682;
+}
+
+.hljs-deletion,
+.hljs-string,
+.hljs-built_in,
+.hljs-builtin-name {
+  color: #b58900;
+}
+
+.hljs-addition,
+.hljs-comment,
+.hljs-quote,
+.hljs-meta {
+  color: #586e75;
+}
+
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
