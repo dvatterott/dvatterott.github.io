@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Classification | Dan Vatterott]]></title>
-  <link href="http://www.danvatterott.com/blog/categories/classification/atom.xml" rel="self"/>
-  <link href="http://www.danvatterott.com/"/>
-  <updated>2017-10-05T21:34:17-04:00</updated>
-  <id>http://www.danvatterott.com/</id>
+  <link href="http://danvatterott.com/blog/categories/classification/atom.xml" rel="self"/>
+  <link href="http://danvatterott.com/"/>
+  <updated>2017-10-05T21:40:05-04:00</updated>
+  <id>http://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Revisting NBA Career Predictions From Rookie Performance...again]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/"/>
+    <link href="http://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/"/>
     <updated>2016-07-31T21:59:41-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again</id>
+    <id>http://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again</id>
     <content type="html"><![CDATA[<p>Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future performance using <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">regression</a> <a href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/">models</a>. In this post I am again trying to predict rookies’ future performance, but now using using a <a href="https://en.wikipedia.org/wiki/Statistical_classification">classification approach</a>. When using a classification approach, I predict whether player X will be a “great,” “average,” or “poor” player rather than predicting exactly how productive player X will be.</p>
 
 <p>Much of this post re-uses code from the previous posts, so I skim over some of the repeated code.</p>

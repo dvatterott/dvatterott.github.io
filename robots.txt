@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://www.danvatterott.com/sitemap.xml 
+Sitemap: http://danvatterott.com/sitemap.xml 

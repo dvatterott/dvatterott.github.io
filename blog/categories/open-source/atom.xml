@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Open Source | Dan Vatterott]]></title>
-  <link href="http://www.danvatterott.com/blog/categories/open-source/atom.xml" rel="self"/>
-  <link href="http://www.danvatterott.com/"/>
-  <updated>2017-10-05T21:34:17-04:00</updated>
-  <id>http://www.danvatterott.com/</id>
+  <link href="http://danvatterott.com/blog/categories/open-source/atom.xml" rel="self"/>
+  <link href="http://danvatterott.com/"/>
+  <updated>2017-10-05T21:40:05-04:00</updated>
+  <id>http://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Using Cron to Automate Jobs on Ubuntu]]></title>
-    <link href="http://www.danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
+    <link href="http://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
     <updated>2017-09-01T18:04:17-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
+    <id>http://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
     <content type="html"><![CDATA[<p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
 
 <p>Hopefully, I can save someone the same pain by writing this blog post.</p>
@@ -116,9 +116,9 @@
   
   <entry>
     <title type="html"><![CDATA[Are We in a TV Golden Age?]]></title>
-    <link href="http://www.danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/"/>
+    <link href="http://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/"/>
     <updated>2017-07-15T16:12:26-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age</id>
+    <id>http://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age</id>
     <content type="html"><![CDATA[<p>I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 years ago. My wife contended that there was simply more TV content being produced, and that this led to more good shows, but shows are not inherently any better.</p>
 
 <p>This struck me as a great opportunity to do some quick data science. For this post, I scraped the names (from wikipedia) and ratings (from <a href="https://www.themoviedb.org/">TMDb</a>) of all American TV shows. I did the same for major American movies, so that I could have a comparison group (maybe all content is better or worse). The ratings are given by TMDb’s users and are scores between 1 and 10 (where 10 is a great show/movie and 1 is a lousy show/movie).</p>
@@ -254,9 +254,9 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   
   <entry>
     <title type="html"><![CDATA[My First Kodi Addon - PBS NewsHour (a Tutorial)]]></title>
-    <link href="http://www.danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
+    <link href="http://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
     <updated>2017-03-11T13:21:03-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
+    <id>http://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
     <content type="html"><![CDATA[<p>I’ve been using <a href="https://kodi.tv/">Kodi/XBMC</a> since 2010. It provides a flexible and (relatively) intuitive interface for interacting with content through your TV (much like an apple TV). One of the best parts of Kodi is the addons - these are apps that you can build or download. For instance, I use the NBA League Pass addon for watching Wolves games. I’ve been looking for a reason to build my own Kodi addon for years.</p>
 
 <p>Enter <a href="http://www.pbs.org/newshour/">PBS NewsHour</a>. If you’re not watching PBS NewsHour, I’m not sure what you’re doing with your life because it’s the shit. It rocks. PBS NewsHour disseminates all their content on youtube and their website. For the past couple years, I’ve been watching their broadcasts every morning through the <a href="http://kodi.wiki/view/Add-on:YouTube">Youtube addon</a>. This works fine, but it’s clunky. I decided to stream line watching the NewsHour by building a Kodi addon for it.</p>
@@ -535,9 +535,9 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   
   <entry>
     <title type="html"><![CDATA[Sifting the Overflow]]></title>
-    <link href="http://www.danvatterott.com/blog/2017/03/04/sifting-the-overflow/"/>
+    <link href="http://danvatterott.com/blog/2017/03/04/sifting-the-overflow/"/>
     <updated>2017-03-04T10:11:45-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2017/03/04/sifting-the-overflow</id>
+    <id>http://danvatterott.com/blog/2017/03/04/sifting-the-overflow</id>
     <content type="html"><![CDATA[<p>In January 2017, I started a fellowship at <a href="http://insightdatascience.com/">Insight Data Science</a>. Insight is a 7 week program for helping academics transition from academia to careers in data science. In the first 4 weeks, fellows build data science products, and fellows present these products to different companies in the last 3 weeks.</p>
 
 <p>At Insight, I built <a href="http://siftingtheoverflow.com/">Sifting the Overflow</a>, a chrome extension which you can install from the <a href="https://chrome.google.com/webstore/detail/sifting-the-overflow/japbeffaagcpbjilckaoigpocdgncind?hl=en-US&amp;gl=US">google chrome store</a>. Sifting the Overflow identifies the most helpful parts of answers to questions about the programming language Python on <a href="http://stackoverflow.com/">StackOverflow.com</a>. To created Sifting the Overflow, I trained a recurrent neural net (RNN) to identify “helpful” answers, and when you use the browser extension on a stackoverflow page, this RNN rates the helpfulness of each sentence of each answer. The sentences that my model believes to be helpful are highlighted so that users can quickly find the most helpful parts of these pages.</p>
@@ -548,9 +548,9 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   
   <entry>
     <title type="html"><![CDATA[Simulating the Monty Hall Problem]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
+    <link href="http://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
     <updated>2016-12-25T11:19:53-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
+    <id>http://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
     <content type="html"><![CDATA[<p>I’ve been hearing about the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty Hall problem</a> for years and its never quite made sense to me, so I decided to program up a quick simulation.</p>
 
 <p>In the Monty Hall problem, there is a car behind one of three doors. There are goats behind the other two doors. The contestant picks one of the three doors. Monty Hall (the game show host) then reveals that one of the two unchosen doors has a goat behind it. The question is whether the constestant should change the door they picked or keep their choice.</p>

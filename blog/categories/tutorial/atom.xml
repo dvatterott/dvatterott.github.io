@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Tutorial | Dan Vatterott]]></title>
-  <link href="http://www.danvatterott.com/blog/categories/tutorial/atom.xml" rel="self"/>
-  <link href="http://www.danvatterott.com/"/>
-  <updated>2017-10-05T21:34:17-04:00</updated>
-  <id>http://www.danvatterott.com/</id>
+  <link href="http://danvatterott.com/blog/categories/tutorial/atom.xml" rel="self"/>
+  <link href="http://danvatterott.com/"/>
+  <updated>2017-10-05T21:40:05-04:00</updated>
+  <id>http://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[PCA Tutorial]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/11/06/pca-tutorial/"/>
+    <link href="http://danvatterott.com/blog/2016/11/06/pca-tutorial/"/>
     <updated>2016-11-06T13:33:50-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/11/06/pca-tutorial</id>
+    <id>http://danvatterott.com/blog/2016/11/06/pca-tutorial</id>
     <content type="html"><![CDATA[<p><a href="http://setosa.io/ev/principal-component-analysis/">Principal Component Analysis</a> (PCA) is an important method for dimensionality reduction and data cleaning. I have used PCA in the past on this blog for estimating the latent variables that underlie player statistics. For example, I might have two features: average number of offensive rebounds and average number of defensive rebounds. The two features are highly correlated because a latent variable, the player’s <em>rebounding ability</em>, explains common variance in the two features. PCA is a method for extracting these latent variables that explain common variance across features.</p>
 
 <p>In this tutorial I generate fake data in order to help gain insight into the mechanics underlying PCA.</p>

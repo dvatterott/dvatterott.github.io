@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Dan Vatterott]]></title>
-  <link href="http://www.danvatterott.com/atom.xml" rel="self"/>
-  <link href="http://www.danvatterott.com/"/>
-  <updated>2017-10-05T21:34:17-04:00</updated>
-  <id>http://www.danvatterott.com/</id>
+  <link href="http://danvatterott.com/atom.xml" rel="self"/>
+  <link href="http://danvatterott.com/"/>
+  <updated>2017-10-05T21:40:05-04:00</updated>
+  <id>http://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Using Cron to Automate Jobs on Ubuntu]]></title>
-    <link href="http://www.danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
+    <link href="http://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
     <updated>2017-09-01T18:04:17-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
+    <id>http://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
     <content type="html"><![CDATA[<p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
 
 <p>Hopefully, I can save someone the same pain by writing this blog post.</p>
@@ -116,9 +116,9 @@
   
   <entry>
     <title type="html"><![CDATA[Are We in a TV Golden Age?]]></title>
-    <link href="http://www.danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/"/>
+    <link href="http://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/"/>
     <updated>2017-07-15T16:12:26-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age</id>
+    <id>http://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age</id>
     <content type="html"><![CDATA[<p>I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 years ago. My wife contended that there was simply more TV content being produced, and that this led to more good shows, but shows are not inherently any better.</p>
 
 <p>This struck me as a great opportunity to do some quick data science. For this post, I scraped the names (from wikipedia) and ratings (from <a href="https://www.themoviedb.org/">TMDb</a>) of all American TV shows. I did the same for major American movies, so that I could have a comparison group (maybe all content is better or worse). The ratings are given by TMDb’s users and are scores between 1 and 10 (where 10 is a great show/movie and 1 is a lousy show/movie).</p>
@@ -131,7 +131,7 @@
 
 <p>Here’s a plot of all TV shows across time.</p>
 
-<iframe src="http://www.danvatterott.com/images/tv_movies/index_tv.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
+<iframe src="http://danvatterott.com/images/tv_movies/index_tv.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
 
 <p>To test the “golden age of TV” hypothesis, I coded up a linear regression in javascript (below). I put the regression’s output as a comment at the end of the code.
 Before stating whether the hypothesis was rejected or not, I should note that that I removed shows with less than 10 votes because these shows had erratic ratings.</p>
@@ -212,7 +212,7 @@ Before stating whether the hypothesis was rejected or not, I should note that th
 
 <p>I wanted to include movies as a comparison to TV. Here’s a plot of all movies across time.</p>
 
-<iframe src="http://www.danvatterott.com/images/tv_movies/index_movie.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
+<iframe src="http://danvatterott.com/images/tv_movies/index_movie.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
 
 <p>It’s important to note that I removed all movies with less than 1000 votes. This is completely 100% unfair, BUT I am very proud of my figures here and things get a little laggy when including too many movies in the plot. Nonetheless, movies seem to be getting worse over time! More dramatically than TV shows!</p>
 
@@ -248,9 +248,9 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   
   <entry>
     <title type="html"><![CDATA[My First Kodi Addon - PBS NewsHour (a Tutorial)]]></title>
-    <link href="http://www.danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
+    <link href="http://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
     <updated>2017-03-11T13:21:03-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
+    <id>http://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
     <content type="html"><![CDATA[<p>I’ve been using <a href="https://kodi.tv/">Kodi/XBMC</a> since 2010. It provides a flexible and (relatively) intuitive interface for interacting with content through your TV (much like an apple TV). One of the best parts of Kodi is the addons - these are apps that you can build or download. For instance, I use the NBA League Pass addon for watching Wolves games. I’ve been looking for a reason to build my own Kodi addon for years.</p>
 
 <p>Enter <a href="http://www.pbs.org/newshour/">PBS NewsHour</a>. If you’re not watching PBS NewsHour, I’m not sure what you’re doing with your life because it’s the shit. It rocks. PBS NewsHour disseminates all their content on youtube and their website. For the past couple years, I’ve been watching their broadcasts every morning through the <a href="http://kodi.wiki/view/Add-on:YouTube">Youtube addon</a>. This works fine, but it’s clunky. I decided to stream line watching the NewsHour by building a Kodi addon for it.</p>
@@ -529,9 +529,9 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   
   <entry>
     <title type="html"><![CDATA[Sifting the Overflow]]></title>
-    <link href="http://www.danvatterott.com/blog/2017/03/04/sifting-the-overflow/"/>
+    <link href="http://danvatterott.com/blog/2017/03/04/sifting-the-overflow/"/>
     <updated>2017-03-04T10:11:45-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2017/03/04/sifting-the-overflow</id>
+    <id>http://danvatterott.com/blog/2017/03/04/sifting-the-overflow</id>
     <content type="html"><![CDATA[<p>In January 2017, I started a fellowship at <a href="http://insightdatascience.com/">Insight Data Science</a>. Insight is a 7 week program for helping academics transition from academia to careers in data science. In the first 4 weeks, fellows build data science products, and fellows present these products to different companies in the last 3 weeks.</p>
 
 <p>At Insight, I built <a href="http://siftingtheoverflow.com/">Sifting the Overflow</a>, a chrome extension which you can install from the <a href="https://chrome.google.com/webstore/detail/sifting-the-overflow/japbeffaagcpbjilckaoigpocdgncind?hl=en-US&amp;gl=US">google chrome store</a>. Sifting the Overflow identifies the most helpful parts of answers to questions about the programming language Python on <a href="http://stackoverflow.com/">StackOverflow.com</a>. To created Sifting the Overflow, I trained a recurrent neural net (RNN) to identify “helpful” answers, and when you use the browser extension on a stackoverflow page, this RNN rates the helpfulness of each sentence of each answer. The sentences that my model believes to be helpful are highlighted so that users can quickly find the most helpful parts of these pages.</p>
@@ -542,9 +542,9 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   
   <entry>
     <title type="html"><![CDATA[Simulating the Monty Hall Problem]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
+    <link href="http://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
     <updated>2016-12-25T11:19:53-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
+    <id>http://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
     <content type="html"><![CDATA[<p>I’ve been hearing about the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty Hall problem</a> for years and its never quite made sense to me, so I decided to program up a quick simulation.</p>
 
 <p>In the Monty Hall problem, there is a car behind one of three doors. There are goats behind the other two doors. The contestant picks one of the three doors. Monty Hall (the game show host) then reveals that one of the two unchosen doors has a goat behind it. The question is whether the constestant should change the door they picked or keep their choice.</p>
@@ -648,7 +648,7 @@ Probability of choosing correctly if do not change choice: 0.33
 Probability of difference arising from chance: 0.00000
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/montyhall/montyhall1.png" /></p>
+<p><img src="http://danvatterott.com/images/montyhall/montyhall1.png" /></p>
 
 <p>Clearly, the contestant should change their choice!</p>
 
@@ -711,7 +711,7 @@ Probability of choosing correctly if do not change choice: 0.49
 Probability of difference arising from chance: 0.57546
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/montyhall/montyhall2.png" /></p>
+<p><img src="http://danvatterott.com/images/montyhall/montyhall2.png" /></p>
 
 <p>Now, there is clearly no difference between whether the contestant changes their choice or not.</p>
 
@@ -723,10 +723,10 @@ Probability of difference arising from chance: 0.57546
   
   <entry>
     <title type="html"><![CDATA[SFN 2016 Presentation]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/11/15/sfn-2016-presentation/"/>
+    <link href="http://danvatterott.com/blog/2016/11/15/sfn-2016-presentation/"/>
     <updated>2016-11-15T13:43:53-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/11/15/sfn-2016-presentation</id>
-    <content type="html"><![CDATA[<p><img src="http://www.danvatterott.com/images/sfn/sfn_2016_vatterott.png" /></p>
+    <id>http://danvatterott.com/blog/2016/11/15/sfn-2016-presentation</id>
+    <content type="html"><![CDATA[<p><img src="http://danvatterott.com/images/sfn/sfn_2016_vatterott.png" /></p>
 
 <p>I recently presented at the annual meeting of the society for neuroscience, so I wanted to do a quick post describing my findings.</p>
 
@@ -740,9 +740,9 @@ Probability of difference arising from chance: 0.57546
   
   <entry>
     <title type="html"><![CDATA[PCA Tutorial]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/11/06/pca-tutorial/"/>
+    <link href="http://danvatterott.com/blog/2016/11/06/pca-tutorial/"/>
     <updated>2016-11-06T13:33:50-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/11/06/pca-tutorial</id>
+    <id>http://danvatterott.com/blog/2016/11/06/pca-tutorial</id>
     <content type="html"><![CDATA[<p><a href="http://setosa.io/ev/principal-component-analysis/">Principal Component Analysis</a> (PCA) is an important method for dimensionality reduction and data cleaning. I have used PCA in the past on this blog for estimating the latent variables that underlie player statistics. For example, I might have two features: average number of offensive rebounds and average number of defensive rebounds. The two features are highly correlated because a latent variable, the player’s <em>rebounding ability</em>, explains common variance in the two features. PCA is a method for extracting these latent variables that explain common variance across features.</p>
 
 <p>In this tutorial I generate fake data in order to help gain insight into the mechanics underlying PCA.</p>
@@ -783,7 +783,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span><span class="mi">30</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/PCA/original_data.png" /></p>
+<p><img src="http://danvatterott.com/images/PCA/original_data.png" /></p>
 
 <p>The first step before doing PCA is to normalize the data. This centers each feature (each feature will have a mean of 0) and divides data by its standard deviation (changing the standard deviation to 1). Normalizing the data puts all features on the same scale. Having features on the same scale is important because features might be more or less variable because of measurement rather than the latent variables producing the feature. For example, in basketball, points are often accumulated in sets of 2s and 3s, while rebounds are accumulated one at a time. The nature of basketball puts points and rebounds on a different scales, but this doesn’t mean that the latent variables <em>scoring ability</em> and <em>rebounding ability</em> are more or less variable.</p>
 
@@ -809,7 +809,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/PCA/stand_data.png" /></p>
+<p><img src="http://danvatterott.com/images/PCA/stand_data.png" /></p>
 
 <p>After standardizing the data, I need to find the <a href="http://setosa.io/ev/eigenvectors-and-eigenvalues/">eigenvectors and eigenvalues</a>. The eigenvectors point in the direction of a component and eigenvalues represent the amount of variance explained by the component. Below, I plot the standardized data with the eigenvectors ploted with their eigenvalues as the vectors distance from the origin.</p>
 
@@ -839,7 +839,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/PCA/eigen_data.png" /></p>
+<p><img src="http://danvatterott.com/images/PCA/eigen_data.png" /></p>
 
 <p>Next I order the eigenvectors according to the magnitude of their eigenvalues. This orders the components so that the components that explain more variability occur first. I then transform the data so that they’re axis aligned. This means the first component explain variability on the x-axis and the second component explains variance on the y-axis.</p>
 
@@ -871,7 +871,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/PCA/trans_data.png" /></p>
+<p><img src="http://danvatterott.com/images/PCA/trans_data.png" /></p>
 
 <p>Finally, just to make sure the PCA was done correctly, I will call PCA from the sklearn library, run it, and make sure it produces the same results as my analysis.</p>
 
@@ -900,16 +900,16 @@ Probability of difference arising from chance: 0.57546
   
   <entry>
     <title type="html"><![CDATA[Attention in a Convolutional Neural Net]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net/"/>
+    <link href="http://danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net/"/>
     <updated>2016-09-20T19:51:01-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net</id>
+    <id>http://danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net</id>
     <content type="html"><![CDATA[<p>This summer I had the pleasure of attending the <a href="http://cbmm.mit.edu/">Brains, Minds, and Machines</a> summer course at the <a href="http://www.mbl.edu/">Marine Biology Laboratory</a>. While there, I saw cool research, met awesome scientists, and completed an independent project. In this blog post, I describe my project.</p>
 
 <p>In 2012, Krizhevsky et al. released a <a href="http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf">convolutional neural network</a> that completely blew away the field at the <a href="http://www.image-net.org/">imagenet challenge</a>. This model is called “Alexnet,” and 2012 marks the beginning of neural networks’ resurgence in the machine learning community.</p>
 
 <p>Alexnet’s domination was not only exciting for the machine learning community. It was also exciting for the visual neuroscience community whose descriptions of the visual system closely matched alexnet (e.g., <a href="http://maxlab.neuro.georgetown.edu/hmax">HMAX</a>). <a href="http://mcgovern.mit.edu/principal-investigators/james-dicarlo">Jim DiCarlo</a> gave an awesome talk at the summer course describing his research comparing the output of neurons in the visual system and the output of “neurons” in alexnet (you can find the article <a href="https://physics.ucsd.edu/neurophysics/courses/physics_171/DeCarlo_reprint.pdf">here</a>).</p>
 
-<p><img src="http://www.danvatterott.com/images/BMM_CNN/visual_system_models.png" /></p>
+<p><img src="http://danvatterott.com/images/BMM_CNN/visual_system_models.png" /></p>
 
 <p>I find the similarities between the visual system and convolutional neural networks exciting, but check out the depictions of alexnet and the visual system above. Alexnet is depicted in the upper image. The visual system is depicted in the lower image. Comparing the two images is not fair, but the visual system is obviously vastly more complex than alexnet.</p>
 
@@ -923,7 +923,7 @@ Probability of difference arising from chance: 0.57546
 
 <p>I chose MNIST because its an easy problem, which allows me to use a small network. A small network is both easy to train and easy to understand, which is good for an exploratory project like this one.</p>
 
-<p><img src="http://www.danvatterott.com/images/BMM_CNN/att_model2.png" /></p>
+<p><img src="http://danvatterott.com/images/BMM_CNN/att_model2.png" /></p>
 
 <p>Above, I depict my model. This model has two <a href="http://cs231n.github.io/convolutional-networks/">convolutional layers</a>. Following the convolutional layers is a feature averaging layer which borrows methods from a <a href="http://cnnlocalization.csail.mit.edu/">recent paper out of the Torralba lab</a> and computes the average activity of units covering each location. The output of this feature averaging layer is then passed along to a fully connected layer. The fully connected layer “guesses” what the most likely digit is. My goal when I first created this network was to use this “guess” to guide where the model focused processing (i.e., attention), but I found guided models are irratic during training.</p>
 
@@ -935,13 +935,13 @@ Probability of difference arising from chance: 0.57546
 
 <p>I depict the results of my attentional and comparison models below. On the X-axis is the test phase (10k trials) following each training epoch (60k trials). On the Y-axis is percent accuracy during the test phase. I did 3 training runs with both sets of models. All models gave fairly similar results, which led to small error bars (these depict standard error). The results are … dissapointing. As you can see both the model with attention and the comparison model perform similarly. There might be an initial impact of attention, but this impact is slight.</p>
 
-<p><img src="http://www.danvatterott.com/images/BMM_CNN/model_performance_nonoise.png" /></p>
+<p><img src="http://danvatterott.com/images/BMM_CNN/model_performance_nonoise.png" /></p>
 
 <p>This result was a little dissapointing (since I’m an attention researcher and consider attention an important part of cognition), but it might not be so surprising given the task. If I gave you the task of naming digits, this task would be virtually effortless; probably so effortless that you would not have to pay very much attention to the task. You could probably talk on the phone or text while doing this task. Basically, I might have failed to find an effect of attention because this task is so easy that it does not require attention.</p>
 
 <p>I decided to try my network when the task was a little more difficult. To make the task more difficult, I added random noise to each image (thank you to Nancy Kanwisher for the suggestion). This trick of adding noise to images is one that’s frequently done in psychophysical attention expeirments, so it would be fitting if it worked here.</p>
 
-<p><img src="http://www.danvatterott.com/images/BMM_CNN/model_performance_noise.png" /></p>
+<p><img src="http://danvatterott.com/images/BMM_CNN/model_performance_noise.png" /></p>
 
 <p>The figure above depicts model performance on noisy images. The models are the as before, but this time the model with attention is far superior to the comparison model. Good news for attention researchers! This work suggests that visual attentional mechanisms similar to those in the brain may be beneficial in convolutional neural networks, and this effect is particularly strong with the images are noisy.</p>
 
@@ -951,9 +951,9 @@ Probability of difference arising from chance: 0.57546
   
   <entry>
     <title type="html"><![CDATA[Revisting NBA Career Predictions From Rookie Performance...again]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/"/>
+    <link href="http://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/"/>
     <updated>2016-07-31T21:59:41-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again</id>
+    <id>http://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again</id>
     <content type="html"><![CDATA[<p>Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future performance using <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">regression</a> <a href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/">models</a>. In this post I am again trying to predict rookies’ future performance, but now using using a <a href="https://en.wikipedia.org/wiki/Statistical_classification">classification approach</a>. When using a classification approach, I predict whether player X will be a “great,” “average,” or “poor” player rather than predicting exactly how productive player X will be.</p>
 
 <p>Much of this post re-uses code from the previous posts, so I skim over some of the repeated code.</p>
@@ -1078,7 +1078,7 @@ Probability of difference arising from chance: 0.57546
  0.10221130221130222]
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/classificationNBA/histogram.png" /></p>
+<p><img src="http://danvatterott.com/images/classificationNBA/histogram.png" /></p>
 
 <p>My goal is to use rookie year performance to classify players into these 4 categories. I have a big matrix with lots of data about rookie year performance, but the reason that I grouped player using the GMM is because I suspect that players in the different groups have different “paths” to success. I am including the groupings in my classification model and computing interaction terms. The interaction terms will allow rookie performance to produce different predictions for the different groups.</p>
 
@@ -1191,7 +1191,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">cm_normalized</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Normalized confusion matrix&#39;</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/classificationNBA/confusion_mat.png" /></p>
+<p><img src="http://danvatterott.com/images/classificationNBA/confusion_mat.png" /></p>
 
 <p>Lets look at what the model predicts for this year’s rookies. Below I modified two functions that I wrote for a previous post. The first function finds a particular year’s draft picks. The second function produces predictions for each draft pick.</p>
 
@@ -1345,16 +1345,16 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Draft Position&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/classificationNBA/predictions.png" /></p>
+<p><img src="http://danvatterott.com/images/classificationNBA/predictions.png" /></p>
 
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Creating Videos of NBA Action With Sportsvu Data]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/06/16/creating-videos-of-nba-action-with-sportsvu-data/"/>
+    <link href="http://danvatterott.com/blog/2016/06/16/creating-videos-of-nba-action-with-sportsvu-data/"/>
     <updated>2016-06-16T08:11:47-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/06/16/creating-videos-of-nba-action-with-sportsvu-data</id>
+    <id>http://danvatterott.com/blog/2016/06/16/creating-videos-of-nba-action-with-sportsvu-data</id>
     <content type="html"><![CDATA[<p>All basketball teams have a camera system called <a href="https://en.wikipedia.org/wiki/SportVU">SportVU</a> installed in their arenas. These camera systems track players and the ball throughout a basketball game.</p>
 
 <p>The data produced by sportsvu camera systems used to be freely available on NBA.com, but was recently removed (I have no idea why). Luckily, the data for about 600 games are available on <a href="https://github.com/neilmj/BasketballData">neilmj’s github</a>. In this post, I show how to create a video recreation of a given basketball play using the sportsvu data.</p>
@@ -1747,7 +1747,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s">&#39;all&#39;</span><span class="p">)</span> <span class="c">#close the plot</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<video preload="metadata" controls=""><source src="http://www.danvatterott.com/images/Event_41.mp4" type="video/mp4; codecs=&quot;avc1.42E01E, mp4a.40.2&quot;" /></video>
+<video preload="metadata" controls=""><source src="http://danvatterott.com/images/Event_41.mp4" type="video/mp4; codecs=&quot;avc1.42E01E, mp4a.40.2&quot;" /></video>
 
 <p>I’ve been told this video does not work for all users. I’ve also posted it on <a href="https://youtu.be/ZPvQOorvVtI">youtube</a>.</p>
 ]]></content>
@@ -1755,9 +1755,9 @@ Probability of difference arising from chance: 0.57546
   
   <entry>
     <title type="html"><![CDATA[NBA Shot Charts: Updated]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/05/13/nba-shot-charts-updated/"/>
+    <link href="http://danvatterott.com/blog/2016/05/13/nba-shot-charts-updated/"/>
     <updated>2016-05-13T11:08:22-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/05/13/nba-shot-charts-updated</id>
+    <id>http://danvatterott.com/blog/2016/05/13/nba-shot-charts-updated</id>
     <content type="html"><![CDATA[<p>For some reason I recently got it in my head that I wanted to go back and create more NBA shot charts. <a href="http://www.danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/">My previous shotcharts</a> used colored circles to depict the frequency and effectiveness of shots at different locations. This is an extremely efficient method of representing shooting profiles, but I thought it would be fun to create shot charts that represent a player’s shooting profile continously across the court rather than in discrete hexagons.</p>
 
 <p>By depicting the shooting data continously, I lose the ability to represent one dimenion - I can no longer use the size of circles to depict shot frequency at a location. Nonetheless, I thought it would be fun to create these charts.</p>
@@ -2222,7 +2222,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/nba_shot_charts/attempts1.png" /></p>
+<p><img src="http://danvatterott.com/images/nba_shot_charts/attempts1.png" /></p>
 
 <p>Here’s KAT’s shots made</p>
 
@@ -2234,7 +2234,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span><span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;made&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/nba_shot_charts/made1.png" /></p>
+<p><img src="http://danvatterott.com/images/nba_shot_charts/made1.png" /></p>
 
 <p>Here’s field goal percentage. I don’t like this one too much. It’s hard to use similar scales for attempts and field goal percentage even though I’m using standard deviations rather than absolute scales.</p>
 
@@ -2246,7 +2246,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;fg&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/nba_shot_charts/fg1.png" /></p>
+<p><img src="http://danvatterott.com/images/nba_shot_charts/fg1.png" /></p>
 
 <p>Here’s points across the court.</p>
 
@@ -2258,7 +2258,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;points&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/nba_shot_charts/points1.png" /></p>
+<p><img src="http://danvatterott.com/images/nba_shot_charts/points1.png" /></p>
 
 <p>Here’s how KAT’s attempts compare to the league average. You can see the twolve’s midrange heavy offense.</p>
 
@@ -2270,7 +2270,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">league_shotDict</span><span class="o">=</span><span class="n">league_shotDict</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/nba_shot_charts/attempts2.png" /></p>
+<p><img src="http://danvatterott.com/images/nba_shot_charts/attempts2.png" /></p>
 
 <p>How KAT’s shots made compares to league average.</p>
 
@@ -2282,7 +2282,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;made&#39;</span><span class="p">,</span><span class="n">league_shotDict</span><span class="o">=</span><span class="n">league_shotDict</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/nba_shot_charts/made2.png" /></p>
+<p><img src="http://danvatterott.com/images/nba_shot_charts/made2.png" /></p>
 
 <p>How KAT’s field goal percentage compares to league average. Again, the scale on these is not too good.</p>
 
@@ -2294,7 +2294,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;fg&#39;</span><span class="p">,</span><span class="n">league_shotDict</span><span class="o">=</span><span class="n">league_shotDict</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/nba_shot_charts/fg2.png" /></p>
+<p><img src="http://danvatterott.com/images/nba_shot_charts/fg2.png" /></p>
 
 <p>And here is how KAT’s points compare to league average.</p>
 
@@ -2306,16 +2306,16 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;points&#39;</span><span class="p">,</span><span class="n">league_shotDict</span><span class="o">=</span><span class="n">league_shotDict</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/nba_shot_charts/points2.png" /></p>
+<p><img src="http://danvatterott.com/images/nba_shot_charts/points2.png" /></p>
 
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[An Introduction to Neural Networks: Part 2]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2/"/>
+    <link href="http://danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2/"/>
     <updated>2016-05-02T21:56:27-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2</id>
+    <id>http://danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2</id>
     <content type="html"><![CDATA[<p>In a previous <a href="http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/">post</a>, I described how to do <a href="https://en.wikipedia.org/wiki/Backpropagation">backpropogation</a> with a 1-layer <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural network</a>. I’ve written this post assuming some familiarity with the previous post.</p>
 
 <p>When first created, 1-layer neural networks <a href="https://en.wikipedia.org/wiki/Perceptron">brought about quite a bit of excitement</a>, but this excitement quickly dissipated when researchers realized that 1-layer <a href="https://en.wikipedia.org/wiki/Perceptrons_%28book%29">neural networks could only solve a limited set of problems</a>.</p>
@@ -2354,7 +2354,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/exampleXOR.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/exampleXOR.png" /></p>
 
 <p>Again, each item has two values. An item’s first value is represented on the x-axis. An items second value is represented on the y-axis. The red items belong to one category and the blue items belong to another.</p>
 
@@ -2382,7 +2382,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/3_layer_net.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/3_layer_net.png" /></p>
 
 <p>Notice that this network now has 5 total neurons. The two units at the bottom are the <em>input layer</em>. The activity of input units is the value of the inputs (same as the inputs in my previous post). The two units in the middle are the <em>hidden layer</em>. The activity of hidden units are calculated in the same manner as the output units from my previous post. The unit at the top is the <em>output layer</em>. The activity of this unit is found in the same manner as in my previous post, but the activity of the hidden units replaces the input units.</p>
 
@@ -2438,7 +2438,7 @@ Probability of difference arising from chance: 0.57546
 </span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/3_layer_weights.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/3_layer_weights.png" /></p>
 
 <p>Above we have out network. The depiction of <script type="math/tex">Weight_{Input_{1}\to.Hidden_{2}}</script> and <script type="math/tex">Weight_{Input_{2}\to.Hidden_{1}}</script> are confusing. -0.8 belongs to <script type="math/tex">Weight_{Input_{1}\to.Hidden_{2}}</script>. -0.5 belongs to <script type="math/tex">Weight_{Input_{2}\to.Hidden_{1}}</script>.</p>
 
@@ -2585,7 +2585,7 @@ Output
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/net_guess1_1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/net_guess1_1.png" /></p>
 
 <p>In the plot above, I have Input 1 on the x-axis and Input 2 on the y-axis. So if the Input is [0,0], the network produces the activity depicted in the lower left square. If the Input is [1,0], the network produces the activity depicted in the lower right square. If the network produces an output of 0, then the square will be blue. If the network produces an output of 1, then the square will be red. As you can see, the network produces all output between 0.25 and 0.5… no where near the correct answers.</p>
 
@@ -2798,7 +2798,7 @@ Output
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Iteration #&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/net_learn1_1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/net_learn1_1.png" /></p>
 
 <p>Really cool. The network start with volatile error - sometimes being nearly correct ans sometimes being completely incorrect. Then After about 5000 iterations, the network starts down the slow path of perfecting an answer scheme. Below, I create a plot depicting the networks’ activity for the different input patterns.</p>
 
@@ -2836,7 +2836,7 @@ Output
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/net_guess2_1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/net_guess2_1.png" /></p>
 
 <p>Again, the Input 1 value is on the x-axis and the Input 2 value is on the y-axis. As you can see, the network guesses 1 when the inputs are different and it guesses 0 when the inputs are the same. Perfect! Below I depict the network with these correct weights.</p>
 
@@ -2862,7 +2862,7 @@ Output
 </span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/3_layer_weights1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/3_layer_weights1.png" /></p>
 
 <p>The network finds a pretty cool solution. Both hidden units are relatively active, but one hidden unit sends a strong postitive signal and the other sends a strong negative signal. The output unit has a negative bias, so if neither input is on, it will have an activity around 0. If both Input units are on, then the hidden unit that sends a postitive signal will be inhibited, and the output unit will have activity near 0. Otherwise, the hidden unit with a positive signal gives the output unit an acitivty near 1.</p>
 
@@ -2900,7 +2900,7 @@ Output
 </span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/local_minimaWeights.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/local_minimaWeights.png" /></p>
 
 <p>Using these weights as the start of the training set, lets see what the network will do with training.</p>
 
@@ -2932,7 +2932,7 @@ Output
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Iteration #&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/net_learn2_1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/net_learn2_1.png" /></p>
 
 <p>As you can see the network never reduces error. Let’s see how the network answers to the different input patterns.</p>
 
@@ -2970,7 +2970,7 @@ Output
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/net_guess3_1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/net_guess3_1.png" /></p>
 
 <p>Looks like the network produces the correct answer in some cases but not others. The network is particularly confused when Inputs 2 is 0. Below I depict the weights after “training.” As you can see, they have not changed too much from where the weights started before training.</p>
 
@@ -3002,7 +3002,7 @@ Output
 </span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/local_minimaWeights1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/local_minimaWeights1.png" /></p>
 
 <p>This network was unable to push itself out of the local optima. While local optima are a problem, they’re are a couple things we can do to avoid them. First, we should always train a network multiple times with different random weights in order to test for local optima. If the network continually finds local optima, then we can increase the learning rate. By increasing the learning rate, the network can escape local optima in some cases. This should be done with care though as too big of a learning rate can also prevent finding the global minima.</p>
 
@@ -3014,9 +3014,9 @@ Output
   
   <entry>
     <title type="html"><![CDATA[An Introduction to Neural Networks: Part 1]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/"/>
+    <link href="http://danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/"/>
     <updated>2016-04-29T19:17:07-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1</id>
+    <id>http://danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1</id>
     <content type="html"><![CDATA[<p>We use our most advanced technologies as metaphors for the brain: The industrial revolution inspired descriptions of the brain as mechanical. The telephone inspired descriptions of the brain as a telephone switchboard. The computer inspired descriptions of the brain as a computer. Recently, we have reached a point where our most advanced technologies - such as AI (e.g., <a href="https://en.wikipedia.org/wiki/AlphaGo">Alpha Go</a>), and our current understanding of the brain inform each other in an awesome synergy. Neural networks exemplify this synergy. Neural networks offer a relatively advanced description of the brain and are the software underlying some of our most advanced technology. As our understanding of the brain increases, neural networks become more sophisticated. As our understanding of neural networks increases, our understanding of the brain becomes more sophisticated.</p>
 
 <p>With the recent success of neural networks, I thought it would be useful to write a few posts describing the basics of neural networks.</p>
@@ -3055,7 +3055,7 @@ Output
 </span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span> <span class="c">#draw the network</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/example1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/example1.png" /></p>
 
 <p>Above is our neural network. It has two input neurons and a single output neuron. In this example, I’ll give the network an input of [0 1]. This means Input A will receive an input value of 0 and Input B will have an input value of 1.</p>
 
@@ -3112,7 +3112,7 @@ Output
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Input&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/logistic1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/logistic1.png" /></p>
 
 <p>As you can see above, the logistic used here transforms negative values into values near 0 and positive values into values near 1. Thus, when a unit receives a negative input it has activity near zero and when a unit receives a postitive input it has activity near 1. The most important aspect of this activation function is that its non-linear - it’s not a straight line.</p>
 
@@ -3135,7 +3135,7 @@ Output
 <pre><code>0.622459331202
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/logistic2.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/logistic2.png" /></p>
 
 <p>The activity of our output neuron is depicted as the red dot.</p>
 
@@ -3174,7 +3174,7 @@ Output
 <pre><code>[0.56217650088579807, 0.62245933120185459]
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/net_guess1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/net_guess1.png" /></p>
 
 <p>The guesses are in blue and the answers are in red. As you can tell, the guesses and the answers look almost nothing alike. Our network likes to guess around 0.6 while the correct answer is 0 in the first example and 1 in the second.</p>
 
@@ -3323,7 +3323,7 @@ Output
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Iteration #&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/net_learn1.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/net_learn1.png" /></p>
 
 <p>It looks like the while loop excecuted about 1000 iterations before converging. As you can see the error decreases. Quickly at first then slowly as the weights zone in on the correct answer. lets see how our guesses compare to the correct answers.</p>
 
@@ -3354,7 +3354,7 @@ Output
 <pre><code>[array([ 0.05420561]), array([ 0.95020512])]
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/neural_net/net_guess2.png" /></p>
+<p><img src="http://danvatterott.com/images/neural_net/net_guess2.png" /></p>
 
 <p>Not bad! Our guesses are much closer to the correct answers than before we started running the backpropogation procedure! Now, you might say, “HEY! But you haven’t reached the <em>correct</em> answers.” That’s true, but note that acheiving the values of 0 and 1 with a logistic function are only possible at -<script type="math/tex">\infty</script> and <script type="math/tex">\infty</script>, respectively. Because of this, we treat 0.05 as 0 and 0.95 as 1.</p>
 
@@ -3366,9 +3366,9 @@ Output
   
   <entry>
     <title type="html"><![CDATA[Revisiting NBA Career Predictions From Rookie Performance]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/"/>
+    <link href="http://danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/"/>
     <updated>2016-04-08T21:19:25-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance</id>
+    <id>http://danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance</id>
     <content type="html"><![CDATA[<p>In this post I wanted to do a quick follow up to a previous post about <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">predicting career nba performance from rookie year data</a>.</p>
 
 <p>After my previous post, I started to get a little worried about my career prediction model. Specifically, I started to wonder about whether my model was <a href="https://en.wikipedia.org/wiki/Bias%E2%80%93variance_tradeoff">underfitting or overfitting the data</a>. Underfitting occurs when the model has too much “bias” and cannot accomodate the data’s shape. <a href="https://en.wikipedia.org/wiki/Overfitting">Overfitting</a> occurs when the model is too flexible and can account for all variance in a data set - even variance due to noise. In this post, I will quickly re-create my player prediction model, and investigate whether underfitting and overfitting are a problem.</p>
@@ -3543,7 +3543,7 @@ Output
 </span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regression2NBA/original_model.png" /></p>
+<p><img src="http://danvatterott.com/images/regression2NBA/original_model.png" /></p>
 
 <p>More quick reminders - predicted performances are on the Y-axis, actual performances are on the X-axis, and the red line is the <a href="https://en.wikipedia.org/wiki/Identity_line">identity line</a>. Thus far, everything has been exactly the same as my previous post (although my group labels are different).</p>
 
@@ -3677,7 +3677,7 @@ Cross Validation MAE: 0.0665
 </span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.1</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regression2NBA/residuals.png" /></p>
+<p><img src="http://danvatterott.com/images/regression2NBA/residuals.png" /></p>
 
 <p>Residuals are on the Y-axis and career performances are on the X-axis. Negative residuals are over predictions (the player is worse than my model predicts) and postive residuals are under predictions (the player is better than my model predicts). I don’t test this, but the residuals appear VERY correlated. That is, the model tends to over estimate bad players (players with WS/48 less than 0.0) and under estimate good players. Just to clarify, non-correlated residuals would have no apparent slope.</p>
 
@@ -3689,9 +3689,9 @@ Cross Validation MAE: 0.0665
   
   <entry>
     <title type="html"><![CDATA[Predicting Career Performance From Rookie Performance]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/"/>
+    <link href="http://danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/"/>
     <updated>2016-03-20T15:56:18-04:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance</id>
+    <id>http://danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance</id>
     <content type="html"><![CDATA[<p>As a huge t-wolves fan, I’ve been curious all year by what we can infer from Karl-Anthony Towns’ great rookie season. To answer this question, I’ve create a simple linear regression model that uses rookie year performance to predict career performance.</p>
 
 <p>Many have attempted to predict NBA players’ success via regression style approaches. Notable models I know of include <a href="http://laynevashro.com/basketball/predsFAQ.html">Layne Vashro’s model</a> which uses combine and college performance to predict career performance. Layne Vashro’s model is a quasi-poisson GLM. I tried a similar approach, but had the most success when using ws/48 and OLS. I will discuss this a little more at the end of the post.</p>
@@ -3748,7 +3748,7 @@ Cross Validation MAE: 0.0665
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;WS/48&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regressionNBA/predictor_hist.png" /></p>
+<p><img src="http://danvatterott.com/images/regressionNBA/predictor_hist.png" /></p>
 
 <p>The predicted variable looks pretty gaussian, so I can use ordinary least squares. This will be nice because while ols is not flexible, it’s highly interpretable. At the end of the post I’ll mention some more complex models that I will try.</p>
 
@@ -3873,7 +3873,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Predicted WS/48&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regressionNBA/regression1_predict.png" /></p>
+<p><img src="http://danvatterott.com/images/regressionNBA/regression1_predict.png" /></p>
 
 <p>The blue line above is NOT the best-fit line. It’s the identity line. I plot it to help visualize where the model fails. The model seems to primarily fail in the extremes - it tends to overestimate the worst players.</p>
 
@@ -3931,7 +3931,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">WS_48</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regressionNBA/boxwhisk_ws48.png" /></p>
+<p><img src="http://danvatterott.com/images/regressionNBA/boxwhisk_ws48.png" /></p>
 
 <p>Some groups perform better than others, but there’s lots of overlap between the groups. Importantly, each group has a fair amount of variability. Each group spans at least 0.15 WS/48. This gives the regression enough room to successfully predict performance in each group.</p>
 
@@ -3973,7 +3973,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Percent&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regressionNBA/grouping_performance.png" /></p>
+<p><img src="http://danvatterott.com/images/regressionNBA/grouping_performance.png" /></p>
 
 <p>I’ve plotted the groups across a number of useful categories. For information about these categories see <a href="http://www.basketball-reference.com/about/glossary.html">basketball reference’s glossary</a>.</p>
 
@@ -4090,7 +4090,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Beta Weights&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regressionNBA/beta_weights.png" /></p>
+<p><img src="http://danvatterott.com/images/regressionNBA/beta_weights.png" /></p>
 
 <p>Above I plot the beta weights for each principle component across the groupings. This plot is a lot to look at, but I wanted to depict how the beta values changed across the groups. They are not drastically different, but they’re also not identical. Error bars depict 95% confidence intervals.</p>
 
@@ -4168,7 +4168,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regressionNBA/model2_predictions.png" /></p>
+<p><img src="http://danvatterott.com/images/regressionNBA/model2_predictions.png" /></p>
 
 <p>The plots above depict each regression’s predictions against actual ws/48. I provide each model’s r^2 in the plot too.</p>
 
@@ -4330,7 +4330,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Draft Position&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/regressionNBA/draft_2015_predict.png" /></p>
+<p><img src="http://danvatterott.com/images/regressionNBA/draft_2015_predict.png" /></p>
 
 <p>The plot above is ordered by draft pick. The error bars depict 95% confidence interbals…which are a little wider than I would like. It’s interesting to look at what clusters these players fit into. Lots of 3-pt shooters! It could be that rookies play a limited role in the offense - just shooting 3s.</p>
 
@@ -4733,9 +4733,9 @@ strong multicollinearity or other numerical problems.
   
   <entry>
     <title type="html"><![CDATA[Repeated Measures ANOVA in Python (Kinda)]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
+    <link href="http://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
     <updated>2016-02-28T21:52:03-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
+    <id>http://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
     <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
 
 <p>In this post I show how to execute a repeated measures ANOVAs using the <a href="http://rpy2.bitbucket.org/">rpy2</a> library, which allows us to move data between python and R, and execute R commands from python. I use rpy2 to load the <a href="http://www.inside-r.org/packages/cran/car/docs/Anova">car</a> library and run the ANOVA.</p>
@@ -4790,7 +4790,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/rmANOVA_1.png" /></p>
+<p><img src="http://danvatterott.com/images/rmANOVA_1.png" /></p>
 
 <p>Next, I load rpy2 for ipython. I am doing these analyses with ipython in a <a href="http://jupyter.org/">jupyter notebook</a> (highly recommended).</p>
 
@@ -4969,7 +4969,7 @@ Factor 1.03025 1.163294e-11
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/rmANOVA_2.png" /></p>
+<p><img src="http://danvatterott.com/images/rmANOVA_2.png" /></p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -5172,9 +5172,9 @@ Factor1:Factor2 1.073774 2.965002e-22
   
   <entry>
     <title type="html"><![CDATA[Grouping NBA Players]]></title>
-    <link href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/"/>
+    <link href="http://danvatterott.com/blog/2016/02/21/grouping-nba-players/"/>
     <updated>2016-02-21T15:14:23-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players</id>
+    <id>http://danvatterott.com/blog/2016/02/21/grouping-nba-players</id>
     <content type="html"><![CDATA[<p>In basketball, we typically talk about 5 positions: point guard, shooting guard, small forward, power forward, and center. Based on this, one might expect NBA players to fall into 5 distinct groups- Point guards perform similar to other point guards, shooting guards perform similar to other shooting guards, etc. Is this the case? Do NBA players fall neatly into position groups?</p>
 
 <p>To answer this question, I will look at how NBA players “group” together. For example, there might be a group of players who collect lots of rebounds, shoot poorly from behind the 3 point line, and block lots of shots. I might call these players forwards. If we allow player performance to create groups, what will these groups look like?</p>
@@ -5341,7 +5341,7 @@ Factor1:Factor2 1.073774 2.965002e-22
 </span><span class="line"><span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span> <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]];</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/scatter_mat1_nba.png" /></p>
+<p><img src="http://danvatterott.com/images/scatter_mat1_nba.png" /></p>
 
 <p>There are a couple things to note in the graph above. First, there’s a TON of information there. Second, it looks like there are some strong correlations. For example, look at the subplots depicting offensive rebounds by defensive rebounds.</p>
 
@@ -5401,7 +5401,7 @@ Factor1:Factor2 1.073774 2.965002e-22
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;PCA Component&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/PCA_nba.png" /></p>
+<p><img src="http://danvatterott.com/images/PCA_nba.png" /></p>
 
 <p>On the left, I plot the amount of variance explained after including each additional PCA component. Using all the components explains all the variability, but notice how little the last few components contribute. It doesn’t make sense to include a component that only explains 1% of the variability…but how many components to include!?</p>
 
@@ -5513,7 +5513,7 @@ Factor1:Factor2 1.073774 2.965002e-22
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Average Silhouette Score*100&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/cluster_eval_nba.png" /></p>
+<p><img src="http://danvatterott.com/images/cluster_eval_nba.png" /></p>
 
 <p>As you can in the left hand plot, adding more clusters explains more of the variance, but there are diminishing returns. Each additional cluster explains a little less data than the last (much like each PCA component explained less variance than the previous component).</p>
 
@@ -5629,7 +5629,7 @@ Factor1:Factor2 1.073774 2.965002e-22
 </span><span class="line">
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/scatter_mat2_nba.png" /></p>
+<p><img src="http://danvatterott.com/images/scatter_mat2_nba.png" /></p>
 
 <p>In this plot above. I mark the center of a given cluster with an X. For example, Cluster 0 and Cluster 5 are both high in outside skills. Cluster 5 is also high in rim scoring, but low in pure points.</p>
 
@@ -6053,7 +6053,7 @@ Name: Name, dtype: object
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Percentage of Players in Each Cluster&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/cluster_inc_nba.png" /></p>
+<p><img src="http://danvatterott.com/images/cluster_inc_nba.png" /></p>
 
 <p>I began this post by asking whether player positions is the most natural way to group NBA players. The clustering analysis here suggests not.</p>
 
@@ -6073,9 +6073,9 @@ Name: Name, dtype: object
   
   <entry>
     <title type="html"><![CDATA[Creating NBA Shot Charts]]></title>
-    <link href="http://www.danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/"/>
+    <link href="http://danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/"/>
     <updated>2015-12-22T14:21:06-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2015/12/22/creating-nba-shot-charts</id>
+    <id>http://danvatterott.com/blog/2015/12/22/creating-nba-shot-charts</id>
     <content type="html"><![CDATA[<p>Here I create shot charts depicting both shooting percentage and the number of shots taken at different court locations, similar to those produced on Austin Clemens’ website (http://www.austinclemens.com/shotcharts/).</p>
 
 <p>To create the shooting charts, I looked to a post by Savvas Tjortjoglou (http://savvastjortjoglou.com/nba-shot-sharts.html). Savvas’ post is great, but his plots only depict the number of shots taken at different locations.</p>
@@ -6386,7 +6386,7 @@ Name: Name, dtype: object
 </span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/shotChart_wiggins.png" /></p>
+<p><img src="http://danvatterott.com/images/shotChart_wiggins.png" /></p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -6396,7 +6396,7 @@ Name: Name, dtype: object
 </span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/shotChart_towns.png" /></p>
+<p><img src="http://danvatterott.com/images/shotChart_towns.png" /></p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -6406,7 +6406,7 @@ Name: Name, dtype: object
 </span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/shotChart_lavine.png" /></p>
+<p><img src="http://danvatterott.com/images/shotChart_lavine.png" /></p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -6416,7 +6416,7 @@ Name: Name, dtype: object
 </span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/shotChart_dieng.png" /></p>
+<p><img src="http://danvatterott.com/images/shotChart_dieng.png" /></p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -6426,7 +6426,7 @@ Name: Name, dtype: object
 </span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/shotChart_martin.png" /></p>
+<p><img src="http://danvatterott.com/images/shotChart_martin.png" /></p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -6436,7 +6436,7 @@ Name: Name, dtype: object
 </span><span class="line"><span class="n">ax</span> <span class="o">=</span> <span class="n">shooting_plot</span><span class="p">(</span><span class="n">shot_df</span><span class="p">,</span> <span class="n">plot_size</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">));</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><img src="http://www.danvatterott.com/images/shotChart_rubio.png" /></p>
+<p><img src="http://danvatterott.com/images/shotChart_rubio.png" /></p>
 
 <p>One concern with my plots is the use of hexbin. It’s a bit hacky. In particular, it does not account for the nonlinearity produced by the 3 point line (some hexbins include both long 2-pt shots and 3-pt shots). It would be nice to limit some bins to 3-pt shots, but I can’t think of a way to do this without hardcoding the locations. One advantage with the hexbin method is I can easily change the number of bins. I’m not sure I could produce equivalent flexibility with a plot that bins 2-pt and 3-pt shots seperately.</p>
 
@@ -6447,9 +6447,9 @@ Name: Name, dtype: object
   
   <entry>
     <title type="html"><![CDATA[Complete Amnesia for Object Attributes?]]></title>
-    <link href="http://www.danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes/"/>
+    <link href="http://danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes/"/>
     <updated>2015-12-12T13:10:09-05:00</updated>
-    <id>http://www.danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes</id>
+    <id>http://danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes</id>
     <content type="html"><![CDATA[<h3 id="reanalysis-of-chen--wyble-2015">Reanalysis of Chen &amp; Wyble, 2015</h3>
 
 <p>Chen and Wyble published an interesting paper (2015) where they demonstrate that participants cannot report attributes of attended stimuli unless the participants are previously informed that this attribute is important. For instance, you wouldn’t remember the color of the apple if you had had just told someone the shape. I would have expected the opposite, so … cool!</p>
@@ -6901,7 +6901,7 @@ standard deviation of accuracies
 0.71
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/Wyble1.png" /></p>
+<p><img src="http://danvatterott.com/images/Wyble1.png" /></p>
 
 <p>Lets look at participants’ performance when asked to identify the target’s location. I will plot performance as mean accuracy in the presurprise,surprise, and postsurprose trials.</p>
 
@@ -6934,7 +6934,7 @@ Presurprise vs Postsurprise
 	 T-test adj. Test value: 0.92 P-value: 0.3695
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/Wyble2.png" /></p>
+<p><img src="http://danvatterott.com/images/Wyble2.png" /></p>
 
 <p>The y-axis represents percent correct. All graphs in this post will have percent correct on the y-axis.</p>
 
@@ -6965,7 +6965,7 @@ Postsurprise vs Surprise
 	 Chi-Square Comparison: 6.4 P-value: 0.0114
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/Wyble3.png" /></p>
+<p><img src="http://danvatterott.com/images/Wyble3.png" /></p>
 
 <p>We perfectly replicate Chen and Wyble; participants respond more accurarely in the post-surprise trial than in the surprise trial.</p>
 
@@ -6992,7 +6992,7 @@ Postsurprise vs Surprise
 	 Chi-Square Comparison: 10.0 P-value: 0.0016
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/Wyble4.png" /></p>
+<p><img src="http://danvatterott.com/images/Wyble4.png" /></p>
 
 <h4 id="experiment-1---intertrial-analyses">Experiment 1 - Intertrial analyses</h4>
 
@@ -7038,7 +7038,7 @@ Match vs Mismatch
 	 Wilcoxon. Test value: 51.0 P-value: 0.04
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/Wyble5.png" /></p>
+<p><img src="http://danvatterott.com/images/Wyble5.png" /></p>
 
 <p>Looks like a 2.5% increase in accuracy. Now, this wasn’t really a planned comparison, so please take this result with a grain of salt.</p>
 
@@ -7072,7 +7072,7 @@ Match vs Mismatch
 	 T-test adj. Test value: 2.62 P-value: 0.0168
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/Wyble6.png" /></p>
+<p><img src="http://danvatterott.com/images/Wyble6.png" /></p>
 
 <p>Target location repetitions lead to a 2% increase in performance. Again, this result is robust.</p>
 
@@ -7138,7 +7138,7 @@ Match vs Mismatch
 	 T-test adj. Test value: 2.81 P-value: 0.0112
 </code></pre>
 
-<p><img src="http://www.danvatterott.com/images/Wyble7.png" /></p>
+<p><img src="http://danvatterott.com/images/Wyble7.png" /></p>
 
 <p>Wow. Only a 1% change in accuracy, so again not big. Nonetheless, this result is signficant. So, Some evidence that participants perform a little better when the targets’ color and identity repeat.</p>
 
