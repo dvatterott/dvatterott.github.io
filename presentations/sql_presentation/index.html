@@ -66,7 +66,7 @@
 					<h2>SQL Tutorial</h2>
 					<p>How I learned to stop worring and love the join</p>
 					<p>
-						<small>Created by <a href="https://danvatterott.com">Dan Vatterott</a> / <a href="http://twitter.com/dvatterott">@dvatterott</a></small>
+						<small>Created by <a href="https://danvatteroat.com">Dan Vatterott</a> / <a href="http://twitter.com/dvatterott">@dvatterott</a></small>
 					</p>
 				</section>
 
@@ -90,36 +90,41 @@
 				</section>
 
 				<section>
-					<h3>Buy_table</h3>
+					<h3>listen_table</h3>
 						<table id="cssTable">
 							<thead>
 								<tr>
 									<th>Customer_id</th>
-									<th>buy_date</th>
-									<th>tool_category</th>
-									<th>tool_id</th>
+									<th>listen_date</th>
+									<th>artist</th>
+									<th>artist_id</th>
+									<th>song_id</th>
 							</tr>
 							</thead>
 							<tbody>
 								<tr>
 									<td>1</td>
-									<td>'2017-11-01'</td>
-									<td>Hammer'</td>
+									<td>"2017-11-01"</td>
+									<td>"A Tribe Called Quest"</td>
+									<td>5.0</td>
 									<td>1.0</td>
 								</tr>
 								<tr>
 									<td>2</td>
-									<td>'2017-11-01'</td>
-									<td>'Wrench'</td>
+									<td>"2017-11-01"</td>
+									<td>"A Tribe Call Quest"</td>
+									<td>5.0</td>
 									<td>7.0</td>
 								</tr>
 								<tr>
 									<td>2</td>
-									<td>'2017-11-02'</td>
-									<td>'Hammer'</td>
+									<td>"2017-11-02"</td>
+									<td>"Wu-Tang Clan'"</td>
+									<td>1.0</td>
 									<td>7.0</td>
 								</tr>
 								<tr>
+									<td><div class="vert_dots"></div></td>
 									<td><div class="vert_dots"></div></td>
 									<td><div class="vert_dots"></div></td>
 									<td><div class="vert_dots"></div></td>
@@ -132,26 +137,26 @@
 				<section>
 					<section>
 						<h3>Where statement</h3>
-							<p>Create a list of people bought a "Hammer".</p>
+							<p>Create a list of people who listened to "A Tribe Called Quest".</p>
 							<pre class=fragment><code class="hljs" data-trim contenteditable>
 								SELECT
-								    DISTINCT(user_id)
+								    DISTINCT user_id
 								FROM
-								    buy_table
+								    listen_table
 								WHERE
-								    tool_category = "Hammer"
+								    artist = "A Tribe Called Quest"
 							</code></pre>
 					</section>
 					<section>
 	 				 <h3>Where statement: Reloaded</h3>
-					 	 <p>Create a list of people bought a "screw" or "Screw driver"?</p>
+					 	 <p>Create a list of people who listened to bands whose names start with "The".</p>
 						 <pre class=fragment><code class="hljs" data-trim contenteditable>
 							 SELECT
-							     DISTINCT(user_id)
+							     DISTINCT user_id
 							 FROM
-							     buy_table
+							     listen_table
 							 WHERE
-							     tool_category ILIKE "screw%"
+							     artist LIKE "The%"
 						 </code></pre>
 						 <p class=fragment>Note: sql alchemy (python api) gets angry about % signs (use %%)
 	 			 </section>
@@ -160,39 +165,37 @@
 			 <section>
 				 <section>
 					 <h3>Group By Statement</h3>
-						 <p>Create a list of the 10 people that bought the most "Hammers" where the id number is 1.</p>
+						 <p>Create a list of the 10 people that listened to the most songs by "Lauryn Hill".</p>
 						 <pre class=fragment><code class="hljs" data-trim contenteditable>
 							 SELECT
 							     user_id,
-							     COUNT(tool_id) AS buy_count
+							     COUNT(song_id) AS song_count
 							 FROM
-							     buy_table
+							     listen_table
 							 WHERE
-							     tool_category = "Hammer"
-							     AND
-							     tool_id = 1.0
+							     artist = "Lauryn Hill"
 							 GROUP BY
 							     user_id
 							 ORDER BY
-							     buy_count DESC
+							     song_count DESC
 							 LIMIT 10
 						 </code></pre>
 				 </section>
 				 <section>
 					<h3>Group By Statement: The Return</h3>
-						<p>Create a list of the people that bought more than 7 "screws".</p>
+						<p>Create a list of the people that listened to more than 10 songs by "Jurassic 5".</p>
 						<pre class=fragment><code class="hljs" data-trim contenteditable>
 							SELECT
 							    user_id,
-							    COUNT(tool_id) AS buy_count
+							    COUNT(song_id) AS song_count
 							FROM
-							    buy_table
+							    listen_table
 							WHERE
-							    tool_category = "screws"
+							    artist = "Jurassic 5"
 							GROUP BY
 							    user_id
 							HAVING
-							    COUNT(tool_id) > 7
+							    COUNT(song_id) > 10
 						</code></pre>
 						<p class=fragment>Note: Can't use select alias in where/having :/</p>
 				</section>
@@ -210,32 +213,37 @@
 				</section>
 
 				<section>
-					<h3>tool_table</h3>
+					<h3>artist_table</h3>
 					<table id="cssTable">
 						<thead>
 							<tr>
-								<th>tool_category</th>
-								<th>hand_tool</th>
-								<th>mechanical</th>
+								<th>artist_id</th>
+								<th>artist</th>
+								<th>male_lead</th>
+								<th>music_genre</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
-								<td>'Hammer'</td>
+								<th>5</th>
+								<td>"A Tribe Called Quest"</td>
 								<td>1</td>
-								<td>0</td>
+								<td>"Hip Hop"</td>
 							</tr>
 							<tr>
-								<td>'Wrench'</td>
+								<th>1</th>
+								<td>"Wu-Tang Clan"</td>
 								<td>1</td>
-								<td>0</td>
+								<td>"Hip Hop"</td>
 							</tr>
 							<tr>
-								<td>'Screw'</td>
+								<th>2</th>
+								<td>"The Fugees"</td>
 								<td>0</td>
-								<td>0</td>
+								<td>"R and B"</td>
 							</tr>
 							<tr>
+								<td><div class="vert_dots"></div></td>
 								<td><div class="vert_dots"></div></td>
 								<td><div class="vert_dots"></div></td>
 								<td><div class="vert_dots"></div></td>
@@ -245,21 +253,21 @@
 				</section>
 				<section>
 					<h3>Join Question</h3>
-					<p>Create a list of the ten people who bought the most "hand tools".</p>
+					<p>Create a list of the 10 people who listened to the most "Hip Hop".</p>
 					<pre class=fragment><code class="hljs" data-trim contenteditable>
 						SELECT
-						    bt.user_id,
-						    COUNT(DISTINCT(bt.tool_id)) AS buy_count
+						    lt.user_id,
+						    COUNT(DISTINCT lt.song_id ) AS listen_count
 						FROM
-						    buy_table AS bt
-						    INNER JOIN tool_table AS tt
-						      ON bt.tool_category = tt.tool_category
+						    listen_table AS lt
+						    INNER JOIN artist_table AS at
+						      ON lt.artist_id = at.artist_id
 						WHERE
-						    tt.hand_tool = 1
+						    at.music_genre = "Hip Hop"
 						GROUP BY
-						    bt.user_id
+						    lt.user_id
 						ORDER BY
-						    buy_count
+						    listen_count
 						LIMIT 10
 					</code></pre>
 				</section>
@@ -268,25 +276,25 @@
 			<section>
 				<section>
 					<h3>Sub-Queries</h3>
-					<p>Create a list of the ten people who bought an item from the most distinct "hand tool" categories.</p>
+					<p>Create a list of the 10 people who listened to the most songs by unique "R and B" artists.</p>
 					<pre class=fragment><code class="hljs" data-trim contenteditable>
 						SELECT
-						    bt.user_id,
-						    COUNT(tt.tool_category) AS tool_count
+						    lt.user_id,
+						    COUNT(lt.artists) AS artists_count
 						FROM
 						    (SELECT
-						         DISTINCT(user_id, tool_category)
+						         DISTINCT user_id, artist
 						     FROM
-						         buy_table
-						    ) AS bt
-						    INNER JOIN tool_table AS tt
-						      ON bt.seies_name = tt.tool_category
+						         listen_table
+						    ) AS lt
+						    INNER JOIN artist_table AS at
+						      ON lt.artist_id = at.artist_id
 						WHERE
-						    tt.hand_tool = 1
+						    at.music_genre = "R and B"
 						GROUP BY
-						    bt.user_id
+						    lt.user_id
 						ORDER BY
-						    tool_count
+						    artist_count
 						LIMIT 10
 					</code></pre>
 				</section>
@@ -296,27 +304,27 @@
 				</section>
 				<section>
 					<h3>Sub-Queries with a temp table</h3>
-					<p>Create a list of the ten people who bought an item from the most distinct "hand tool" categories.</p>
+					<p>Create a list of the 10 people who listened to the most songs by unique "R and B" artists.</p>
 					<pre class=fragment><code class="hljs" data-trim contenteditable>
 						WITH temp_table AS (
 						    SELECT
-						        DISTINCT(user_id, tool_category)
+						        DISTINCT user_id, artist
 						    FROM
-						        buy_table
+						        listen_table
 						)
 						SELECT
-						    tt.user_id,
-						    COUNT(tt.tool_category) AS tool_count
+						    at.user_id,
+						    COUNT(at.artist) AS artist_count
 						FROM
 						    temp_table AS tt
-						    INNER JOIN tool_table AS tt3
-						      ON tt.seies_name = tt2.tool_category
+						    INNER JOIN artist_table AS at
+						      ON tt.artist_id = at.artist_id
 						WHERE
-						    tt2.hand_tool = 0
+						    at.music_genre = "R and B"
 						GROUP BY
-						    tt.user_id
+						    at.user_id
 						ORDER BY
-						    tool_count
+						    artist_count
 						LIMIT 10
 					</code></pre>
 				</section>
@@ -328,23 +336,45 @@
 
 			<section>
 				<section>
+					<h3>In Statements</h3>
+					<p>Create a list of people who listened to "The Beatles" and "Kanye West".</p>
+					<pre><code class="hljs" data-trim contenteditable>
+						WITH temp_table AS (
+						    SELECT
+						        DISTINCT user_id  AS user_id
+						    FROM
+						        listen_table
+						    WHERE
+						        artist = 'The Beatles'
+						)
+						SELECT
+						    DISTINCT user_id AS user_id
+						FROM
+						    listen_table
+						WHERE
+						    artist = 'Kanye West'
+						AND
+						    user_id IN (SELECT user_id FROM temp_table)
+					</code></pre>
+				</section>
+				<section>
 					<h3>Exist Statements</h3>
-					<p>Create a list of people who bought a "Wrench" and a "Hammer".</p>
+					<p>Create a list of people who listened to "The Beatles" and "Kanye West".</p>
 					<pre class=fragment><code class="hljs" data-trim contenteditable>
 						WITH temp_table AS (
 						    SELECT
-						        DISTINCT(user_id) AS user_id
+						        DISTINCT user_id AS user_id
 						    FROM
-						        buy_table
+						        listen_table
 						    WHERE
-						        tool_category = 'Hammer'
+						        artist = 'The Beatles'
 						)
 						SELECT
-						    DISTINCT(user_id) AS user_id
+						    DISTINCT user_id AS user_id
 						FROM
-						    buy_table AS bt
+						    listen_table AS lt
 						WHERE
-						    tool_category = 'Wrench'
+						    artist = 'Kanye West'
 						    AND
 						    EXISTS (
 							SELECT
@@ -352,45 +382,23 @@
 						        FROM
 						            temp_table
 						        WHERE
-						            temp_table.user_id = bt.user_id)
-					</code></pre>
-				</section>
-				<section>
-					<h3>In Statements</h3>
-					<p>Create a list of people who bought a "Wrench" and a "Hammer".</p>
-					<pre><code class="hljs" data-trim contenteditable>
-						WITH temp_table AS (
-						    SELECT
-						        DISTINCT(user_id) AS user_id
-						    FROM
-						        buy_table
-						    WHERE
-						        tool_category = 'Hammer'
-						)
-						SELECT
-						    DISTINCT(user_id) AS user_id
-						FROM
-						    buy_table
-						WHERE
-						    tool_category = 'Wrench'
-						    AND
-						    user_id IN (SELECT user_id FROM temp_table)
+						            temp_table.user_id = lt.user_id)
 					</code></pre>
 				</section>
 			</section>
 
 			<section>
 				<h3>Case Statements</h3>
-				<p>Count whether more items are bought on the weekends or weekdays.</p>
+				<p>Count whether more songs are listened to on the weekends or weekdays.</p>
 				<pre><code class="hljs" data-trim contenteditable>
 					SELECT
           CASE
-              WHEN extract('isodow' from buy_date) > 5 THEN 'weekend'
+              WHEN extract('dow' from listen_date) > 5 THEN 'weekend'
               ELSE 'weekday'
           END AS weekend_or_not,
           COUNT(*)
 					FROM
-					    buy_table AS vt
+					    listen_table AS lt
 					GROUP BY
 					    weekend_or_not
 				</code></pre>
@@ -398,19 +406,19 @@
 
 			<section>
 				<h3>Window Functions</h3>
-				<p>Create a list of users and the first item they bought.</p>
+				<p>Create a list of users and the first artist they listened to.</p>
 				<pre><code class="hljs" data-trim contenteditable>
 					WITH temp_table AS (
 	        SELECT
 					        user_id,
-					        tool_category,
-					        rank() OVER (PARTITION BY user_id ORDER BY buy_date ASC)
+					        artist,
+					        rank() OVER (PARTITION BY user_id ORDER BY listen_date ASC)
 					    FROM
-					        buy_table
+					        listen_table
 					)
 					SELECT
 					    user_id,
-					    tool_category
+					    artist
 					FROM
 					    temp_table
 					WHERE
@@ -433,6 +441,11 @@
 					<li>LIMIT/TOP</li>
 				</ol>
 				<p class="fragment">Temp tables are faster when many tables. Joins are faster when using fewer tables.</p>
+			</section>
+
+			<section>
+				<h3>Watch out for null values</h3>
+				<p>The way that SQL handles null values is often not how you would expect.</p>
 			</section>
 
 			<section>
@@ -470,7 +483,7 @@
 
 				// More info https://github.com/hakimel/reveal.js#dependencies
 				dependencies: [
-					{ src: 'lib/js/classLitt.js', condition: function() { return !document.body.classList; } },
+					{ src: 'lib/js/classLiat.js', condition: function() { return !document.body.classList; } },
 					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
 					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
 					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
