@@ -6,6 +6,8 @@ comments: true
 categories: [python, open source, Kodi, HTPC]
 ---   
 
+NOTE: Since writing this post, PBS Newshour changed their site. They know use the url, https://www.pbs.org/newshour/video. The mechanics here will work but the url has changed and some of the queries need to be changed too. Check the repo for a working version of the code.
+
 I've been using [Kodi/XBMC](https://kodi.tv/) since 2010. It provides a flexible and (relatively) intuitive interface for interacting with content through your TV (much like an apple TV). One of the best parts of Kodi is the addons - these are apps that you can build or download. For instance, I use the NBA League Pass addon for watching Wolves games. I've been looking for a reason to build my own Kodi addon for years.
 
 Enter [PBS NewsHour](http://www.pbs.org/newshour/). If you're not watching PBS NewsHour, I'm not sure what you're doing with your life because it's the shit. It rocks. PBS NewsHour disseminates all their content on youtube and their website. For the past couple years, I've been watching their broadcasts every morning through the [Youtube addon](http://kodi.wiki/view/Add-on:YouTube). This works fine, but it's clunky. I decided to stream line watching the NewsHour by building a Kodi addon for it.
