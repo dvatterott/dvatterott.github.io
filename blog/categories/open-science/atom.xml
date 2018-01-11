@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Open Science | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/open-science/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Repeated Measures ANOVA in Python (Kinda)]]></title>
     <link href="https://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
-    <updated>2016-02-28T21:52:03-05:00</updated>
+    <updated>2016-02-28T20:52:03-06:00</updated>
     <id>https://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
     <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
 
@@ -459,7 +459,7 @@ Factor1:Factor2 1.073774 2.965002e-22
   <entry>
     <title type="html"><![CDATA[Complete Amnesia for Object Attributes?]]></title>
     <link href="https://danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes/"/>
-    <updated>2015-12-12T13:10:09-05:00</updated>
+    <updated>2015-12-12T12:10:09-06:00</updated>
     <id>https://danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes</id>
     <content type="html"><![CDATA[<h3 id="reanalysis-of-chen--wyble-2015">Reanalysis of Chen &amp; Wyble, 2015</h3>
 

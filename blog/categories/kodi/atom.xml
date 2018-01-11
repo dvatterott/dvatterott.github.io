@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Kodi | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/kodi/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[My First Kodi Addon - PBS NewsHour (a Tutorial)]]></title>
     <link href="https://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
-    <updated>2017-03-11T13:21:03-05:00</updated>
+    <updated>2017-03-11T12:21:03-06:00</updated>
     <id>https://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
     <content type="html"><![CDATA[<p>NOTE: Since writing this post, PBS Newshour changed their site. They know use the url, https://www.pbs.org/newshour/video. The mechanics here will work but the url has changed and some of the queries need to be changed too. Check the repo for a working version of the code.</p>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="https://danvatterott.com/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -14,9 +14,62 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Psychology to Data Science: Part 1]]></title>
+    <link href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/"/>
+    <updated>2018-01-10T19:21:28-06:00</updated>
+    <id>https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1</id>
+    <content type="html"><![CDATA[<p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard.</p>
+
+<p>Before I get started, I want to thank <a href="https://www.linkedin.com/in/rickcwolf/">Rick Wolf</a> for providing comments on an earlier version of this post.</p>
+
+<p>This first post is a series of general questions I’ve received. The second post will focus on technical skills required to get a job in data science.</p>
+
+<p>Each header in this post represents a question. Below the header/question I record my response.</p>
+
+<p>Anyone starting this process should know they are starting a marathon. Not a sprint. Making the leap from academia to data science is more than possible, but it takes time and dedication.</p>
+
+<h3 id="do-you-think-that-being-a-psychology-phd-is-a-disadvantage">Do you think that being a Psychology PhD is a disadvantage?</h3>
+<p>I think it can be a disadvantage in the job application process. Most people don’t understand how quantitative Psychology is, so psychology grads have to overcome these stereotypes. This doesn’t mean having a Psychology PhD is a disadvantage when it comes to BEING a data scientist. Having a Psychology PhD can be a huge advantage because Psychology PhDs have experience measuring behavior which is 90% of data science. Every company wants to know what their customers are doing and how to change their customers’ behavior. This is literally what Psychology PhDs do, so Psychology PhDs might have the most pertinent experience of any science PhD.</p>
+
+<h3 id="when-it-is-the-right-time-to-apply-for-a-boot-camp">When it is the right time to apply for a boot camp?</h3>
+<p>(I did the <a href="http://insightdatascience.com/">Insight Data Science</a> bootcamp)<br />
+Apply when you’re good enough to get a phone screen but not good enough to get a job. Don’t count on a boot camp to give you all the skills. Instead, think of boot camps as polishing your skills.<br />
+<br />
+Here is the game plan I would use:<br />
+Send out 3-4 job applications and see if you get any hits. If not, think about how you can improve your resume (see post #2), and go about those improvements. After a few iterations of this, you will start getting invitations to do phone screens. At this stage, a boot camp will be useful.<br />
+The boot camps are of varying quality. Ask around to get an idea for which boot camps are better or worse. Also, look into how each boot camp gets paid. If you pay tuition, the boot camp will care less about whether you get a job. If the boot camp gets paid through recruiting fees or collecting tuition from your paychecks, it is more invested in your job.</p>
+
+<h3 id="should-i-start-a-blog">Should I start a blog?</h3>
+<p>Yes, I consider this a must (and so do <a href="varianceexplained.org/r/start-blog/varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
+
+<p>Most people (including myself) host their page on github and generate the html with a static site generator. I use <a href="http://octopress.org/">octopress</a>, which works great. Most people seem to use <a href="http://docs.getpelican.com/en/stable/">pelican</a>. I would recommend pelican because it’s built in Python. I haven’t used it, but a quick google search led me to <a href="http://mathamy.com/migrating-to-github-pages-using-pelican.html">this tutorial</a> on building a github site with pelican.</p>
+
+<p>I wish I’d sent more of my posts to friends/colleagues. Peer review is always good for a variety of reasons. I’d be more than happy to review posts for anyone reading this blog.</p>
+
+<h3 id="how-should-i-frame-what-ive-done-in-academia-on-my-cvresume">How should I frame what I’ve done in academia on my CV/resume?</h3>
+<p>First, no one in industry cares about publications. People might notice if the journal is Science/Nature but most will not.
+Spend a few hours thinking about how to describe your academic accomplishments as technical skills. For example, as a Postdoc, I was on a Neurophysiology project that required writing code to collect, ingest, and transform electrophysiology data. In academia, none of this code mattered. In industry, it’s the only thing that matters. What I built was a data-pipeline, and this is a product many companies desire.</p>
+
+<p>We all have examples like this, but they’re not obvious because academics don’t know what companies want. Think of your data-pipelines, your interactive experiments, your scripted analytics.</p>
+
+<p>Transforming academic work into skills that companies desire will take a bit of creativity (I am happy to help with this), but remember that your goal here is to express how the technical skills you used in academia will apply to what you will do as a data scientist.</p>
+
+<p>Many people (including myself) love to say they can learn fast. While this is an important skill it’s hard to measure and it calls attention to what you do not know. In general, avoid it.</p>
+
+<h3 id="did-you-focus-on-one-specific-industry">Did you focus on one specific industry?</h3>
+<p>I think a better question than what industry is what size of team/company you want to work on. At a big company you will have a more specific job with more specific requirements (and probably more depth of knowledge). At a smaller company, you will be expected to have a broader skill set. This matters in terms of what you want in a job and what skills you have. Having industry specific knowledge is awesome, but most academics have never worked in an industry so by definition they don’t have industry specific knowledge. Unfortunately, we just have to punt on this aspect of the job application.</p>
+
+<h3 id="anything-to-be-wary-of">Anything to be wary of?</h3>
+<p>No matter what your job is, having a good boss is important. If you get a funny feeling about a potential boss in the interview process, don’t take the job.</p>
+
+<p>Some companies are trying to hire data scientists but don’t want to change their company. By this I mean they want their data scientists to work in excel. Excel is a great tool, but it’s not a tool I would want to use every day. If you feel the same way, then keep an eye out for this.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Using Cron to Automate Jobs on Ubuntu]]></title>
     <link href="https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
-    <updated>2017-09-01T18:04:17-04:00</updated>
+    <updated>2017-09-01T17:04:17-05:00</updated>
     <id>https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
     <content type="html"><![CDATA[<p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
 
@@ -117,7 +170,7 @@
   <entry>
     <title type="html"><![CDATA[Are We in a TV Golden Age?]]></title>
     <link href="https://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/"/>
-    <updated>2017-07-15T16:12:26-04:00</updated>
+    <updated>2017-07-15T15:12:26-05:00</updated>
     <id>https://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age</id>
     <content type="html"><![CDATA[<p>I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 years ago. My wife contended that there was simply more TV content being produced, and that this led to more good shows, but shows are not inherently any better.</p>
 
@@ -249,7 +302,7 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   <entry>
     <title type="html"><![CDATA[My First Kodi Addon - PBS NewsHour (a Tutorial)]]></title>
     <link href="https://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
-    <updated>2017-03-11T13:21:03-05:00</updated>
+    <updated>2017-03-11T12:21:03-06:00</updated>
     <id>https://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
     <content type="html"><![CDATA[<p>NOTE: Since writing this post, PBS Newshour changed their site. They know use the url, https://www.pbs.org/newshour/video. The mechanics here will work but the url has changed and some of the queries need to be changed too. Check the repo for a working version of the code.</p>
 
@@ -532,7 +585,7 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   <entry>
     <title type="html"><![CDATA[Sifting the Overflow]]></title>
     <link href="https://danvatterott.com/blog/2017/03/04/sifting-the-overflow/"/>
-    <updated>2017-03-04T10:11:45-05:00</updated>
+    <updated>2017-03-04T09:11:45-06:00</updated>
     <id>https://danvatterott.com/blog/2017/03/04/sifting-the-overflow</id>
     <content type="html"><![CDATA[<p>In January 2017, I started a fellowship at <a href="http://insightdatascience.com/">Insight Data Science</a>. Insight is a 7 week program for helping academics transition from academia to careers in data science. In the first 4 weeks, fellows build data science products, and fellows present these products to different companies in the last 3 weeks.</p>
 
@@ -545,7 +598,7 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   <entry>
     <title type="html"><![CDATA[Simulating the Monty Hall Problem]]></title>
     <link href="https://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
-    <updated>2016-12-25T11:19:53-05:00</updated>
+    <updated>2016-12-25T10:19:53-06:00</updated>
     <id>https://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
     <content type="html"><![CDATA[<p>I’ve been hearing about the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty Hall problem</a> for years and its never quite made sense to me, so I decided to program up a quick simulation.</p>
 
@@ -726,7 +779,7 @@ Probability of difference arising from chance: 0.57546
   <entry>
     <title type="html"><![CDATA[SFN 2016 Presentation]]></title>
     <link href="https://danvatterott.com/blog/2016/11/15/sfn-2016-presentation/"/>
-    <updated>2016-11-15T13:43:53-05:00</updated>
+    <updated>2016-11-15T12:43:53-06:00</updated>
     <id>https://danvatterott.com/blog/2016/11/15/sfn-2016-presentation</id>
     <content type="html"><![CDATA[<p><img src="https://danvatterott.com/images/sfn/sfn_2016_vatterott.png" /></p>
 
@@ -743,7 +796,7 @@ Probability of difference arising from chance: 0.57546
   <entry>
     <title type="html"><![CDATA[PCA Tutorial]]></title>
     <link href="https://danvatterott.com/blog/2016/11/06/pca-tutorial/"/>
-    <updated>2016-11-06T13:33:50-05:00</updated>
+    <updated>2016-11-06T12:33:50-06:00</updated>
     <id>https://danvatterott.com/blog/2016/11/06/pca-tutorial</id>
     <content type="html"><![CDATA[<p><a href="http://setosa.io/ev/principal-component-analysis/">Principal Component Analysis</a> (PCA) is an important method for dimensionality reduction and data cleaning. I have used PCA in the past on this blog for estimating the latent variables that underlie player statistics. For example, I might have two features: average number of offensive rebounds and average number of defensive rebounds. The two features are highly correlated because a latent variable, the player’s <em>rebounding ability</em>, explains common variance in the two features. PCA is a method for extracting these latent variables that explain common variance across features.</p>
 
@@ -903,7 +956,7 @@ Probability of difference arising from chance: 0.57546
   <entry>
     <title type="html"><![CDATA[Attention in a Convolutional Neural Net]]></title>
     <link href="https://danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net/"/>
-    <updated>2016-09-20T19:51:01-04:00</updated>
+    <updated>2016-09-20T18:51:01-05:00</updated>
     <id>https://danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net</id>
     <content type="html"><![CDATA[<p>This summer I had the pleasure of attending the <a href="http://cbmm.mit.edu/">Brains, Minds, and Machines</a> summer course at the <a href="http://www.mbl.edu/">Marine Biology Laboratory</a>. While there, I saw cool research, met awesome scientists, and completed an independent project. In this blog post, I describe my project.</p>
 
@@ -954,7 +1007,7 @@ Probability of difference arising from chance: 0.57546
   <entry>
     <title type="html"><![CDATA[Revisting NBA Career Predictions From Rookie Performance...again]]></title>
     <link href="https://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/"/>
-    <updated>2016-07-31T21:59:41-04:00</updated>
+    <updated>2016-07-31T20:59:41-05:00</updated>
     <id>https://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again</id>
     <content type="html"><![CDATA[<p>Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future performance using <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">regression</a> <a href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/">models</a>. In this post I am again trying to predict rookies’ future performance, but now using using a <a href="https://en.wikipedia.org/wiki/Statistical_classification">classification approach</a>. When using a classification approach, I predict whether player X will be a “great,” “average,” or “poor” player rather than predicting exactly how productive player X will be.</p>
 
@@ -1355,7 +1408,7 @@ Probability of difference arising from chance: 0.57546
   <entry>
     <title type="html"><![CDATA[Creating Videos of NBA Action With Sportsvu Data]]></title>
     <link href="https://danvatterott.com/blog/2016/06/16/creating-videos-of-nba-action-with-sportsvu-data/"/>
-    <updated>2016-06-16T08:11:47-04:00</updated>
+    <updated>2016-06-16T07:11:47-05:00</updated>
     <id>https://danvatterott.com/blog/2016/06/16/creating-videos-of-nba-action-with-sportsvu-data</id>
     <content type="html"><![CDATA[<p>All basketball teams have a camera system called <a href="https://en.wikipedia.org/wiki/SportVU">SportVU</a> installed in their arenas. These camera systems track players and the ball throughout a basketball game.</p>
 
@@ -1758,7 +1811,7 @@ Probability of difference arising from chance: 0.57546
   <entry>
     <title type="html"><![CDATA[NBA Shot Charts: Updated]]></title>
     <link href="https://danvatterott.com/blog/2016/05/13/nba-shot-charts-updated/"/>
-    <updated>2016-05-13T11:08:22-04:00</updated>
+    <updated>2016-05-13T10:08:22-05:00</updated>
     <id>https://danvatterott.com/blog/2016/05/13/nba-shot-charts-updated</id>
     <content type="html"><![CDATA[<p>For some reason I recently got it in my head that I wanted to go back and create more NBA shot charts. <a href="http://www.danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/">My previous shotcharts</a> used colored circles to depict the frequency and effectiveness of shots at different locations. This is an extremely efficient method of representing shooting profiles, but I thought it would be fun to create shot charts that represent a player’s shooting profile continously across the court rather than in discrete hexagons.</p>
 
@@ -2316,7 +2369,7 @@ Probability of difference arising from chance: 0.57546
   <entry>
     <title type="html"><![CDATA[An Introduction to Neural Networks: Part 2]]></title>
     <link href="https://danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2/"/>
-    <updated>2016-05-02T21:56:27-04:00</updated>
+    <updated>2016-05-02T20:56:27-05:00</updated>
     <id>https://danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2</id>
     <content type="html"><![CDATA[<p>In a previous <a href="http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/">post</a>, I described how to do <a href="https://en.wikipedia.org/wiki/Backpropagation">backpropogation</a> with a 1-layer <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural network</a>. I’ve written this post assuming some familiarity with the previous post.</p>
 
@@ -3017,7 +3070,7 @@ Output
   <entry>
     <title type="html"><![CDATA[An Introduction to Neural Networks: Part 1]]></title>
     <link href="https://danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/"/>
-    <updated>2016-04-29T19:17:07-04:00</updated>
+    <updated>2016-04-29T18:17:07-05:00</updated>
     <id>https://danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1</id>
     <content type="html"><![CDATA[<p>We use our most advanced technologies as metaphors for the brain: The industrial revolution inspired descriptions of the brain as mechanical. The telephone inspired descriptions of the brain as a telephone switchboard. The computer inspired descriptions of the brain as a computer. Recently, we have reached a point where our most advanced technologies - such as AI (e.g., <a href="https://en.wikipedia.org/wiki/AlphaGo">Alpha Go</a>), and our current understanding of the brain inform each other in an awesome synergy. Neural networks exemplify this synergy. Neural networks offer a relatively advanced description of the brain and are the software underlying some of our most advanced technology. As our understanding of the brain increases, neural networks become more sophisticated. As our understanding of neural networks increases, our understanding of the brain becomes more sophisticated.</p>
 
@@ -3369,7 +3422,7 @@ Output
   <entry>
     <title type="html"><![CDATA[Revisiting NBA Career Predictions From Rookie Performance]]></title>
     <link href="https://danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/"/>
-    <updated>2016-04-08T21:19:25-04:00</updated>
+    <updated>2016-04-08T20:19:25-05:00</updated>
     <id>https://danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance</id>
     <content type="html"><![CDATA[<p>In this post I wanted to do a quick follow up to a previous post about <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">predicting career nba performance from rookie year data</a>.</p>
 
@@ -3692,7 +3745,7 @@ Cross Validation MAE: 0.0665
   <entry>
     <title type="html"><![CDATA[Predicting Career Performance From Rookie Performance]]></title>
     <link href="https://danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/"/>
-    <updated>2016-03-20T15:56:18-04:00</updated>
+    <updated>2016-03-20T14:56:18-05:00</updated>
     <id>https://danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance</id>
     <content type="html"><![CDATA[<p>As a huge t-wolves fan, I’ve been curious all year by what we can infer from Karl-Anthony Towns’ great rookie season. To answer this question, I’ve create a simple linear regression model that uses rookie year performance to predict career performance.</p>
 
@@ -4736,7 +4789,7 @@ strong multicollinearity or other numerical problems.
   <entry>
     <title type="html"><![CDATA[Repeated Measures ANOVA in Python (Kinda)]]></title>
     <link href="https://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
-    <updated>2016-02-28T21:52:03-05:00</updated>
+    <updated>2016-02-28T20:52:03-06:00</updated>
     <id>https://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
     <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
 
@@ -5175,7 +5228,7 @@ Factor1:Factor2 1.073774 2.965002e-22
   <entry>
     <title type="html"><![CDATA[Grouping NBA Players]]></title>
     <link href="https://danvatterott.com/blog/2016/02/21/grouping-nba-players/"/>
-    <updated>2016-02-21T15:14:23-05:00</updated>
+    <updated>2016-02-21T14:14:23-06:00</updated>
     <id>https://danvatterott.com/blog/2016/02/21/grouping-nba-players</id>
     <content type="html"><![CDATA[<p>In basketball, we typically talk about 5 positions: point guard, shooting guard, small forward, power forward, and center. Based on this, one might expect NBA players to fall into 5 distinct groups- Point guards perform similar to other point guards, shooting guards perform similar to other shooting guards, etc. Is this the case? Do NBA players fall neatly into position groups?</p>
 
@@ -6076,7 +6129,7 @@ Name: Name, dtype: object
   <entry>
     <title type="html"><![CDATA[Creating NBA Shot Charts]]></title>
     <link href="https://danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/"/>
-    <updated>2015-12-22T14:21:06-05:00</updated>
+    <updated>2015-12-22T13:21:06-06:00</updated>
     <id>https://danvatterott.com/blog/2015/12/22/creating-nba-shot-charts</id>
     <content type="html"><![CDATA[<p>Here I create shot charts depicting both shooting percentage and the number of shots taken at different court locations, similar to those produced on Austin Clemens’ website (http://www.austinclemens.com/shotcharts/).</p>
 
@@ -6450,7 +6503,7 @@ Name: Name, dtype: object
   <entry>
     <title type="html"><![CDATA[Complete Amnesia for Object Attributes?]]></title>
     <link href="https://danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes/"/>
-    <updated>2015-12-12T13:10:09-05:00</updated>
+    <updated>2015-12-12T12:10:09-06:00</updated>
     <id>https://danvatterott.com/blog/2015/12/12/complete-amnesia-for-object-attributes</id>
     <content type="html"><![CDATA[<h3 id="reanalysis-of-chen--wyble-2015">Reanalysis of Chen &amp; Wyble, 2015</h3>
 

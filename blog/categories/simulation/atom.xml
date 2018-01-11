@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Simulation | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/simulation/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Simulating the Monty Hall Problem]]></title>
     <link href="https://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
-    <updated>2016-12-25T11:19:53-05:00</updated>
+    <updated>2016-12-25T10:19:53-06:00</updated>
     <id>https://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
     <content type="html"><![CDATA[<p>I’ve been hearing about the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty Hall problem</a> for years and its never quite made sense to me, so I decided to program up a quick simulation.</p>
 

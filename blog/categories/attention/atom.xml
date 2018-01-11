@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Attention | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/attention/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Attention in a Convolutional Neural Net]]></title>
     <link href="https://danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net/"/>
-    <updated>2016-09-20T19:51:01-04:00</updated>
+    <updated>2016-09-20T18:51:01-05:00</updated>
     <id>https://danvatterott.com/blog/2016/09/20/attention-in-a-convolutional-neural-net</id>
     <content type="html"><![CDATA[<p>This summer I had the pleasure of attending the <a href="http://cbmm.mit.edu/">Brains, Minds, and Machines</a> summer course at the <a href="http://www.mbl.edu/">Marine Biology Laboratory</a>. While there, I saw cool research, met awesome scientists, and completed an independent project. In this blog post, I describe my project.</p>
 

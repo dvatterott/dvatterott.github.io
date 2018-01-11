@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Statistics | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/statistics/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Repeated Measures ANOVA in Python (Kinda)]]></title>
     <link href="https://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
-    <updated>2016-02-28T21:52:03-05:00</updated>
+    <updated>2016-02-28T20:52:03-06:00</updated>
     <id>https://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
     <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Ubuntu | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/ubuntu/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Using Cron to Automate Jobs on Ubuntu]]></title>
     <link href="https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
-    <updated>2017-09-01T18:04:17-04:00</updated>
+    <updated>2017-09-01T17:04:17-05:00</updated>
     <id>https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
     <content type="html"><![CDATA[<p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
 

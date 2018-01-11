@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Open Source | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/open-source/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Using Cron to Automate Jobs on Ubuntu]]></title>
     <link href="https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
-    <updated>2017-09-01T18:04:17-04:00</updated>
+    <updated>2017-09-01T17:04:17-05:00</updated>
     <id>https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
     <content type="html"><![CDATA[<p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
 
@@ -117,7 +117,7 @@
   <entry>
     <title type="html"><![CDATA[Are We in a TV Golden Age?]]></title>
     <link href="https://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age/"/>
-    <updated>2017-07-15T16:12:26-04:00</updated>
+    <updated>2017-07-15T15:12:26-05:00</updated>
     <id>https://danvatterott.com/blog/2017/07/15/are-we-in-a-tv-golden-age</id>
     <content type="html"><![CDATA[<p>I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 years ago. My wife contended that there was simply more TV content being produced, and that this led to more good shows, but shows are not inherently any better.</p>
 
@@ -255,7 +255,7 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   <entry>
     <title type="html"><![CDATA[My First Kodi Addon - PBS NewsHour (a Tutorial)]]></title>
     <link href="https://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/"/>
-    <updated>2017-03-11T13:21:03-05:00</updated>
+    <updated>2017-03-11T12:21:03-06:00</updated>
     <id>https://danvatterott.com/blog/2017/03/11/my-first-kodi-addon-pbs-newshour</id>
     <content type="html"><![CDATA[<p>NOTE: Since writing this post, PBS Newshour changed their site. They know use the url, https://www.pbs.org/newshour/video. The mechanics here will work but the url has changed and some of the queries need to be changed too. Check the repo for a working version of the code.</p>
 
@@ -538,7 +538,7 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   <entry>
     <title type="html"><![CDATA[Sifting the Overflow]]></title>
     <link href="https://danvatterott.com/blog/2017/03/04/sifting-the-overflow/"/>
-    <updated>2017-03-04T10:11:45-05:00</updated>
+    <updated>2017-03-04T09:11:45-06:00</updated>
     <id>https://danvatterott.com/blog/2017/03/04/sifting-the-overflow</id>
     <content type="html"><![CDATA[<p>In January 2017, I started a fellowship at <a href="http://insightdatascience.com/">Insight Data Science</a>. Insight is a 7 week program for helping academics transition from academia to careers in data science. In the first 4 weeks, fellows build data science products, and fellows present these products to different companies in the last 3 weeks.</p>
 
@@ -551,7 +551,7 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   <entry>
     <title type="html"><![CDATA[Simulating the Monty Hall Problem]]></title>
     <link href="https://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem/"/>
-    <updated>2016-12-25T11:19:53-05:00</updated>
+    <updated>2016-12-25T10:19:53-06:00</updated>
     <id>https://danvatterott.com/blog/2016/12/25/simulating-the-monty-hall-problem</id>
     <content type="html"><![CDATA[<p>I’ve been hearing about the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty Hall problem</a> for years and its never quite made sense to me, so I decided to program up a quick simulation.</p>
 

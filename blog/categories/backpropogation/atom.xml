@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Backpropogation | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/backpropogation/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[An Introduction to Neural Networks: Part 2]]></title>
     <link href="https://danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2/"/>
-    <updated>2016-05-02T21:56:27-04:00</updated>
+    <updated>2016-05-02T20:56:27-05:00</updated>
     <id>https://danvatterott.com/blog/2016/05/02/an-introduction-to-neural-networks-part-2</id>
     <content type="html"><![CDATA[<p>In a previous <a href="http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/">post</a>, I described how to do <a href="https://en.wikipedia.org/wiki/Backpropagation">backpropogation</a> with a 1-layer <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural network</a>. I’ve written this post assuming some familiarity with the previous post.</p>
 
@@ -723,7 +723,7 @@ Output
   <entry>
     <title type="html"><![CDATA[An Introduction to Neural Networks: Part 1]]></title>
     <link href="https://danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/"/>
-    <updated>2016-04-29T19:17:07-04:00</updated>
+    <updated>2016-04-29T18:17:07-05:00</updated>
     <id>https://danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1</id>
     <content type="html"><![CDATA[<p>We use our most advanced technologies as metaphors for the brain: The industrial revolution inspired descriptions of the brain as mechanical. The telephone inspired descriptions of the brain as a telephone switchboard. The computer inspired descriptions of the brain as a computer. Recently, we have reached a point where our most advanced technologies - such as AI (e.g., <a href="https://en.wikipedia.org/wiki/AlphaGo">Alpha Go</a>), and our current understanding of the brain inform each other in an awesome synergy. Neural networks exemplify this synergy. Neural networks offer a relatively advanced description of the brain and are the software underlying some of our most advanced technology. As our understanding of the brain increases, neural networks become more sophisticated. As our understanding of neural networks increases, our understanding of the brain becomes more sophisticated.</p>
 

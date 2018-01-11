@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Regression | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/regression/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2017-12-14T18:38:08-05:00</updated>
+  <updated>2018-01-10T21:11:26-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Revisting NBA Career Predictions From Rookie Performance...again]]></title>
     <link href="https://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/"/>
-    <updated>2016-07-31T21:59:41-04:00</updated>
+    <updated>2016-07-31T20:59:41-05:00</updated>
     <id>https://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again</id>
     <content type="html"><![CDATA[<p>Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future performance using <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">regression</a> <a href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/">models</a>. In this post I am again trying to predict rookies’ future performance, but now using using a <a href="https://en.wikipedia.org/wiki/Statistical_classification">classification approach</a>. When using a classification approach, I predict whether player X will be a “great,” “average,” or “poor” player rather than predicting exactly how productive player X will be.</p>
 
@@ -420,7 +420,7 @@
   <entry>
     <title type="html"><![CDATA[Revisiting NBA Career Predictions From Rookie Performance]]></title>
     <link href="https://danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/"/>
-    <updated>2016-04-08T21:19:25-04:00</updated>
+    <updated>2016-04-08T20:19:25-05:00</updated>
     <id>https://danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance</id>
     <content type="html"><![CDATA[<p>In this post I wanted to do a quick follow up to a previous post about <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">predicting career nba performance from rookie year data</a>.</p>
 
@@ -749,7 +749,7 @@ Cross Validation MAE: 0.0665
   <entry>
     <title type="html"><![CDATA[Predicting Career Performance From Rookie Performance]]></title>
     <link href="https://danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/"/>
-    <updated>2016-03-20T15:56:18-04:00</updated>
+    <updated>2016-03-20T14:56:18-05:00</updated>
     <id>https://danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance</id>
     <content type="html"><![CDATA[<p>As a huge t-wolves fan, I’ve been curious all year by what we can infer from Karl-Anthony Towns’ great rookie season. To answer this question, I’ve create a simple linear regression model that uses rookie year performance to predict career performance.</p>
 
