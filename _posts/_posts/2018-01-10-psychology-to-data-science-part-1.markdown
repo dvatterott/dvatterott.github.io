@@ -6,7 +6,7 @@ comments: true
 categories: [data science, psychology, academia, industry]
 ---
 
-A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I've heard.
+A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I've heard. Part 2 can be found [here](https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-2/).
 
 Before I get started, I want to thank [Rick Wolf](https://www.linkedin.com/in/rickcwolf/) for providing comments on an earlier version of this post.
 
@@ -28,7 +28,7 @@ Send out 3-4 job applications and see if you get any hits. If not, think about h
 The boot camps are of varying quality. Ask around to get an idea for which boot camps are better or worse. Also, look into how each boot camp gets paid. If you pay tuition, the boot camp will care less about whether you get a job. If the boot camp gets paid through recruiting fees or collecting tuition from your paychecks, it is more invested in your job.
 
 ### Should I start a blog?
-Yes, I consider this a must (and so do [others](varianceexplained.org/r/start-blog/varianceexplained.org/r/start-blog/)). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.
+Yes, I consider this a must (and so do [others](http://varianceexplained.org/r/start-blog/)). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.
 
 Most people (including myself) host their page on github and generate the html with a static site generator. I use [octopress](http://octopress.org/), which works great. Most people seem to use [pelican](http://docs.getpelican.com/en/stable/). I would recommend pelican because it's built in Python. I haven't used it, but a quick google search led me to [this tutorial](http://mathamy.com/migrating-to-github-pages-using-pelican.html) on building a github site with pelican.
 

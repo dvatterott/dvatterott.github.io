@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Academia | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/academia/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-01-10T21:11:26-06:00</updated>
+  <updated>2018-01-17T19:55:09-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -14,11 +14,59 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Psychology to Data Science: Part 2]]></title>
+    <link href="https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2/"/>
+    <updated>2018-01-16T20:18:34-06:00</updated>
+    <id>https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2</id>
+    <content type="html"><![CDATA[<p>This is the second post in a series of posts about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. The <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">first post</a> answers many of the best and most common questions I’ve heard about my transition. This post focuses on the technical skills that are often necessary for landing a data science job.</p>
+
+<p>Each header in this post represents a different technical area. Following the header I describe what I would know before walking into an interview.</p>
+
+<h3 id="sql">SQL</h3>
+<p>SQL is not often used in academia, but it’s probably the most important skill in data science (how do you think you’ll get your data??). It’s used every day by data scientists at every company, and while it’s 100% necessary to know, it’s stupidly boring to learn. But, once you get the hang of it, it’s a fun language because it requires a lot of creativity. To learn SQL, I would start by doing the <a href="https://community.modeanalytics.com/sql/tutorial/introduction-to-sql/">mode analytics tutorials</a>, then the <a href="http://sqlzoo.net/">sql zoo</a> problems. <a href="https://www.fullstackpython.com/blog/postgresql-python-3-psycopg2-ubuntu-1604.html">Installing postgres on your personal computer</a> and fetching data in Python with psycopg2 or sql-alchemy is a good idea. After, completing all this, move onto query optimization (where the creativity comes into play) - check out the <a href="https://www.postgresql.org/docs/9.3/static/sql-explain.html">explain function</a> and <a href="https://stackoverflow.com/questions/2617661/whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement">order of execution</a>. Shameless self promotion: I made a <a href="https://danvatterott.com/presentations/sql_presentation/index.html#_blank">SQL presentation</a> on what SQL problems to know for job interviews.</p>
+
+<h3 id="pythonr">Python/R</h3>
+<p>Some places use R. Some places use Python. It sucks, but these languages are not interchangeable (an R team will not hire someone who only knows Python). Whatever language you choose, you should know it well because this is a tool you will use every day. I use Python, so what follows is specific to Python.</p>
+
+<p>I learned Python with <a href="https://www.codecademy.com/">codeacademy</a> and liked it. If you’re already familiar with Python I would practice “white board” style questions. Feeling comfortable with the beginner questions on a site like <a href="https://leetcode.com/">leetcode</a> or <a href="https://www.hackerrank.com/">hackerrank</a> would be a good idea. Writing answers while thinking about code optimization is a plus.</p>
+
+<p><a href="https://jeffknupp.com/">Jeff Knupp’s blog</a> has great tid-bits about developing in python; it’s pure gold.</p>
+
+<p>Another good way to learn is to work on your digital profile. If you haven’t already, I would start a blog (I talk more about this is <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">Post 1</a>).</p>
+
+<h3 id="statisticsml">Statistics/ML</h3>
+<p>When starting here, the Andrew Ng <a href="https://www.coursera.org/learn/machine-learning">coursera course</a> is a great intro. While it’s impossible to learn all of it, I love to use <a href="https://web.stanford.edu/~hastie/ElemStatLearn/">elements of statistical learning</a> and it’s sibling book <a href="http://www-bcf.usc.edu/~gareth/ISL/">introduction to statistical learning</a> as a reference. I’ve heard good things about <a href="https://www.amazon.com/Python-Machine-Learning-Sebastian-Raschka/dp/1783555130">Python Machine Learning</a> but haven’t checked it out myself.</p>
+
+<p>As a psychology major, I felt relatively well prepared in this regard. Experience with linear-mixed effects, hypothesis-testing, regression, etc. serves Psychology PhDs well. This doesn’t mean you can forget Stats 101 though. Once, I found myself uncomfortably surprised by a very basic probability question.</p>
+
+<p>Here’s a quick list of Statistics/ML algorithms I often use: GLMs and their regularization methods are a must (L1 and L2 regularization probably come up in 75% of phone screens). Hyper-parameter search. Cross-validation! Tree-based models (e.g., random forests, boosted decision trees). I often use XGBoost and have found its <a href="http://xgboost.readthedocs.io/en/latest/model.html">intro post</a> helpful.</p>
+
+<p>I think you’re better off deeply (pun not intended) learning the basics (e.g., linear and logistic regression) than learning a smattering of newer, fancier methods (e.g., deep learning). This means thinking about linear regression from first principles (what are the assumptions and given these assumptions can you derive the best-fit parameters of a linear regression?). I can’t tell you how many hours I’ve spent studying Andrew Ng’s <a href="http://cs229.stanford.edu/notes/cs229-notes1.pdf">first supervised learning lecture</a> for this. It’s good to freshen up on linear algebra and there isn’t a better way to do this than the <a href="https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab">3Blue1Brown</a> videos; they’re amazing. This might seem too introductory/theoretical, but it’s necessary and often comes up in interviews.</p>
+
+<p>Be prepared to talk about the bias-variance tradeoff. Everything in ML comes back to the bias-variance tradeoff so it’s a great interview question. I know some people like to ask candidates about feature selection. I think this question is basically a rephrasing of the bias-variance tradeoff.</p>
+
+<h3 id="gitcode-etiquette">Git/Code Etiquette</h3>
+<p>Make a github account if you haven’t already. Get used to commits, pushing, and branching. This won’t take long to get the hang of, but, again, it’s something you will use every day.</p>
+
+<p>As much as possible I would watch code etiquette. I know this seems anal, but it matters to some people (myself included), and having pep8 quality code can’t hurt. There’s a number of <a href="https://pylint.readthedocs.io/en/latest/">python modules</a> that will help here. Jeff Knupp also has a <a href="https://jeffknupp.com/blog/2016/12/09/how-python-linters-will-save-your-large-python-project/">great post</a> about linting/automating code etiquette.</p>
+
+<p>Unit-tests are a good thing to practice/be familiar with. Like usual, Jeff Knupp has a great <a href="https://jeffknupp.com/blog/2013/12/09/improve-your-python-understanding-unit-testing/">post</a> on the topic.</p>
+
+<p>I want to mention that getting a data science job is a little like getting a grant. Each time you apply, there is a low chance of getting the job/grant (luckily, there are many more jobs than grants). When creating your application/grant, it’s important to find ways to get people excited about your application/grant (e.g., showing off your statistical chops). This is where code etiquette comes into play. The last thing you want is to diminish someone’s excitement about you because you didn’t include a doc string. Is code etiquette going to remove you from contention for a job? Probably not. But it could diminish someone’s excitement.</p>
+
+<h3 id="final-thoughts">Final Thoughts</h3>
+<p>One set of skills that I haven’t touched on is cluster computing (e.g., Hadoop, Spark). Unfortunately, I don’t think there is much you can do here. I’ve heard good things about the book <a href="http://shop.oreilly.com/product/0636920028512.do">Learning Spark</a>, but books can only get you so far. If you apply for a job that wants Spark, I would install Spark on your local computer and play around, but it’s hard to learn cluster computing when you’re not on a cluster. Spark is more or less fancy SQL (aside from the ML aspects), so learning SQL is a good way to prepare for a Spark mindset. I didn’t include cluster computing above, because many teams seem okay with employees learning this on the job.</p>
+
+<p>Not that there’s a lack of content here, but <a href="https://blog.insightdatascience.com/preparing-for-insight-ca7cc6087f91">here</a>’s a good list of must know topics that I used when transitioning from academia to data science.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Psychology to Data Science: Part 1]]></title>
     <link href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/"/>
     <updated>2018-01-10T19:21:28-06:00</updated>
     <id>https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1</id>
-    <content type="html"><![CDATA[<p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard.</p>
+    <content type="html"><![CDATA[<p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard. Part 2 can be found <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-2/">here</a>.</p>
 
 <p>Before I get started, I want to thank <a href="https://www.linkedin.com/in/rickcwolf/">Rick Wolf</a> for providing comments on an earlier version of this post.</p>
 
@@ -40,7 +88,7 @@ Send out 3-4 job applications and see if you get any hits. If not, think about h
 The boot camps are of varying quality. Ask around to get an idea for which boot camps are better or worse. Also, look into how each boot camp gets paid. If you pay tuition, the boot camp will care less about whether you get a job. If the boot camp gets paid through recruiting fees or collecting tuition from your paychecks, it is more invested in your job.</p>
 
 <h3 id="should-i-start-a-blog">Should I start a blog?</h3>
-<p>Yes, I consider this a must (and so do <a href="varianceexplained.org/r/start-blog/varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
+<p>Yes, I consider this a must (and so do <a href="http://varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
 
 <p>Most people (including myself) host their page on github and generate the html with a static site generator. I use <a href="http://octopress.org/">octopress</a>, which works great. Most people seem to use <a href="http://docs.getpelican.com/en/stable/">pelican</a>. I would recommend pelican because it’s built in Python. I haven’t used it, but a quick google search led me to <a href="http://mathamy.com/migrating-to-github-pages-using-pelican.html">this tutorial</a> on building a github site with pelican.</p>
 

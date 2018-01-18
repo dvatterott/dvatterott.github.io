@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is &hellip;">
+  <meta name="description" content="This is the second post in a series of posts about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. The &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -94,6 +94,74 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2018/01/16/psychology-to-data-science-part-2/">Psychology to Data Science: Part 2</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2018-01-16T20:18:34-06:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>16</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>8:18 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This is the second post in a series of posts about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. The <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">first post</a> answers many of the best and most common questions I’ve heard about my transition. This post focuses on the technical skills that are often necessary for landing a data science job.</p>
+
+<p>Each header in this post represents a different technical area. Following the header I describe what I would know before walking into an interview.</p>
+
+<h3 id="sql">SQL</h3>
+<p>SQL is not often used in academia, but it’s probably the most important skill in data science (how do you think you’ll get your data??). It’s used every day by data scientists at every company, and while it’s 100% necessary to know, it’s stupidly boring to learn. But, once you get the hang of it, it’s a fun language because it requires a lot of creativity. To learn SQL, I would start by doing the <a href="https://community.modeanalytics.com/sql/tutorial/introduction-to-sql/">mode analytics tutorials</a>, then the <a href="http://sqlzoo.net/">sql zoo</a> problems. <a href="https://www.fullstackpython.com/blog/postgresql-python-3-psycopg2-ubuntu-1604.html">Installing postgres on your personal computer</a> and fetching data in Python with psycopg2 or sql-alchemy is a good idea. After, completing all this, move onto query optimization (where the creativity comes into play) - check out the <a href="https://www.postgresql.org/docs/9.3/static/sql-explain.html">explain function</a> and <a href="https://stackoverflow.com/questions/2617661/whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement">order of execution</a>. Shameless self promotion: I made a <a href="https://danvatterott.com/presentations/sql_presentation/index.html#_blank">SQL presentation</a> on what SQL problems to know for job interviews.</p>
+
+<h3 id="pythonr">Python/R</h3>
+<p>Some places use R. Some places use Python. It sucks, but these languages are not interchangeable (an R team will not hire someone who only knows Python). Whatever language you choose, you should know it well because this is a tool you will use every day. I use Python, so what follows is specific to Python.</p>
+
+<p>I learned Python with <a href="https://www.codecademy.com/">codeacademy</a> and liked it. If you’re already familiar with Python I would practice “white board” style questions. Feeling comfortable with the beginner questions on a site like <a href="https://leetcode.com/">leetcode</a> or <a href="https://www.hackerrank.com/">hackerrank</a> would be a good idea. Writing answers while thinking about code optimization is a plus.</p>
+
+<p><a href="https://jeffknupp.com/">Jeff Knupp’s blog</a> has great tid-bits about developing in python; it’s pure gold.</p>
+
+<p>Another good way to learn is to work on your digital profile. If you haven’t already, I would start a blog (I talk more about this is <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">Post 1</a>).</p>
+
+<h3 id="statisticsml">Statistics/ML</h3>
+<p>When starting here, the Andrew Ng <a href="https://www.coursera.org/learn/machine-learning">coursera course</a> is a great intro. While it’s impossible to learn all of it, I love to use <a href="https://web.stanford.edu/~hastie/ElemStatLearn/">elements of statistical learning</a> and it’s sibling book <a href="http://www-bcf.usc.edu/~gareth/ISL/">introduction to statistical learning</a> as a reference. I’ve heard good things about <a href="https://www.amazon.com/Python-Machine-Learning-Sebastian-Raschka/dp/1783555130">Python Machine Learning</a> but haven’t checked it out myself.</p>
+
+<p>As a psychology major, I felt relatively well prepared in this regard. Experience with linear-mixed effects, hypothesis-testing, regression, etc. serves Psychology PhDs well. This doesn’t mean you can forget Stats 101 though. Once, I found myself uncomfortably surprised by a very basic probability question.</p>
+
+<p>Here’s a quick list of Statistics/ML algorithms I often use: GLMs and their regularization methods are a must (L1 and L2 regularization probably come up in 75% of phone screens). Hyper-parameter search. Cross-validation! Tree-based models (e.g., random forests, boosted decision trees). I often use XGBoost and have found its <a href="http://xgboost.readthedocs.io/en/latest/model.html">intro post</a> helpful.</p>
+
+<p>I think you’re better off deeply (pun not intended) learning the basics (e.g., linear and logistic regression) than learning a smattering of newer, fancier methods (e.g., deep learning). This means thinking about linear regression from first principles (what are the assumptions and given these assumptions can you derive the best-fit parameters of a linear regression?). I can’t tell you how many hours I’ve spent studying Andrew Ng’s <a href="http://cs229.stanford.edu/notes/cs229-notes1.pdf">first supervised learning lecture</a> for this. It’s good to freshen up on linear algebra and there isn’t a better way to do this than the <a href="https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab">3Blue1Brown</a> videos; they’re amazing. This might seem too introductory/theoretical, but it’s necessary and often comes up in interviews.</p>
+
+<p>Be prepared to talk about the bias-variance tradeoff. Everything in ML comes back to the bias-variance tradeoff so it’s a great interview question. I know some people like to ask candidates about feature selection. I think this question is basically a rephrasing of the bias-variance tradeoff.</p>
+
+<h3 id="gitcode-etiquette">Git/Code Etiquette</h3>
+<p>Make a github account if you haven’t already. Get used to commits, pushing, and branching. This won’t take long to get the hang of, but, again, it’s something you will use every day.</p>
+
+<p>As much as possible I would watch code etiquette. I know this seems anal, but it matters to some people (myself included), and having pep8 quality code can’t hurt. There’s a number of <a href="https://pylint.readthedocs.io/en/latest/">python modules</a> that will help here. Jeff Knupp also has a <a href="https://jeffknupp.com/blog/2016/12/09/how-python-linters-will-save-your-large-python-project/">great post</a> about linting/automating code etiquette.</p>
+
+<p>Unit-tests are a good thing to practice/be familiar with. Like usual, Jeff Knupp has a great <a href="https://jeffknupp.com/blog/2013/12/09/improve-your-python-understanding-unit-testing/">post</a> on the topic.</p>
+
+<p>I want to mention that getting a data science job is a little like getting a grant. Each time you apply, there is a low chance of getting the job/grant (luckily, there are many more jobs than grants). When creating your application/grant, it’s important to find ways to get people excited about your application/grant (e.g., showing off your statistical chops). This is where code etiquette comes into play. The last thing you want is to diminish someone’s excitement about you because you didn’t include a doc string. Is code etiquette going to remove you from contention for a job? Probably not. But it could diminish someone’s excitement.</p>
+
+<h3 id="final-thoughts">Final Thoughts</h3>
+<p>One set of skills that I haven’t touched on is cluster computing (e.g., Hadoop, Spark). Unfortunately, I don’t think there is much you can do here. I’ve heard good things about the book <a href="http://shop.oreilly.com/product/0636920028512.do">Learning Spark</a>, but books can only get you so far. If you apply for a job that wants Spark, I would install Spark on your local computer and play around, but it’s hard to learn cluster computing when you’re not on a cluster. Spark is more or less fancy SQL (aside from the ML aspects), so learning SQL is a good way to prepare for a Spark mindset. I didn’t include cluster computing above, because many teams seem okay with employees learning this on the job.</p>
+
+<p>Not that there’s a lack of content here, but <a href="https://blog.insightdatascience.com/preparing-for-insight-ca7cc6087f91">here</a>’s a good list of must know topics that I used when transitioning from academia to data science.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2018/01/10/psychology-to-data-science-part-1/">Psychology to Data Science: Part 1</a></h1>
     
     
@@ -110,7 +178,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   </header>
 
 
-  <div class="entry-content"><p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard.</p>
+  <div class="entry-content"><p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard. Part 2 can be found <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-2/">here</a>.</p>
 
 <p>Before I get started, I want to thank <a href="https://www.linkedin.com/in/rickcwolf/">Rick Wolf</a> for providing comments on an earlier version of this post.</p>
 
@@ -132,7 +200,7 @@ Send out 3-4 job applications and see if you get any hits. If not, think about h
 The boot camps are of varying quality. Ask around to get an idea for which boot camps are better or worse. Also, look into how each boot camp gets paid. If you pay tuition, the boot camp will care less about whether you get a job. If the boot camp gets paid through recruiting fees or collecting tuition from your paychecks, it is more invested in your job.</p>
 
 <h3 id="should-i-start-a-blog">Should I start a blog?</h3>
-<p>Yes, I consider this a must (and so do <a href="varianceexplained.org/r/start-blog/varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
+<p>Yes, I consider this a must (and so do <a href="http://varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
 
 <p>Most people (including myself) host their page on github and generate the html with a static site generator. I use <a href="http://octopress.org/">octopress</a>, which works great. Most people seem to use <a href="http://docs.getpelican.com/en/stable/">pelican</a>. I would recommend pelican because it’s built in Python. I haven’t used it, but a quick google search led me to <a href="http://mathamy.com/migrating-to-github-pages-using-pelican.html">this tutorial</a> on building a github site with pelican.</p>
 
@@ -1260,427 +1328,6 @@ Probability of difference arising from chance: 0.57546
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/">Revisting NBA Career Predictions From Rookie Performance...again</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-07-31T20:59:41-05:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>8:59 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future performance using <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">regression</a> <a href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/">models</a>. In this post I am again trying to predict rookies’ future performance, but now using using a <a href="https://en.wikipedia.org/wiki/Statistical_classification">classification approach</a>. When using a classification approach, I predict whether player X will be a “great,” “average,” or “poor” player rather than predicting exactly how productive player X will be.</p>
-
-<p>Much of this post re-uses code from the previous posts, so I skim over some of the repeated code.</p>
-
-<p>As usual, I will post all code as a jupyter notebook on my <a href="https://github.com/dvatterott/jupyter_notebooks">github</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
-</span><span class="line">
-</span><span class="line"><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-</span><span class="line">
-</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s">&#39;ggplot&#39;</span><span class="p">)</span> <span class="c">#im addicted to ggplot. so pretty.</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Load the data. Reminder - this data is available on my <a href="https://github.com/dvatterott/nba_project">github</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Apr_16.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the rookie year data</span>
-</span><span class="line">
-</span><span class="line"><span class="n">rook_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Career Games&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span> <span class="c">#only attempting to predict players that have played at least 50 games</span>
-</span><span class="line"><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span> <span class="c">#only attempting to predict players from after 1980</span>
-</span><span class="line">
-</span><span class="line"><span class="c">#remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair</span>
-</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
-</span><span class="line"><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Load more data, and normalize the data for the <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">PCA transformation</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
-</span><span class="line">
-</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Apr_15.pkl&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;G&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span><span class="p">]</span>
-</span><span class="line"><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class="line"><span class="n">ScaleModel</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#make sure each feature has 0 mean and unit variance. </span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>In the past I used <a href="https://en.wikipedia.org/wiki/K-means_clustering">k-means</a> to group players according to their performance (see my post on <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">grouping players</a> for more info). Here, I use a <a href="https://en.wikipedia.org/wiki/Mixture_model">gaussian mixture model</a> (GMM) to group the players. I use the GMM model because it assigns each player a “soft” label rather than a “hard” label. By soft label I mean that a player simultaneously belongs to several groups. For instance, Russell Westbrook belongs to both my “point guard” group and my “scorers” group. K-means uses hard labels where each player can only belong to one group. I think the GMM model provides a more accurate representation of players, so I’ve decided to use it in this post. Maybe in a future post I will spend more time describing it.</p>
-
-<p>For anyone wondering, the GMM groupings looked pretty similar to the k-means groupings.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.mixture</span> <span class="kn">import</span> <span class="n">GMM</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
-</span><span class="line">
-</span><span class="line"><span class="n">reduced_model</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">whiten</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span><span class="line"><span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data into the 5 PCA components space</span>
-</span><span class="line">
-</span><span class="line"><span class="n">g</span> <span class="o">=</span> <span class="n">GMM</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#6 clusters. like the k-means model</span>
-</span><span class="line"><span class="n">new_labels</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">predictions</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#generate values describing &quot;how much&quot; each player belongs to each group </span>
-</span><span class="line"><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
-</span><span class="line">    <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
-</span><span class="line">    <span class="n">df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[:,</span><span class="n">x</span><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>In this past I have attempted to predict win shares per 48 minutes. I am using win shares as a dependent variable again, but I want to categorize players.</p>
-
-<p>Below I create a histogram of players’ win shares per 48.</p>
-
-<p>I split players into 4 groups which I will refer to as “bad,” “below average,” “above average,” and “great”: Poor players are the bottom 10% in win shares per 48, Below average are the 10-50th percentiles, Above average and 50-90th percentiles, Great are the top 10%. This assignment scheme is relatively arbitrary; the model performs similarly with different assignment schemes.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]);</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">10</span><span class="p">),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c">#category 1 players are bottom 10%</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">50</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">10</span><span class="p">)),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">90</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">50</span><span class="p">)),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">90</span><span class="p">),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span> <span class="c">#category 4 players are top 10%</span>
-</span><span class="line"><span class="n">perc_in_cat</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])];</span>
-</span><span class="line"><span class="n">perc_in_cat</span> <span class="c">#print % of palyers in each category as a sanity check</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>[0.096314496314496317,
- 0.40196560196560199,
- 0.39950859950859952,
- 0.10221130221130222]
-</code></pre>
-
-<p><img src="/images/classificationNBA/histogram.png" /></p>
-
-<p>My goal is to use rookie year performance to classify players into these 4 categories. I have a big matrix with lots of data about rookie year performance, but the reason that I grouped player using the GMM is because I suspect that players in the different groups have different “paths” to success. I am including the groupings in my classification model and computing interaction terms. The interaction terms will allow rookie performance to produce different predictions for the different groups.</p>
-
-<p>By including interaction terms, I include quite a few predictor features. I’ve printed the number of predictor features and the number of predicted players below.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">preprocessing</span>
-</span><span class="line">
-</span><span class="line"><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">]</span>
-</span><span class="line"><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
-</span><span class="line">    <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
-</span><span class="line">    <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_drop</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="c">#give rookies the groupings produced by the GMM model</span>
-</span><span class="line">
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe   </span>
-</span><span class="line">
-</span><span class="line"><span class="n">poly</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">PolynomialFeatures</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">interaction_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c">#create interaction terms.</span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Career_data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">]</span>
-</span><span class="line"><span class="n">Y</span> <span class="o">=</span> <span class="n">Career_data</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="c">#get predictor data</span>
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>(1703, 1432)
-(1703,)
-</code></pre>
-
-<p>Now that I have all the features, it’s time to try and predict which players will be poor, below average, above average, and great. To create these predictions, I will use a <a href="https://en.wikipedia.org/wiki/Logistic_regression">logistic regression model</a>.</p>
-
-<p>Because I have so many predictors, correlation between predicting features and over-fitting the data are major concerns. I use <a href="http://stats.stackexchange.com/questions/4272/when-to-use-regularization-methods-for-regression">regularization</a> and <a href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)">cross-validation</a> to combat these issues.</p>
-
-<p>Specifically, I am using <a href="https://en.wikipedia.org/wiki/Tikhonov_regularization">l2 regularization</a> and k-fold 5 cross-validation. Within the cross-validation, I am trying to estimate how much regularization is appropriate.</p>
-
-<p>Some important notes - I am using “balanced” weights which tells the model that worse to incorrectly predict the poor and great players than the below average and above average players. I do this because I don’t want the model to completely ignore the less frequent classifications. Second, I use the multi_class multinomial because it limits the number of models I have to fit.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
-</span><span class="line">
-</span><span class="line"><span class="n">logreg</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegressionCV</span><span class="p">(</span><span class="n">Cs</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0008</span><span class="p">],</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="s">&#39;l2&#39;</span><span class="p">,</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="s">&#39;balanced&#39;</span><span class="p">,</span>
-</span><span class="line">                                           <span class="n">max_iter</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span> <span class="n">multi_class</span><span class="o">=</span><span class="s">&#39;multinomial&#39;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">est</span> <span class="o">=</span> <span class="n">logreg</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
-</span><span class="line"><span class="n">score</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="c">#calculate the % correct </span>
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>0.738109219025
-</code></pre>
-
-<p>Okay, the model did pretty well, but lets look at where the errors are coming from. To visualize the models accuracy, I am using a <a href="https://en.wikipedia.org/wiki/Confusion_matrix">confusion matrix</a>. In a confusion matrix, every item on the diagnonal is a correctly classified item. Every item off the diagonal is incorrectly classified. The color bar’s axis is the percent correct. So the dark blue squares represent cells with more items.</p>
-
-<p>It seems the model is best at predicting poor players and great players. It makes more errors when trying to predict the more average players.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
-</span><span class="line"><span class="n">cm</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">plot_confusion_matrix</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Confusion matrix&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">):</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
-</span><span class="line">    <span class="n">tick_marks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])))</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">tick_marks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]))</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">tick_marks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]))</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;True label&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Predicted label&#39;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">cm_normalized</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="n">cm</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
-</span><span class="line"><span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">cm_normalized</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Normalized confusion matrix&#39;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/classificationNBA/confusion_mat.png" /></p>
-
-<p>Lets look at what the model predicts for this year’s rookies. Below I modified two functions that I wrote for a previous post. The first function finds a particular year’s draft picks. The second function produces predictions for each draft pick.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">gather_draftData</span><span class="p">(</span><span class="n">Year</span><span class="p">):</span>
-</span><span class="line">
-</span><span class="line">    <span class="kn">import</span> <span class="nn">urllib2</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">draft_len</span> <span class="o">=</span> <span class="mi">30</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">def</span> <span class="nf">convert_float</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
-</span><span class="line">        <span class="k">try</span><span class="p">:</span>
-</span><span class="line">            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-</span><span class="line">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-</span><span class="line">            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://www.basketball-reference.com/draft/NBA_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">Year</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;.html&#39;</span>
-</span><span class="line">    <span class="n">html</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span class="line">    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span><span class="s">&quot;lxml&quot;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">draft_num</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
-</span><span class="line">    <span class="n">draft_nam</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">draft_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">draft_num</span><span class="p">,</span><span class="n">draft_nam</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
-</span><span class="line">    <span class="n">draft_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Number&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">draft_df</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">player_prediction__regressionModel</span><span class="p">(</span><span class="n">PlayerName</span><span class="p">):</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Apr_15.pkl&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="p">[</span><span class="n">clust_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
-</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">    <span class="n">new_vect</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">clust_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-</span><span class="line">    <span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_vect</span><span class="p">)</span>
-</span><span class="line">    <span class="n">predictions</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
-</span><span class="line">        <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
-</span><span class="line">        <span class="n">clust_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[:,</span><span class="n">x</span><span class="p">]</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Apr_16.pkl&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="p">[</span><span class="n">Predrookie_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
-</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
-</span><span class="line">        <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
-</span><span class="line">        <span class="n">Predrookie_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">clust_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="c">#give rookies the groupings produced by the GMM model</span>
-</span><span class="line">    <span class="n">predX</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class="line">    <span class="n">predX</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">predX</span><span class="p">)</span>
-</span><span class="line">    <span class="n">predictions2</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">predX</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;Name&#39;</span><span class="p">:</span><span class="n">PlayerName</span><span class="p">,</span><span class="s">&#39;Group&#39;</span><span class="p">:</span><span class="n">predictions</span><span class="p">,</span><span class="s">&#39;Prediction&#39;</span><span class="p">:</span><span class="n">predictions2</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Below I create a plot depicting the model’s predictions. On the y-axis are the four classifications. On the x-axis are the players from the 2015 draft. Each cell in the plot is the probability of a player belonging to one of the classifications. Again, dark blue means a cell or more likely. Good news for us T-Wolves fans! The model loves KAT.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">gather_draftData</span><span class="p">(</span><span class="mi">2015</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">][</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span>  <span class="s">&#39;Kelly Oubre Jr.&#39;</span> <span class="c">#annoying name inconsistencies </span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span>
-</span><span class="line">
-</span><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">draft_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c">#spurs&#39; 1st round pick has not played yet</span>
-</span><span class="line">
-</span><span class="line"><span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line"><span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]:</span>
-</span><span class="line">    <span class="n">draft_num</span> <span class="o">=</span> <span class="n">draft_df</span><span class="p">[</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="s">&#39;Number&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">predict_dict</span> <span class="o">=</span> <span class="n">player_prediction__regressionModel</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span class="line">    <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Prediction&#39;</span><span class="p">])</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Predicting Future Performance of 2015-16 Rookies&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">shrink</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
-</span><span class="line"><span class="n">tick_marks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])))</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">29</span><span class="p">),</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;Poor&#39;</span><span class="p">,</span><span class="s">&#39;Below Average&#39;</span><span class="p">,</span><span class="s">&#39;Above Average&#39;</span><span class="p">,</span><span class="s">&#39;Great&#39;</span><span class="p">])</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Prediction&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Draft Position&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/classificationNBA/predictions.png" /></p>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -1729,6 +1376,10 @@ Probability of difference arising from chance: 0.57546
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/01/16/psychology-to-data-science-part-2/">Psychology to Data Science: Part 2</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/01/10/psychology-to-data-science-part-1/">Psychology to Data Science: Part 1</a>
       </li>
     
@@ -1742,10 +1393,6 @@ Probability of difference arising from chance: 0.57546
     
       <li class="post">
         <a href="/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/">My First Kodi Addon - PBS NewsHour (a Tutorial)</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2017/03/04/sifting-the-overflow/">Sifting the Overflow</a>
       </li>
     
   </ul>
