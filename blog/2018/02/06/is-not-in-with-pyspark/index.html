@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is not a similar command in pyspark &hellip;">
+  <meta name="description" content="In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -107,7 +107,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   </header>
 
 
-<div class="entry-content"><p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is not a similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
+<div class="entry-content"><p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
 
 <p>Here is a tidbit of code which replicates SQL’s “not in” command, while keeping your data with the workers (it will require a shuffle).</p>
 
@@ -300,6 +300,8 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
         <a class="basic-alignment left" href="/blog/2018/01/16/psychology-to-data-science-part-2/" title="Previous Post: Psychology to Data Science: Part 2">&laquo; Psychology to Data Science: Part 2</a>
       
       
+        <a class="basic-alignment right" href="/blog/2018/03/17/exploring-roc-curves/" title="Next Post: Exploring ROC Curves">Exploring ROC Curves &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -352,6 +354,10 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/03/17/exploring-roc-curves/">Exploring ROC Curves</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/02/06/is-not-in-with-pyspark/">'Is Not in' With Pyspark</a>
       </li>
     
@@ -365,10 +371,6 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     
       <li class="post">
         <a href="/blog/2017/09/01/automating-jobs-on-ubuntu/">Using Cron to Automate Jobs on Ubuntu</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2017/07/15/are-we-in-a-tv-golden-age/">Are We in a TV Golden Age?</a>
       </li>
     
   </ul>

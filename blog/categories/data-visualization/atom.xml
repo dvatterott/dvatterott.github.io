@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Visualization | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-visualization/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-02-03T09:56:30-06:00</updated>
+  <updated>2018-03-18T13:51:25-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -30,114 +30,69 @@
 
 <p>Here’s a plot of all TV shows across time.</p>
 
-<iframe src="/images/tv_movies/index_tv.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
+<iframe src="{{ root_url }}/images/tv_movies/index_tv.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
 
 <p>To test the “golden age of TV” hypothesis, I coded up a linear regression in javascript (below). I put the regression’s output as a comment at the end of the code.
 Before stating whether the hypothesis was rejected or not, I should note that that I removed shows with less than 10 votes because these shows had erratic ratings.</p>
 
 <p>As you can see, there is no evidence that TV is better now that previously. In fact, if anything, this dataset says that TV is worse (but more on this later).</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">linearRegression</span><span class="p">(</span><span class="nx">y</span><span class="p">,</span><span class="nx">x</span><span class="p">){</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="kd">var</span> <span class="nx">lr</span> <span class="o">=</span> <span class="p">{};</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">y</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sum_x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sum_y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sum_xy</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sum_xx</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sum_yy</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">y</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">sum_x</span> <span class="o">+=</span> <span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-</span><span class='line'>    <span class="nx">sum_y</span> <span class="o">+=</span> <span class="nx">y</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-</span><span class='line'>    <span class="nx">sum_xy</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">*</span><span class="nx">y</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
-</span><span class='line'>    <span class="nx">sum_xx</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">*</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
-</span><span class='line'>    <span class="nx">sum_yy</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">y</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">*</span><span class="nx">y</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">lr</span><span class="p">[</span><span class="s1">&#39;slope&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">n</span> <span class="o">*</span> <span class="nx">sum_xy</span> <span class="o">-</span> <span class="nx">sum_x</span> <span class="o">*</span> <span class="nx">sum_y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">n</span><span class="o">*</span><span class="nx">sum_xx</span> <span class="o">-</span> <span class="nx">sum_x</span> <span class="o">*</span> <span class="nx">sum_x</span><span class="p">);</span>
-</span><span class='line'><span class="nx">lr</span><span class="p">[</span><span class="s1">&#39;intercept&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">sum_y</span> <span class="o">-</span> <span class="nx">lr</span><span class="p">.</span><span class="nx">slope</span> <span class="o">*</span> <span class="nx">sum_x</span><span class="p">)</span><span class="o">/</span><span class="nx">n</span><span class="p">;</span>
-</span><span class='line'><span class="nx">lr</span><span class="p">[</span><span class="s1">&#39;r2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">((</span><span class="nx">n</span><span class="o">*</span><span class="nx">sum_xy</span> <span class="o">-</span> <span class="nx">sum_x</span><span class="o">*</span><span class="nx">sum_y</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">((</span><span class="nx">n</span><span class="o">*</span><span class="nx">sum_xx</span><span class="o">-</span><span class="nx">sum_x</span><span class="o">*</span><span class="nx">sum_x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="nx">n</span><span class="o">*</span><span class="nx">sum_yy</span><span class="o">-</span><span class="nx">sum_y</span><span class="o">*</span><span class="nx">sum_y</span><span class="p">)),</span><span class="mi">2</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">return</span> <span class="nx">lr</span><span class="p">;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="err">/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">};</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="kd">var</span> <span class="nx">yval</span> <span class="o">=</span> <span class="nx">data</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">vote_count</span> <span class="o">&amp;</span><span class="nx">gt</span><span class="p">;</span> <span class="mi">10</span> <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">parseFloat</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">vote_average</span><span class="p">);</span> <span class="p">});</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">xval</span> <span class="o">=</span> <span class="nx">data</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">vote_count</span> <span class="o">&amp;</span><span class="nx">gt</span><span class="p">;</span> <span class="mi">10</span> <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">first_air_date</span><span class="p">.</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">;</span> <span class="p">});</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">lr</span> <span class="o">=</span> <span class="nx">linearRegression</span><span class="p">(</span><span class="nx">yval</span><span class="p">,</span><span class="nx">xval</span><span class="p">);</span>
-</span><span class='line'><span class="c1">// Object { slope: -3.754543948800799e-10, intercept: 7.0808230581192815, r2: 0.038528573017115 }&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:javascript %}
+function linearRegression(y,x){</p>
+
+<pre><code>var lr = {};
+var n = y.length;
+var sum_x = 0;
+var sum_y = 0;
+var sum_xy = 0;
+var sum_xx = 0;
+var sum_yy = 0;
+
+for (var i = 0; i &lt; y.length; i++) {
+
+    sum_x += x[i];
+    sum_y += y[i];
+    sum_xy += (x[i]*y[i]);
+    sum_xx += (x[i]*x[i]);
+    sum_yy += (y[i]*y[i]);
+}
+
+lr['slope'] = (n * sum_xy - sum_x * sum_y) / (n*sum_xx - sum_x * sum_x);
+lr['intercept'] = (sum_y - lr.slope * sum_x)/n;
+lr['r2'] = Math.pow((n*sum_xy - sum_x*sum_y)/Math.sqrt((n*sum_xx-sum_x*sum_x)*(n*sum_yy-sum_y*sum_y)),2);
+
+return lr;
+</code></pre>
+
+<p>};</p>
+
+<p>var yval = data
+    .filter(function(d) { return d.vote_count &gt; 10 })
+    .map(function (d) { return parseFloat(d.vote_average); });
+var xval = data
+    .filter(function(d) { return d.vote_count &gt; 10 })
+    .map(function (d) { return d.first_air_date.getTime() / 1000; });
+var lr = linearRegression(yval,xval);
+// Object { slope: -3.754543948800799e-10, intercept: 7.0808230581192815, r2: 0.038528573017115 }</p>
+
+<p>{% endcodeblock %}</p>
 
 <p>I wanted to include movies as a comparison to TV. Here’s a plot of all movies across time.</p>
 
-<iframe src="/images/tv_movies/index_movie.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
+<iframe src="{{ root_url }}/images/tv_movies/index_movie.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
 
 <p>It’s important to note that I removed all movies with less than 1000 votes. This is completely 100% unfair, BUT I am very proud of my figures here and things get a little laggy when including too many movies in the plot. Nonetheless, movies seem to be getting worse over time! More dramatically than TV shows!</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">yval</span> <span class="o">=</span> <span class="nx">data</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">vote_count</span> <span class="o">&amp;</span><span class="nx">gt</span><span class="p">;</span> <span class="mi">1000</span> <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">parseFloat</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">vote_average</span><span class="p">);</span> <span class="p">});</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">xval</span> <span class="o">=</span> <span class="nx">data</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">vote_count</span> <span class="o">&amp;</span><span class="nx">gt</span><span class="p">;</span> <span class="mi">1000</span> <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">first_air_date</span><span class="p">.</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">;</span> <span class="p">});</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">lr</span> <span class="o">=</span> <span class="nx">linearRegression</span><span class="p">(</span><span class="nx">yval</span><span class="p">,</span><span class="nx">xval</span><span class="p">);</span>
-</span><span class='line'><span class="c1">// Object { slope: -8.11645196776367e-10, intercept: 7.659366705415847, r2: 0.16185069580043676 }</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:javascript %}
+var yval = data
+    .filter(function(d) { return d.vote_count &gt; 1000 })
+    .map(function (d) { return parseFloat(d.vote_average); });
+var xval = data
+    .filter(function(d) { return d.vote_count &gt; 1000 })
+    .map(function (d) { return d.first_air_date.getTime() / 1000; });
+var lr = linearRegression(yval,xval);
+// Object { slope: -8.11645196776367e-10, intercept: 7.659366705415847, r2: 0.16185069580043676 }
+{% endcodeblock %}</p>
 
 <p>Okay, so this was a fun little analysis, but I have to come out and say that I wasn’t too happy with my dataset and the conclusions we can draw from this analysis are only as good as the dataset.</p>
 

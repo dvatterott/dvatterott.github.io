@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Data Science | Dan Vatterott]]></title>
+  <title><![CDATA[Category: Data-science | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-science/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-02-03T09:56:30-06:00</updated>
+  <updated>2018-03-18T13:51:25-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -14,272 +14,322 @@
 
   
   <entry>
-    <title type="html"><![CDATA['Is Not in' With Pyspark]]></title>
-    <link href="https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark/"/>
-    <updated>2018-02-06T21:10:32-06:00</updated>
-    <id>https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark</id>
-    <content type="html"><![CDATA[<p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is not a similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
+    <title type="html"><![CDATA[Exploring ROC Curves]]></title>
+    <link href="https://danvatterott.com/blog/2018/03/17/exploring-roc-curves/"/>
+    <updated>2018-03-17T14:06:15-05:00</updated>
+    <id>https://danvatterott.com/blog/2018/03/17/exploring-roc-curves</id>
+    <content type="html"><![CDATA[<p>I’ve always found ROC curves a little confusing. Particularly when it comes to ROC curves with imbalanced classes. This blog post is an exploration into receiver operating characteristic (i.e. <a href="http://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html#sphx-glr-auto-examples-model-selection-plot-roc-py">ROC</a>) curves and how they react to imbalanced classes.</p>
 
-<p>Here is a tidbit of code which replicates SQL’s “not in” command, while keeping your data with the workers (it will require a shuffle).</p>
+<p>I start by loading the necessary libraries.</p>
 
-<p>I start by creating some small dataframes.</p>
+<p>{% codeblock lang:python %}
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+%matplotlib inline
+{% endcodeblock %}</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pyspark</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueA</span><span class="err">’</span><span class="p">])</span>
-</span><span class='line'><span class="n">b</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="err">‘</span><span class="n">d</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="err">‘</span><span class="n">e</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueB</span><span class="err">’</span><span class="p">])</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>Seed the random number generator so that everything here is reproducible.</p>
 
-<p>Take a quick look at dataframe <em>a</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>b</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>c</td>
- </tr>
-</table>
+<p>{% codeblock lang:python %}
+np.random.seed(seed=1)
+{% endcodeblock %}</p>
 
-<p>And dataframe <em>b</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
- </tr>
-</table>
+<p>I write a few functions that will create fake date, plot fake date, and plot ROC curves.</p>
 
-<p>I create a new column in <em>a</em> that is all ones. I could have used an existing column, but this way I know the column is never null.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>b</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>c</td>
-   <td>1</td>
- </tr>
-</table>
+<p>I describe each function in turn below:</p>
+<ul style="padding-left: 25px;">
+ <li><strong>grab_probability</strong> draws a sample of "probabilities" drawn from a uniform distribution bound between 0 and 1.</li>
+ <li><strong>create_fake_binary_data</strong> creates a vector of 0s and 1s. The mean of the vector is controlled by the positive input.</li>
+ <li><strong>probability_hist</strong> plots a normalized histogram (each bar depicts the proportion of data in it) bound between 0 and 1. </li>
+ <li><strong>plot_roc_curve</strong> does not need an explanation.</li>
+</ul>
 
-<p>I join <em>a</em> and <em>b</em> with a left join. This way all values in <em>b</em> which are not in <em>a</em> have null values in the column “inA”.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>valueB</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
-   <td>a</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
-</table>
+<p>{% codeblock lang:python %}
+def grab_probability(sample_size):
+    “"”Draw probabilties”””
+    return np.random.random(size=(sample_size,))</p>
 
-<p>By filtering out rows in the new dataframe <em>c</em>, which are not null, I remove all values of <em>b</em>, which were also in <em>a</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">isNull</span><span class="p">())</span>
-</span><span class='line'><span class="n">c</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>valueB</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
-</table>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Psychology to Data Science: Part 2]]></title>
-    <link href="https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2/"/>
-    <updated>2018-01-16T20:18:34-06:00</updated>
-    <id>https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2</id>
-    <content type="html"><![CDATA[<p>This is the second post in a series of posts about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. The <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">first post</a> answers many of the best and most common questions I’ve heard about my transition. This post focuses on the technical skills that are often necessary for landing a data science job.</p>
+<p>def create_fake_binary_data(positive, sample_size):
+    “"”Create a vector of binary data with the mean specified in positive”””
+    negative = 1-positive
+    y = np.ones(sample_size)
+    y[:int(negative*sample_size)] = 0
+    np.random.shuffle(y)
+    return y</p>
 
-<p>Each header in this post represents a different technical area. Following the header I describe what I would know before walking into an interview.</p>
+<p>def probability_hist(probs):
+    “"”Create histogram of probabilities”””
+    fig = plt.Figure()
+    weights = np.ones_like(probs)/float(len(probs))
+    plt.hist(probs, weights=weights)
+    plt.xlim(0, 1)
+    plt.ylim(0, 1);</p>
 
-<h3 id="sql">SQL</h3>
-<p>SQL is not often used in academia, but it’s probably the most important skill in data science (how do you think you’ll get your data??). It’s used every day by data scientists at every company, and while it’s 100% necessary to know, it’s stupidly boring to learn. But, once you get the hang of it, it’s a fun language because it requires a lot of creativity. To learn SQL, I would start by doing the <a href="https://community.modeanalytics.com/sql/tutorial/introduction-to-sql/">mode analytics tutorials</a>, then the <a href="http://sqlzoo.net/">sql zoo</a> problems. <a href="https://www.fullstackpython.com/blog/postgresql-python-3-psycopg2-ubuntu-1604.html">Installing postgres on your personal computer</a> and fetching data in Python with psycopg2 or sql-alchemy is a good idea. After, completing all this, move onto query optimization (where the creativity comes into play) - check out the <a href="https://www.postgresql.org/docs/9.3/static/sql-explain.html">explain function</a> and <a href="https://stackoverflow.com/questions/2617661/whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement">order of execution</a>. Shameless self promotion: I made a <a href="https://danvatterott.com/presentations/sql_presentation/index.html#_blank">SQL presentation</a> on what SQL problems to know for job interviews.</p>
+<p>def plot_roc_curve(fpr, tpr, roc_auc, lw=2):
+    “"”Plot roc curve”””
+    lw = lw
+    fig = plt.Figure()
+    plt.plot(fpr, tpr, color=’darkorange’,
+             lw=lw, label=’ROC curve (area = %0.2f)’ % roc_auc)
+    plt.plot([0, 1], [0, 1], color=’navy’, lw=2, linestyle=’–’)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel(‘False Positive Rate’)
+    plt.ylabel(‘True Positive Rate’)
+    plt.title(‘Receiver operating characteristic example’)
+    plt.legend(loc=”lower right”);
+{% endcodeblock %}</p>
 
-<h3 id="pythonr">Python/R</h3>
-<p>Some places use R. Some places use Python. It sucks, but these languages are not interchangeable (an R team will not hire someone who only knows Python). Whatever language you choose, you should know it well because this is a tool you will use every day. I use Python, so what follows is specific to Python.</p>
+<p>I have found one of the best ways to learn about an algorithm is to give it fake data. That way, I know the data, and can examine exactly what the algorithm does with the data. I then change the data and examine how the algorithm reacts to this change.</p>
 
-<p>I learned Python with <a href="https://www.codecademy.com/">codeacademy</a> and liked it. If you’re already familiar with Python I would practice “white board” style questions. Feeling comfortable with the beginner questions on a site like <a href="https://leetcode.com/">leetcode</a> or <a href="https://www.hackerrank.com/">hackerrank</a> would be a good idea. Writing answers while thinking about code optimization is a plus.</p>
+<p>The first dataset I create is random data with balanced classes.</p>
 
-<p><a href="https://jeffknupp.com/">Jeff Knupp’s blog</a> has great tid-bits about developing in python; it’s pure gold.</p>
+<p>I create <em>probability</em> with the grab_probability function. This is a vector of numbers between 0 and 1. These data are meant to simulate the probabilities that would be produced by a model that is no better than chance.</p>
 
-<p>Another good way to learn is to work on your digital profile. If you haven’t already, I would start a blog (I talk more about this is <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">Post 1</a>).</p>
+<p>I also create the vector <em>y</em> which is random ones and zeroes. I will call the ones the positive class and the zeroes the negative class.</p>
 
-<h3 id="statisticsml">Statistics/ML</h3>
-<p>When starting here, the Andrew Ng <a href="https://www.coursera.org/learn/machine-learning">coursera course</a> is a great intro. While it’s impossible to learn all of it, I love to use <a href="https://web.stanford.edu/~hastie/ElemStatLearn/">elements of statistical learning</a> and it’s sibling book <a href="http://www-bcf.usc.edu/~gareth/ISL/">introduction to statistical learning</a> as a reference. I’ve heard good things about <a href="https://www.amazon.com/Python-Machine-Learning-Sebastian-Raschka/dp/1783555130">Python Machine Learning</a> but haven’t checked it out myself.</p>
+<p>The plot below is a histogram of <em>probability</em>. The y-axis is the proportion of samples in each bin. The x-axis is probability levels. You can see the probabilities appear to be from a uniform distribution.</p>
 
-<p>As a psychology major, I felt relatively well prepared in this regard. Experience with linear-mixed effects, hypothesis-testing, regression, etc. serves Psychology PhDs well. This doesn’t mean you can forget Stats 101 though. Once, I found myself uncomfortably surprised by a very basic probability question.</p>
+<p>{% codeblock lang:python %}
+sample_size = 1000
+positive = 0.5</p>
 
-<p>Here’s a quick list of Statistics/ML algorithms I often use: GLMs and their regularization methods are a must (L1 and L2 regularization probably come up in 75% of phone screens). Hyper-parameter search. Cross-validation! Tree-based models (e.g., random forests, boosted decision trees). I often use XGBoost and have found its <a href="http://xgboost.readthedocs.io/en/latest/model.html">intro post</a> helpful.</p>
+<p>y = create_fake_binary_data(positive, sample_size)
+probability = grab_probability(sample_size)</p>
 
-<p>I think you’re better off deeply (pun not intended) learning the basics (e.g., linear and logistic regression) than learning a smattering of newer, fancier methods (e.g., deep learning). This means thinking about linear regression from first principles (what are the assumptions and given these assumptions can you derive the best-fit parameters of a linear regression?). I can’t tell you how many hours I’ve spent studying Andrew Ng’s <a href="http://cs229.stanford.edu/notes/cs229-notes1.pdf">first supervised learning lecture</a> for this. It’s good to freshen up on linear algebra and there isn’t a better way to do this than the <a href="https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab">3Blue1Brown</a> videos; they’re amazing. This might seem too introductory/theoretical, but it’s necessary and often comes up in interviews.</p>
+<p>probability_hist(probability)
+{% endcodeblock %}</p>
 
-<p>Be prepared to talk about the bias-variance tradeoff. Everything in ML comes back to the bias-variance tradeoff so it’s a great interview question. I know some people like to ask candidates about feature selection. I think this question is basically a rephrasing of the bias-variance tradeoff.</p>
+<p><img src="{{ root_url }}/images/roc_post/output_7_0.png" /></p>
 
-<h3 id="gitcode-etiquette">Git/Code Etiquette</h3>
-<p>Make a github account if you haven’t already. Get used to commits, pushing, and branching. This won’t take long to get the hang of, but, again, it’s something you will use every day.</p>
+<p>There’s no association between <em>y</em> and the <em>probability</em>, so I don’t expect the area under the curve to be different than chance (i.e., have an area under the curve of about 0.5). I plot the ROC curve to confirm this below.</p>
 
-<p>As much as possible I would watch code etiquette. I know this seems anal, but it matters to some people (myself included), and having pep8 quality code can’t hurt. There’s a number of <a href="https://pylint.readthedocs.io/en/latest/">python modules</a> that will help here. Jeff Knupp also has a <a href="https://jeffknupp.com/blog/2016/12/09/how-python-linters-will-save-your-large-python-project/">great post</a> about linting/automating code etiquette.</p>
+<p>{% codeblock lang:python %}
+fpr, tpr, thresholds = roc_curve(y, probability)
+roc_auc = auc(fpr, tpr)</p>
 
-<p>Unit-tests are a good thing to practice/be familiar with. Like usual, Jeff Knupp has a great <a href="https://jeffknupp.com/blog/2013/12/09/improve-your-python-understanding-unit-testing/">post</a> on the topic.</p>
+<p>plot_roc_curve(fpr, tpr, roc_auc)
+{% endcodeblock %}</p>
 
-<p>I want to mention that getting a data science job is a little like getting a grant. Each time you apply, there is a low chance of getting the job/grant (luckily, there are many more jobs than grants). When creating your application/grant, it’s important to find ways to get people excited about your application/grant (e.g., showing off your statistical chops). This is where code etiquette comes into play. The last thing you want is to diminish someone’s excitement about you because you didn’t include a doc string. Is code etiquette going to remove you from contention for a job? Probably not. But it could diminish someone’s excitement.</p>
+<p><img src="{{ root_url }}/images/roc_post/output_9_0.png" /></p>
 
-<h3 id="final-thoughts">Final Thoughts</h3>
-<p>One set of skills that I haven’t touched on is cluster computing (e.g., Hadoop, Spark). Unfortunately, I don’t think there is much you can do here. I’ve heard good things about the book <a href="http://shop.oreilly.com/product/0636920028512.do">Learning Spark</a>, but books can only get you so far. If you apply for a job that wants Spark, I would install Spark on your local computer and play around, but it’s hard to learn cluster computing when you’re not on a cluster. Spark is more or less fancy SQL (aside from the ML aspects), so learning SQL is a good way to prepare for a Spark mindset. I didn’t include cluster computing above, because many teams seem okay with employees learning this on the job.</p>
+<p>Let’s talk about the axes here. The y-axis is the proportion of true positives (i.e., <a href="https://en.wikipedia.org/wiki/Sensitivity_and_specificity">TPR</a> - True Positive Rate). This is how often the model correctly identifies members of the positive class. The x-axis is the proportion of false positives (FPR - False Positive Rate). This how often the model incorrectly assigns examples to the positive class.</p>
 
-<p>Not that there’s a lack of content here, but <a href="https://blog.insightdatascience.com/preparing-for-insight-ca7cc6087f91">here</a>’s a good list of must know topics that I used when transitioning from academia to data science.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Psychology to Data Science: Part 1]]></title>
-    <link href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/"/>
-    <updated>2018-01-10T19:21:28-06:00</updated>
-    <id>https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1</id>
-    <content type="html"><![CDATA[<p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard. Part 2 can be found <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-2/">here</a>.</p>
+<p>One might wonder how the TPR and FPR can change. Doesn’t a model always produce the same guesses? The TPR and FPR can change because we can choose how liberal or conservative the model should be with assigning examples to the positive class. The lower left-hand corner of the plot above is when the model is maximally conservative (and assigns no examples to the positive class). The upper right-hand corner is when the model is maximally liberal and assigns every example to the positive class.</p>
 
-<p>Before I get started, I want to thank <a href="https://www.linkedin.com/in/rickcwolf/">Rick Wolf</a> for providing comments on an earlier version of this post.</p>
+<p>I used to assume that when a model is neutral in assigning examples to the positive class, that point would like halfway between the end points, but this is not the case. The threshold creates points along the curve, but doesn’t dictate where these points lie. If this is confusing, continue to think about it as we march through the proceeding plots.</p>
 
-<p>This first post is a series of general questions I’ve received. The second post will focus on technical skills required to get a job in data science.</p>
+<p>The ROC curve is the balance between true and false positives as a threshold varies. To help visualize this balance, I create a function which plots the two classes as a stacked histogram, cumulative density functions, and the relative balance between the two classes.</p>
 
-<p>Each header in this post represents a question. Below the header/question I record my response.</p>
+<p>{% codeblock lang:python %}
+def probability_histogram_class(probability, y):
+    plt.subplot(221)
+    counts, bins, _ = plt.hist([probability[y==0], probability[y==1]], stacked=True)
+    plt.xlim(np.min(bins),np.max(bins))
+    plt.xticks([])</p>
 
-<p>Anyone starting this process should know they are starting a marathon. Not a sprint. Making the leap from academia to data science is more than possible, but it takes time and dedication.</p>
+<pre><code>plt.subplot(222)
+plt.hist(probability[y==1], cumulative=True, normed=True, color='tab:orange')
+plt.xlim(np.min(bins),np.max(bins))
+plt.xticks([])
+plt.ylim(0,1)
 
-<h3 id="do-you-think-that-being-a-psychology-phd-is-a-disadvantage">Do you think that being a Psychology PhD is a disadvantage?</h3>
-<p>I think it can be a disadvantage in the job application process. Most people don’t understand how quantitative Psychology is, so psychology grads have to overcome these stereotypes. This doesn’t mean having a Psychology PhD is a disadvantage when it comes to BEING a data scientist. Having a Psychology PhD can be a huge advantage because Psychology PhDs have experience measuring behavior which is 90% of data science. Every company wants to know what their customers are doing and how to change their customers’ behavior. This is literally what Psychology PhDs do, so Psychology PhDs might have the most pertinent experience of any science PhD.</p>
+plt.subplot(224)
+plt.hist(probability[y==0], cumulative=True, normed=True, color='tab:blue')
+plt.xlim(np.min(bins),np.max(bins))
+plt.xticks()
+plt.ylim(0,1)
 
-<h3 id="when-it-is-the-right-time-to-apply-for-a-boot-camp">When it is the right time to apply for a boot camp?</h3>
-<p>(I did the <a href="http://insightdatascience.com/">Insight Data Science</a> bootcamp)<br />
-Apply when you’re good enough to get a phone screen but not good enough to get a job. Don’t count on a boot camp to give you all the skills. Instead, think of boot camps as polishing your skills.<br />
-<br />
-Here is the game plan I would use:<br />
-Send out 3-4 job applications and see if you get any hits. If not, think about how you can improve your resume (see post #2), and go about those improvements. After a few iterations of this, you will start getting invitations to do phone screens. At this stage, a boot camp will be useful.<br />
-The boot camps are of varying quality. Ask around to get an idea for which boot camps are better or worse. Also, look into how each boot camp gets paid. If you pay tuition, the boot camp will care less about whether you get a job. If the boot camp gets paid through recruiting fees or collecting tuition from your paychecks, it is more invested in your job.</p>
+plt.subplot(223)
+proportion = counts[0]/[max(0.0001, x) for x in counts[1]]
+plt.plot(bins[:-1], 1-proportion)
+plt.xlim(np.min(bins),np.max(bins))
+plt.ylim(0,1); {% endcodeblock %}
+</code></pre>
 
-<h3 id="should-i-start-a-blog">Should I start a blog?</h3>
-<p>Yes, I consider this a must (and so do <a href="http://varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
+<p>The idea behind this plot is we can visualize the model’s threshold moving from LEFT to RIGHT through the plots. As the threshold decreases, the model will guess the positive class more often. This means more and more of each class will be included when calculating the numerator of TPR and FPR.</p>
 
-<p>Most people (including myself) host their page on github and generate the html with a static site generator. I use <a href="http://octopress.org/">octopress</a>, which works great. Most people seem to use <a href="http://docs.getpelican.com/en/stable/">pelican</a>. I would recommend pelican because it’s built in Python. I haven’t used it, but a quick google search led me to <a href="http://mathamy.com/migrating-to-github-pages-using-pelican.html">this tutorial</a> on building a github site with pelican.</p>
+<p>The top left plot is a stacked histogram. Orange depicts members of the positive class and blue depicts members of the negative class. On the x-axis (of all four plots) is probability.</p>
 
-<p>I wish I’d sent more of my posts to friends/colleagues. Peer review is always good for a variety of reasons. I’d be more than happy to review posts for anyone reading this blog.</p>
+<p>If we continue thinking about the threshold as decreasing as the plots moves from left to right, we can think of the top right plot (a reversed <a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">CDF</a> of the positive class) as depicting the proportion of the positive class assigned to the positive class as the threshold varies (setting the TPR). We can think of the bottom right plot (a reversed CDF of the negative class) as depicting the proportion of the negative class assigned to the positive class as the threshold varies (setting the FPR).</p>
 
-<h3 id="how-should-i-frame-what-ive-done-in-academia-on-my-cvresume">How should I frame what I’ve done in academia on my CV/resume?</h3>
-<p>First, no one in industry cares about publications. People might notice if the journal is Science/Nature but most will not.
-Spend a few hours thinking about how to describe your academic accomplishments as technical skills. For example, as a Postdoc, I was on a Neurophysiology project that required writing code to collect, ingest, and transform electrophysiology data. In academia, none of this code mattered. In industry, it’s the only thing that matters. What I built was a data-pipeline, and this is a product many companies desire.</p>
+<p>In the bottom left plot, I plot the proportion of positive class that falls in each bin from the histogram in the top plot.  Because the proportion of positive and negative class are equal as the threshold varies (as depicted in the bottom plot) we consistently assign both positive and negative examples to the positive class at equal rates and the ROC stays along the identity and the area under the curve is 0.5.</p>
 
-<p>We all have examples like this, but they’re not obvious because academics don’t know what companies want. Think of your data-pipelines, your interactive experiments, your scripted analytics.</p>
+<p>{% codeblock lang:python %}
+probability = grab_probability(sample_size)</p>
 
-<p>Transforming academic work into skills that companies desire will take a bit of creativity (I am happy to help with this), but remember that your goal here is to express how the technical skills you used in academia will apply to what you will do as a data scientist.</p>
+<p>probability_histogram_class(probability, y)
+{% endcodeblock %}</p>
 
-<p>Many people (including myself) love to say they can learn fast. While this is an important skill it’s hard to measure and it calls attention to what you do not know. In general, avoid it.</p>
+<p><img src="{{ root_url }}/images/roc_post/output_13_0.png" /></p>
 
-<h3 id="did-you-focus-on-one-specific-industry">Did you focus on one specific industry?</h3>
-<p>I think a better question than what industry is what size of team/company you want to work on. At a big company you will have a more specific job with more specific requirements (and probably more depth of knowledge). At a smaller company, you will be expected to have a broader skill set. This matters in terms of what you want in a job and what skills you have. Having industry specific knowledge is awesome, but most academics have never worked in an industry so by definition they don’t have industry specific knowledge. Unfortunately, we just have to punt on this aspect of the job application.</p>
+<p>Next, I do the same process as above but with fake probabilities that are predictive of the label. The function biased_probability produces probabilities that tend to be greater for the positive class and lesser for the negative class.</p>
 
-<h3 id="anything-to-be-wary-of">Anything to be wary of?</h3>
-<p>No matter what your job is, having a good boss is important. If you get a funny feeling about a potential boss in the interview process, don’t take the job.</p>
+<p>{% codeblock lang:python %}
+def biased_probability(y):
+    “"”Return probabilities biased towards correct answer”””
+    probability = np.random.random(size=(len(y),))
+    probability[y==1] = np.random.random(size=(int(sum(y)),)) + 0.25
+    probability[y==0] = np.random.random(size=(int(sum(y==0)),)) - 0.25
+    probability = np.array([max(0, min(1, i)) for i in probability])
+    return probability
+{% endcodeblock %}</p>
 
-<p>Some companies are trying to hire data scientists but don’t want to change their company. By this I mean they want their data scientists to work in excel. Excel is a great tool, but it’s not a tool I would want to use every day. If you feel the same way, then keep an eye out for this.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Sifting the Overflow]]></title>
-    <link href="https://danvatterott.com/blog/2017/03/04/sifting-the-overflow/"/>
-    <updated>2017-03-04T09:11:45-06:00</updated>
-    <id>https://danvatterott.com/blog/2017/03/04/sifting-the-overflow</id>
-    <content type="html"><![CDATA[<p>In January 2017, I started a fellowship at <a href="http://insightdatascience.com/">Insight Data Science</a>. Insight is a 7 week program for helping academics transition from academia to careers in data science. In the first 4 weeks, fellows build data science products, and fellows present these products to different companies in the last 3 weeks.</p>
+<p>I create this data for a balanced class problem again. using the same y vector, I adjust the probabilities so that they are predcitive of the values in this y vector. Below, you can see the probability data as a histogram. The data no longer appear to be drawn from a uniform distribution. Instead, there are modes near 0 and 1.</p>
 
-<p>At Insight, I built <a href="http://siftingtheoverflow.com/">Sifting the Overflow</a>, a chrome extension which you can install from the <a href="https://chrome.google.com/webstore/detail/sifting-the-overflow/japbeffaagcpbjilckaoigpocdgncind?hl=en-US&amp;gl=US">google chrome store</a>. Sifting the Overflow identifies the most helpful parts of answers to questions about the programming language Python on <a href="http://stackoverflow.com/">StackOverflow.com</a>. To created Sifting the Overflow, I trained a recurrent neural net (RNN) to identify “helpful” answers, and when you use the browser extension on a stackoverflow page, this RNN rates the helpfulness of each sentence of each answer. The sentences that my model believes to be helpful are highlighted so that users can quickly find the most helpful parts of these pages.</p>
+<p>{% codeblock lang:python %}
+probability = biased_probability(y)</p>
 
-<p>I wrote a quick post <a href="http://siftingtheoverflow.com/">here</a> about how I built Sifting the Overflow, so check it out if you’re interested. The code is also available on my <a href="https://github.com/dvatterott/stackex_sum">github</a>.</p>
+<p>probability_hist(probability)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_17_0.png" /></p>
+
+<p>Now, we get a nice roc curve which leaves the identity line. Not surprising since I designed the probabilities to be predictive. Notice how quickly the model acheives a TPR of 1. Remember this when looking at the plots below.</p>
+
+<p>{% codeblock lang:python %}
+fpr, tpr, _ = roc_curve(y, probability)
+roc_auc = auc(fpr, tpr)</p>
+
+<p>plot_roc_curve(fpr, tpr, roc_auc)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_19_0.png" /></p>
+
+<p>In the upper left plot below, we can clearly see that the positive class occurs more often than the negative class on the right side of the plot.</p>
+
+<p>Now remember that the lower left hand side of the roc plot is when we are most conservative. This corresponds to the right hand side of these plots where the model is confident that these examples are from the positive class.</p>
+
+<p>If we look at the cdfs of right side. We can see the positive class (in orange) has many examples on the right side of these plots while the negative class (in blue) has no examples on this side. This is why the TPR immediately jumps to about 0.5 in the roc curve above. We also see the positive class has no examples on the left side of these plots while the negative class has many. This is why the TPR saturates at 1 well before the FPR does.</p>
+
+<p>In other words, because there model is quite certain that some examples are from the positive class the ROC curve quickly jumps up on the y-axis. Because the model is quite certain as to which examples are from the negative class, the ROC curves saturates on the y-axis well before the end of the x-axis.</p>
+
+<p>{% codeblock lang:python %}
+probability = biased_probability(y)</p>
+
+<p>probability_histogram_class(probability, y)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_21_0.png" /></p>
+
+<p>After those two examples, I think we have a good handle on the ROC curve in the balanced class situation. Now let’s make some fake data when the classes are unbalanced. The probabilities will be completely random.</p>
+
+<p>{% codeblock lang:python %}
+sample_size = 1000
+positive = 0.7</p>
+
+<p>y = create_fake_binary_data(positive, sample_size)
+probability = grab_probability(sample_size)</p>
+
+<p>print(‘Average Test Value: %0.2f’ % np.mean(y))
+print(‘Average Probability: %0.2f’ % np.mean(probability))</p>
+
+<p>probability_hist(probability)
+{% endcodeblock %}</p>
+
+<pre><code>Average Test Value: 0.70
+Average Probability: 0.49
+</code></pre>
+
+<p><img src="{{ root_url }}/images/roc_post/output_23_1.png" /></p>
+
+<p>Again, this is fake data, so the probabilities do not reflect the fact that the classes are imbalanced.</p>
+
+<p>Below, we can see that the ROC curve agrees that the data are completely random.</p>
+
+<p>{% codeblock lang:python %}
+fpr, tpr, _ = roc_curve(y, probability)
+roc_auc = auc(fpr, tpr)</p>
+
+<p>plot_roc_curve(fpr, tpr, roc_auc)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_25_0.png" /></p>
+
+<p>{% codeblock lang:python %}
+probability_histogram_class(probability, y)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_26_0.png" /></p>
+
+<p>Now, lets create biased probabilities and see if the ROC curve differs from chance</p>
+
+<p>{% codeblock lang:python %}
+from sklearn.utils import shuffle</p>
+
+<p>probability = biased_probability(y)</p>
+
+<p>fpr, tpr, _ = roc_curve(y, probability)
+roc_auc = auc(fpr, tpr)</p>
+
+<p>plot_roc_curve(fpr, tpr, roc_auc)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_28_0.png" /></p>
+
+<p>It does as we expect.</p>
+
+<p>{% codeblock lang:python %}
+probability_histogram_class(probability, y)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_30_0.png" /></p>
+
+<p>Importantly, the probabilities now reflect the biased classes</p>
+
+<p>{% codeblock lang:python %}
+print(np.mean(probability))
+{% endcodeblock %}</p>
+
+<pre><code>0.602536255717
+</code></pre>
+
+<p>Using these same probabilities, lets remove the relationship between the probabilities and the output variable by shuffling the data.</p>
+
+<p>{% codeblock lang:python %}
+y = shuffle(y)
+{% endcodeblock %}</p>
+
+<p>{% codeblock lang:python %}
+fpr, tpr, _ = roc_curve(y, probability)
+roc_auc = auc(fpr, tpr)</p>
+
+<p>plot_roc_curve(fpr, tpr, roc_auc)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_35_0.png" /></p>
+
+<p>Beautiful! the ROC curve stays on the identity line. We can see that this is because while the positive class is predicted more often, the positive class is evently distributed across the different thresholds.</p>
+
+<p>{% codeblock lang:python %}
+probability_histogram_class(probability, y)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/roc_post/output_37_0.png" /></p>
+
+<p>Importantly, this demonstrates that even with imbalanced classes, if a model is at chance, then the ROC curve will reflect this chance perforomance. I do a similar demonstration with fake data <a href="https://github.com/dvatterott/jupyter_notebooks/blob/master/ROC_curves_realData.ipynb">here</a>.</p>
+
+<p>{% codeblock lang:python %}
+%load_ext watermark
+%watermark -v -m -p numpy,matplotlib,sklearn
+{% endcodeblock %}</p>
+
+<pre><code>CPython 3.6.3
+IPython 6.1.0
+
+numpy 1.13.3
+matplotlib 2.0.2
+sklearn 0.19.1
+
+compiler   : GCC 7.2.0
+system     : Linux
+release    : 4.13.0-36-generic
+machine    : x86_64
+processor  : x86_64
+CPU cores  : 4
+interpreter: 64bit
+</code></pre>
 ]]></content>
   </entry>
   

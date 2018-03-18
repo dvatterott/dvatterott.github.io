@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Htpc | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/htpc/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-02-03T09:56:30-06:00</updated>
+  <updated>2018-03-18T13:51:25-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -30,267 +30,157 @@
 
 <p>I start by importing libraries that I will use. Most these libraries are used for scraping content off the web. I then create some basic variables to describe the addon’s name (addonID), its name in kodi (base_url), the number used to refer to it (addon_handle - I am not sure how this number is used), and current arguments sent to my addon (args).</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">zlib</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">json</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">urlparse</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">xbmc</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">xbmcgui</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">xbmcplugin</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">urllib2</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">re</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">addonID</span> <span class="o">=</span> <span class="err">‘</span><span class="n">plugin</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">pbsnewshour</span><span class="err">’</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span class='line'><span class="n">addon_handle</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span class='line'><span class="n">args</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">parse_qs</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+import zlib
+import json
+import sys
+import urlparse
+import xbmc
+import xbmcgui
+import xbmcplugin</p>
+
+<p>import urllib2
+import re</p>
+
+<p>addonID = ‘plugin.video.pbsnewshour’</p>
+
+<p>base_url = sys.argv[0]
+addon_handle = int(sys.argv[1])
+args = urlparse.parse_qs(sys.argv[2][1:])
+{% endcodeblock %}</p>
 
 <p>The next function, getRequest, gathers html from a website (specified by the variable url). The dictionary httpHeaders tells the website a little about myself, and how I want the html. I use urllib2 to get a compressed version of the html, which is decompressed using zlib.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># ———–  Create some functions for fetching videos —————</span>
-</span><span class='line'><span class="c"># https://github.com/learningit/Kodi-plugins-source/blob/master/script.module.t1mlib/lib/t1mlib.py</span>
-</span><span class='line'><span class="n">UTF8</span> <span class="o">=</span> <span class="err">‘</span><span class="n">utf</span><span class="o">-</span><span class="mi">8</span><span class="err">’</span>
-</span><span class='line'><span class="n">USERAGENT</span> <span class="o">=</span> <span class="err">“</span><span class="s">&quot;”Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 </span><span class="se">\</span>
-</span><span class='line'><span class="s">            (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36”””</span>
-</span><span class='line'><span class="n">httpHeaders</span> <span class="o">=</span> <span class="p">{</span><span class="err">‘</span><span class="n">User</span><span class="o">-</span><span class="n">Agent</span><span class="err">’</span><span class="p">:</span> <span class="n">USERAGENT</span><span class="p">,</span>
-</span><span class='line'>               <span class="err">‘</span><span class="n">Accept</span><span class="err">’</span><span class="p">:</span> <span class="err">“</span><span class="n">application</span><span class="o">/</span><span class="n">json</span><span class="p">,</span> <span class="n">text</span><span class="o">/</span><span class="n">javascript</span><span class="p">,</span> <span class="n">text</span><span class="o">/</span><span class="n">html</span><span class="p">,</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;/&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="err">”</span><span class="p">,</span>
-</span><span class='line'>               <span class="err">‘</span><span class="n">Accept</span><span class="o">-</span><span class="n">Encoding</span><span class="err">’</span><span class="p">:</span> <span class="err">‘</span><span class="n">gzip</span><span class="p">,</span><span class="n">deflate</span><span class="p">,</span><span class="n">sdch</span><span class="err">’</span><span class="p">,</span>
-</span><span class='line'>               <span class="err">‘</span><span class="n">Accept</span><span class="o">-</span><span class="n">Language</span><span class="err">’</span><span class="p">:</span> <span class="err">‘</span><span class="n">en</span><span class="o">-</span><span class="n">US</span><span class="p">,</span><span class="n">en</span><span class="p">;</span><span class="n">q</span><span class="o">=</span><span class="mf">0.8</span><span class="err">’</span>
-</span><span class='line'>               <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">getRequest</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">udata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">httpHeaders</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">req</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">UTF8</span><span class="p">),</span> <span class="n">udata</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">response</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">page</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">getheader</span><span class="p">(</span><span class="err">‘</span><span class="n">Content</span><span class="o">-</span><span class="n">Encoding</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">gzip</span><span class="err">’</span><span class="p">:</span>
-</span><span class='line'>            <span class="n">page</span> <span class="o">=</span> <span class="n">zlib</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">zlib</span><span class="o">.</span><span class="n">MAX_WBITS</span> <span class="o">+</span> <span class="mi">16</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">response</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span class='line'>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">page</span> <span class="o">=</span> <span class="err">“”</span>
-</span><span class='line'>        <span class="n">xbmc</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">msg</span><span class="o">=</span><span class="err">’</span><span class="n">REQUEST</span> <span class="n">ERROR</span><span class="err">’</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">xbmc</span><span class="o">.</span><span class="n">LOGDEBUG</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">return</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+# ———–  Create some functions for fetching videos —————
+# https://github.com/learningit/Kodi-plugins-source/blob/master/script.module.t1mlib/lib/t1mlib.py
+UTF8 = ‘utf-8’
+USERAGENT = “"”Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 \
+            (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36”””
+httpHeaders = {‘User-Agent’: USERAGENT,
+               ‘Accept’: “application/json, text/javascript, text/html,<em>/</em>”,
+               ‘Accept-Encoding’: ‘gzip,deflate,sdch’,
+               ‘Accept-Language’: ‘en-US,en;q=0.8’
+               }</p>
+
+<p>def getRequest(url, udata=None, headers=httpHeaders):
+    req = urllib2.Request(url.encode(UTF8), udata, headers)
+    try:
+        response = urllib2.urlopen(req)
+        page = response.read()
+        if response.info().getheader(‘Content-Encoding’) == ‘gzip’:
+            page = zlib.decompress(page, zlib.MAX_WBITS + 16)
+        response.close()
+    except Exception:
+        page = “”
+        xbmc.log(msg=’REQUEST ERROR’, level=xbmc.LOGDEBUG)
+    return(page)
+{% endcodeblock %}</p>
 
 <p>The hardest part of building this addon was finding video links. I was able to find a <a href="https://github.com/learningit/Kodi-plugins-source/">github repo</a> with code for identifying links to PBS’s videos, but PBS initially posts their videos on youtube. I watch PBS NewsHour the morning after it airs, so I needed a way to watch these youtube links. I started this post by saying I wanted to avoid using Kodi’s youtube addon, but I punted and decided to use the youtube addon to play these links. Below is a function for finding the youtube id of a video.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">deal_with_youtube</span><span class="p">(</span><span class="n">html</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">vid_num</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="err">‘</span><span class="o">&lt;</span><span class="n">span</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;youtubeid&quot;</span><span class="o">&gt;</span><span class="p">(</span><span class="o">.+</span><span class="err">?</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">span</span><span class="o">&gt;</span><span class="err">’</span><span class="p">,</span>
-</span><span class='line'>                         <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">url</span> <span class="o">=</span> <span class="n">vid_num</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">url</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+def deal_with_youtube(html):
+    vid_num = re.compile(‘<span class="youtubeid">(.+?)</span>’,
+                         re.DOTALL).search(html)
+    url = vid_num.group(1)
+    return url
+{% endcodeblock %}</p>
 
 <p>This next function actually fetches the videos (the hard part of building this addon). This function fetches the html of the website that has PBS’s video. It then searches the html for “coveplayerid,” which is PBS’s name for the video. I use this name to create a url that will play the video. I get the html associated with this new url, and search it for a json file that contains the video. I grab this json file, and viola I have the video’s url! In the final part of the code, I request a higher version of the video than PBS would give me by default.</p>
 
 <p>If I fail to find “coveplayerid,” then I know this is a video with a youtube link, so I grab the youtube id. Some pages have a coveplayerid class, but no actual coveplayerid. I also detect these cases and find the youtube id when it occurs.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># https://github.com/learningit/Kodi-plugins-source/blob/master/plugin.video.thinktv/resources/lib/scraper.py</span>
-</span><span class='line'><span class="c"># modified from link above</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">getAddonVideo</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">udata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">httpHeaders</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">html</span> <span class="o">=</span> <span class="n">getRequest</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">vid_num</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;&amp;lt;span class=&quot;coveplayerid&quot;&amp;gt;(.+?)&amp;lt;/span&amp;gt;&#39;</span><span class="p">,</span>
-</span><span class='line'>                     <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class='line'><span class="k">if</span> <span class="n">vid_num</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">vid_num</span> <span class="o">=</span> <span class="n">vid_num</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">if</span> <span class="s">&#39;youtube&#39;</span> <span class="ow">in</span> <span class="n">vid_num</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">deal_with_youtube</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">pg</span> <span class="o">=</span> <span class="n">getRequest</span><span class="p">(</span><span class="s">&#39;http://player.pbs.org/viralplayer/</span><span class="si">%s</span><span class="s">/&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vid_num</span><span class="p">))</span>
-</span><span class='line'>    <span class="n">query</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;PBS.videoData =.+?recommended_encoding.+?&#39;url&#39;.+?&#39;(.+?)&#39;&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="n">urls</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">url</span> <span class="o">=</span> <span class="n">urls</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">pg</span> <span class="o">=</span> <span class="n">getRequest</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">?format=json&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">url</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pg</span><span class="p">)[</span><span class="s">&#39;url&#39;</span><span class="p">]</span>
-</span><span class='line'><span class="k">else</span><span class="p">:</span>  <span class="c"># weekend links are initially posted as youtube vids</span>
-</span><span class='line'>    <span class="n">deal_with_youtube</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;800k&#39;</span><span class="p">,</span> <span class="s">&#39;2500k&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="k">if</span> <span class="s">&#39;hd-1080p&#39;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;-hls-&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">+</span><span class="s">&#39;-hls-6500k.m3u8&#39;</span>
-</span><span class='line'><span class="k">return</span> <span class="n">url</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>{% codeblock lang:python %}
+# https://github.com/learningit/Kodi-plugins-source/blob/master/plugin.video.thinktv/resources/lib/scraper.py
+# modified from link above
+def getAddonVideo(url, udata=None, headers=httpHeaders):
+    html = getRequest(url)</p>
+
+<pre><code>vid_num = re.compile('&lt;span class="coveplayerid"&gt;(.+?)&lt;/span&gt;',
+                     re.DOTALL).search(html)
+if vid_num:
+    vid_num = vid_num.group(1)
+    if 'youtube' in vid_num:
+        return deal_with_youtube(html)
+    pg = getRequest('http://player.pbs.org/viralplayer/%s/' % (vid_num))
+    query = """PBS.videoData =.+?recommended_encoding.+?'url'.+?'(.+?)'"""
+    urls = re.compile(query, re.DOTALL).search(pg)
+
+    url = urls.groups()
+    pg = getRequest('%s?format=json' % url)
+    url = json.loads(pg)['url']
+else:  # weekend links are initially posted as youtube vids
+    deal_with_youtube(html)
+
+url = url.replace('800k', '2500k')
+if 'hd-1080p' in url:
+    url = url.split('-hls-', 1)[0]
+    url = url+'-hls-6500k.m3u8'
+return url {% endcodeblock %}
 </code></pre>
 
 <p>This next function identifies full episodes that have aired in the past week. It’s the meat of the addon. The function gets the html of <a href="http://www.pbs.org/newshour/videos/">PBS NewsHour’s page</a>, and finds all links in a side-bar where PBS lists their past week’s episodes. I loop through the links and create a menu item for each one. These menu items are python objects that Kodi can display to users. The items include a label/title (the name of the episode), an image, and a url that Kodi can use to find the video url.</p>
 
 <p>The most important part of this listing is the url I create. This url gives Kodi all the information I just described, associates the link with an addon, and tells Kodi that the link is playable. In the final part of the function, I pass the list of links to Kodi.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># ————– Create list of videos ——————–</span>
-</span><span class='line'><span class="c"># http://kodi.wiki/view/HOW-TO:Video_addon</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">list_videos</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="err">’</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">pbs</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">newshour</span><span class="o">/</span><span class="n">videos</span><span class="o">/</span><span class="err">’</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">html</span> <span class="o">=</span> <span class="n">getRequest</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">query</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;&amp;lt;div class=&#39;sw-pic maxwidth&#39;&amp;gt;.+?href=&#39;(.+?)&#39;.+?src=&quot;(.+?)&quot;.+?title=&quot;(.+?)&quot; &quot;&quot;&quot;</span>
-</span><span class='line'><span class="n">videos</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">listing</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class='line'><span class="k">for</span> <span class="n">vids</span> <span class="ow">in</span> <span class="n">videos</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">list_item</span> <span class="o">=</span> <span class="n">xbmcgui</span><span class="o">.</span><span class="n">ListItem</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">vids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-</span><span class='line'>                                 <span class="n">thumbnailImage</span><span class="o">=</span><span class="n">vids</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span class='line'>    <span class="n">list_item</span><span class="o">.</span><span class="n">setInfo</span><span class="p">(</span><span class="s">&#39;video&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="n">vids</span><span class="p">[</span><span class="mi">2</span><span class="p">]})</span>
-</span><span class='line'>    <span class="n">list_item</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s">&#39;IsPlayable&#39;</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">url</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">?action=</span><span class="si">%s</span><span class="s">&amp;amp;title=</span><span class="si">%s</span><span class="s">&amp;amp;url=</span><span class="si">%s</span><span class="s">&amp;amp;thumbnail=</span><span class="si">%s</span><span class="s">&quot;</span>
-</span><span class='line'>           <span class="o">%</span> <span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="s">&#39;play&#39;</span><span class="p">,</span> <span class="n">vids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">vids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vids</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">listing</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">url</span><span class="p">,</span> <span class="n">list_item</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span>
-</span><span class='line'>
-</span><span class='line'><span class="c"># Add list to Kodi.</span>
-</span><span class='line'><span class="n">xbmcplugin</span><span class="o">.</span><span class="n">addDirectoryItems</span><span class="p">(</span><span class="n">addon_handle</span><span class="p">,</span> <span class="n">listing</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">listing</span><span class="p">))</span>
-</span><span class='line'><span class="n">xbmcplugin</span><span class="o">.</span><span class="n">endOfDirectory</span><span class="p">(</span><span class="n">handle</span><span class="o">=</span><span class="n">addon_handle</span><span class="p">,</span> <span class="n">succeeded</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>{% codeblock lang:python %}
+# ————– Create list of videos ——————–
+# http://kodi.wiki/view/HOW-TO:Video_addon
+def list_videos(url=’http://www.pbs.org/newshour/videos/’):
+    html = getRequest(url)</p>
+
+<pre><code>query = """&lt;div class='sw-pic maxwidth'&gt;.+?href='(.+?)'.+?src="(.+?)".+?title="(.+?)" """
+videos = re.compile(query, re.DOTALL).findall(html)
+
+listing = []
+for vids in videos:
+    list_item = xbmcgui.ListItem(label=vids[2],
+                                 thumbnailImage=vids[1])
+    list_item.setInfo('video', {'title': vids[2]})
+    list_item.setProperty('IsPlayable', 'true')
+
+    url = ("%s?action=%s&amp;title=%s&amp;url=%s&amp;thumbnail=%s"
+           % (base_url, 'play', vids[2], vids[0], vids[1]))
+
+    listing.append((url, list_item, False))
+
+# Add list to Kodi.
+xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
+xbmcplugin.endOfDirectory(handle=addon_handle, succeeded=True) {% endcodeblock %}
 </code></pre>
 
 <p>Okay, thats the hard part. The rest of the code implements the functions I just described. The function below is executed when a user chooses to play a video. It gets the url of the video, and gives this to the xbmc function that will play the video. The only hiccup here is I check whether the link is for the standard PBS video type or not. If it is, then I give the link directly to Kodi. If it’s not, then this is a youtube link and I launch the youtube plugin with my youtube video id.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">play_video</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">path</span> <span class="o">=</span> <span class="n">getAddonVideo</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">if</span> <span class="err">‘</span><span class="mo">00</span><span class="n">k</span><span class="err">’</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">play_item</span> <span class="o">=</span> <span class="n">xbmcgui</span><span class="o">.</span><span class="n">ListItem</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">xbmcplugin</span><span class="o">.</span><span class="n">setResolvedUrl</span><span class="p">(</span><span class="n">addon_handle</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="n">listitem</span><span class="o">=</span><span class="n">play_item</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">else</span><span class="p">:</span>  <span class="c"># deal with youtube links</span>
-</span><span class='line'>        <span class="n">path</span> <span class="o">=</span> <span class="err">‘</span><span class="n">plugin</span><span class="p">:</span><span class="o">//</span><span class="n">plugin</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">youtube</span><span class="o">/</span><span class="err">?</span><span class="n">action</span><span class="o">=</span><span class="n">play_video</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">videoid</span><span class="o">=</span><span class="err">’</span> <span class="o">+</span> <span class="n">path</span>
-</span><span class='line'>        <span class="n">play_item</span> <span class="o">=</span> <span class="n">xbmcgui</span><span class="o">.</span><span class="n">ListItem</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">xbmcplugin</span><span class="o">.</span><span class="n">setResolvedUrl</span><span class="p">(</span><span class="n">addon_handle</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="n">listitem</span><span class="o">=</span><span class="n">play_item</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+def play_video(path):
+    path = getAddonVideo(path)
+    if ‘00k’ in path:
+        play_item = xbmcgui.ListItem(path=path)
+        xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
+    else:  # deal with youtube links
+        path = ‘plugin://plugin.video.youtube/?action=play_video&amp;videoid=’ + path
+        play_item = xbmcgui.ListItem(path=path)
+        xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
+{% endcodeblock %}</p>
 
 <p>This final function is launched whenever a user calls the addon or executes an action in the addon (thats why I call the function in the final line of code here). params is an empty dictionary if the addon is being opened. params being empty causes the addon to call list_videos, creating the list of episodes that PBS has aired in the past week. If the user selects one of the episodes, then router is called again, but this time the argument is the url of the selected item. This url is passed to the play_video function, which plays the video for the user!</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">router</span><span class="p">():</span>
-</span><span class='line'>    <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">if</span> <span class="n">params</span><span class="p">:</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s">&#39;action&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;play&#39;</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">play_video</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s">&#39;url&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid paramstring: {0}!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
-</span><span class='line'><span class="k">else</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">list_videos</span><span class="p">()</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">router</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+def router():
+    params = dict(args)</p>
+
+<pre><code>if params:
+    if params['action'][0] == 'play':
+        play_video(params['url'][0])
+    else:
+        raise ValueError('Invalid paramstring: {0}!'.format(params))
+else:
+    list_videos()
+</code></pre>
+
+<p>router()
+{% endcodeblock %}</p>
 
 <p>That’s my addon! I hope this tutorial helps people create future Kodi addons. Definitely reach out if you have questions. Also, make sure to check out the NewsHour soon and often. It’s the bomb.</p>
 ]]></content>
