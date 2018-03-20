@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Spark | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/spark/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-03-18T13:51:25-05:00</updated>
+  <updated>2018-03-20T18:24:21-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -24,17 +24,20 @@
 
 <p>I start by creating some small dataframes.</p>
 
-<p>{% codeblock lang:python %}
-import pyspark
-from pyspark.sql import functions as F
-a = sc.parallelize([[1, ‘a’], [2, ‘b’], [3, ‘c’]]).toDF([‘id’, ‘valueA’])
-b = sc.parallelize([[1, ‘a’], [4, ‘d’], [5, ‘e’]]).toDF([‘id’, ‘valueB’])
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pyspark</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueA</span><span class="err">’</span><span class="p">])</span>
+</span><span class='line'><span class="n">b</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="err">‘</span><span class="n">d</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="err">‘</span><span class="n">e</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueB</span><span class="err">’</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Take a quick look at dataframe <em>a</em>.
-{% codeblock lang:python %}
-a.show()
-{% endcodeblock %}</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 <table style="width:5%">
  <tr>
    <th>id</th>
@@ -55,9 +58,9 @@ a.show()
 </table>
 
 <p>And dataframe <em>b</em>.
-{% codeblock lang:python %}
-b.show()
-{% endcodeblock %}</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 <table style="width:5%">
  <tr>
    <th>id</th>
@@ -78,10 +81,11 @@ b.show()
 </table>
 
 <p>I create a new column in <em>a</em> that is all ones. I could have used an existing column, but this way I know the column is never null.
-{% codeblock lang:python %}
-a = a.withColumn(‘inA’, F.lit(1))
-a.show()
-{% endcodeblock %}</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 <table style="width:5%">
  <tr>
    <th>id</th>
@@ -106,9 +110,9 @@ a.show()
 </table>
 
 <p>I join <em>a</em> and <em>b</em> with a left join. This way all values in <em>b</em> which are not in <em>a</em> have null values in the column “inA”.
-{% codeblock lang:python %}
-b.join(a, ‘id’, ‘left’).show()
-{% endcodeblock %}</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 <table style="width:5%">
  <tr>
    <th>id</th>
@@ -137,10 +141,11 @@ b.join(a, ‘id’, ‘left’).show()
 </table>
 
 <p>By filtering out rows in the new dataframe <em>c</em>, which are not null, I remove all values of <em>b</em>, which were also in <em>a</em>.
-{% codeblock lang:python %}
-c = b.join(a, ‘id’, ‘left’).filter(F.col(‘inA’).isNull())
-c.show()
-{% endcodeblock %}</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">isNull</span><span class="p">())</span>
+</span><span class='line'><span class="n">c</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 <table style="width:5%">
  <tr>
    <th>id</th>

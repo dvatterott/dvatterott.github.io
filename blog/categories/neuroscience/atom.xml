@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Neuroscience | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/neuroscience/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-03-18T13:51:25-05:00</updated>
+  <updated>2018-03-20T18:24:21-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -18,7 +18,7 @@
     <link href="https://danvatterott.com/blog/2016/11/15/sfn-2016-presentation/"/>
     <updated>2016-11-15T12:43:53-06:00</updated>
     <id>https://danvatterott.com/blog/2016/11/15/sfn-2016-presentation</id>
-    <content type="html"><![CDATA[<p><img src="{{ root_url }}/images/sfn/sfn_2016_vatterott.png" /></p>
+    <content type="html"><![CDATA[<p><img src="/images/sfn/sfn_2016_vatterott.png" /></p>
 
 <p>I recently presented at the annual meeting of the society for neuroscience, so I wanted to do a quick post describing my findings.</p>
 

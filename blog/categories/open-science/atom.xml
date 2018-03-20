@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Open-science | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/open-science/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-03-18T13:51:25-05:00</updated>
+  <updated>2018-03-20T18:24:21-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -22,18 +22,21 @@
 
 <p>I start by loading the necessary libraries.</p>
 
-<p>{% codeblock lang:python %}
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
-%matplotlib inline
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_curve</span><span class="p">,</span> <span class="n">auc</span>
+</span><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Seed the random number generator so that everything here is reproducible.</p>
 
-<p>{% codeblock lang:python %}
-np.random.seed(seed=1)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>I write a few functions that will create fake date, plot fake date, and plot ROC curves.</p>
 
@@ -45,41 +48,73 @@ np.random.seed(seed=1)
  <li><strong>plot_roc_curve</strong> does not need an explanation.</li>
 </ul>
 
-<p>{% codeblock lang:python %}
-def grab_probability(sample_size):
-    “"”Draw probabilties”””
-    return np.random.random(size=(sample_size,))</p>
-
-<p>def create_fake_binary_data(positive, sample_size):
-    “"”Create a vector of binary data with the mean specified in positive”””
-    negative = 1-positive
-    y = np.ones(sample_size)
-    y[:int(negative*sample_size)] = 0
-    np.random.shuffle(y)
-    return y</p>
-
-<p>def probability_hist(probs):
-    “"”Create histogram of probabilities”””
-    fig = plt.Figure()
-    weights = np.ones_like(probs)/float(len(probs))
-    plt.hist(probs, weights=weights)
-    plt.xlim(0, 1)
-    plt.ylim(0, 1);</p>
-
-<p>def plot_roc_curve(fpr, tpr, roc_auc, lw=2):
-    “"”Plot roc curve”””
-    lw = lw
-    fig = plt.Figure()
-    plt.plot(fpr, tpr, color=’darkorange’,
-             lw=lw, label=’ROC curve (area = %0.2f)’ % roc_auc)
-    plt.plot([0, 1], [0, 1], color=’navy’, lw=2, linestyle=’–’)
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel(‘False Positive Rate’)
-    plt.ylabel(‘True Positive Rate’)
-    plt.title(‘Receiver operating characteristic example’)
-    plt.legend(loc=”lower right”);
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">grab_probability</span><span class="p">(</span><span class="n">sample_size</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Draw probabilties”””</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">sample_size</span><span class="p">,))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">create_fake_binary_data</span><span class="p">(</span><span class="n">positive</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Create a vector of binary data with the mean specified in positive”””</span>
+</span><span class='line'>    <span class="n">negative</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">positive</span>
+</span><span class='line'>    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">sample_size</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">y</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">negative</span><span class="o">*</span><span class="n">sample_size</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">y</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">probability_hist</span><span class="p">(</span><span class="n">probs</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Create histogram of probabilities”””</span>
+</span><span class='line'>    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">))</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">plot_roc_curve</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">roc_auc</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Plot roc curve”””</span>
+</span><span class='line'>    <span class="n">lw</span> <span class="o">=</span> <span class="n">lw</span>
+</span><span class='line'>    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="err">’</span><span class="n">darkorange</span><span class="err">’</span><span class="p">,</span>
+</span><span class='line'>             <span class="n">lw</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">’</span><span class="n">ROC</span> <span class="n">curve</span> <span class="p">(</span><span class="n">area</span> <span class="o">=</span> <span class="o">%</span><span class="mf">0.2</span><span class="n">f</span><span class="p">)</span><span class="err">’</span> <span class="o">%</span> <span class="n">roc_auc</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="err">’</span><span class="n">navy</span><span class="err">’</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="err">’–’</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.05</span><span class="p">])</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="err">‘</span><span class="bp">False</span> <span class="n">Positive</span> <span class="n">Rate</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="err">‘</span><span class="bp">True</span> <span class="n">Positive</span> <span class="n">Rate</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="err">‘</span><span class="n">Receiver</span> <span class="n">operating</span> <span class="n">characteristic</span> <span class="n">example</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="err">”</span><span class="n">lower</span> <span class="n">right</span><span class="err">”</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>I have found one of the best ways to learn about an algorithm is to give it fake data. That way, I know the data, and can examine exactly what the algorithm does with the data. I then change the data and examine how the algorithm reacts to this change.</p>
 
@@ -91,28 +126,37 @@ def grab_probability(sample_size):
 
 <p>The plot below is a histogram of <em>probability</em>. The y-axis is the proportion of samples in each bin. The x-axis is probability levels. You can see the probabilities appear to be from a uniform distribution.</p>
 
-<p>{% codeblock lang:python %}
-sample_size = 1000
-positive = 0.5</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">sample_size</span> <span class="o">=</span> <span class="mi">1000</span>
+</span><span class='line'><span class="n">positive</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">y</span> <span class="o">=</span> <span class="n">create_fake_binary_data</span><span class="p">(</span><span class="n">positive</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">)</span>
+</span><span class='line'><span class="n">probability</span> <span class="o">=</span> <span class="n">grab_probability</span><span class="p">(</span><span class="n">sample_size</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">probability_hist</span><span class="p">(</span><span class="n">probability</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>y = create_fake_binary_data(positive, sample_size)
-probability = grab_probability(sample_size)</p>
-
-<p>probability_hist(probability)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_7_0.png" /></p>
+<p><img src="/images/roc_post/output_7_0.png" /></p>
 
 <p>There’s no association between <em>y</em> and the <em>probability</em>, so I don’t expect the area under the curve to be different than chance (i.e., have an area under the curve of about 0.5). I plot the ROC curve to confirm this below.</p>
 
-<p>{% codeblock lang:python %}
-fpr, tpr, thresholds = roc_curve(y, probability)
-roc_auc = auc(fpr, tpr)</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">probability</span><span class="p">)</span>
+</span><span class='line'><span class="n">roc_auc</span> <span class="o">=</span> <span class="n">auc</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plot_roc_curve</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">roc_auc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>plot_roc_curve(fpr, tpr, roc_auc)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_9_0.png" /></p>
+<p><img src="/images/roc_post/output_9_0.png" /></p>
 
 <p>Let’s talk about the axes here. The y-axis is the proportion of true positives (i.e., <a href="https://en.wikipedia.org/wiki/Sensitivity_and_specificity">TPR</a> - True Positive Rate). This is how often the model correctly identifies members of the positive class. The x-axis is the proportion of false positives (FPR - False Positive Rate). This how often the model incorrectly assigns examples to the positive class.</p>
 
@@ -122,30 +166,53 @@ roc_auc = auc(fpr, tpr)</p>
 
 <p>The ROC curve is the balance between true and false positives as a threshold varies. To help visualize this balance, I create a function which plots the two classes as a stacked histogram, cumulative density functions, and the relative balance between the two classes.</p>
 
-<p>{% codeblock lang:python %}
-def probability_histogram_class(probability, y):
-    plt.subplot(221)
-    counts, bins, _ = plt.hist([probability[y==0], probability[y==1]], stacked=True)
-    plt.xlim(np.min(bins),np.max(bins))
-    plt.xticks([])</p>
-
-<pre><code>plt.subplot(222)
-plt.hist(probability[y==1], cumulative=True, normed=True, color='tab:orange')
-plt.xlim(np.min(bins),np.max(bins))
-plt.xticks([])
-plt.ylim(0,1)
-
-plt.subplot(224)
-plt.hist(probability[y==0], cumulative=True, normed=True, color='tab:blue')
-plt.xlim(np.min(bins),np.max(bins))
-plt.xticks()
-plt.ylim(0,1)
-
-plt.subplot(223)
-proportion = counts[0]/[max(0.0001, x) for x in counts[1]]
-plt.plot(bins[:-1], 1-proportion)
-plt.xlim(np.min(bins),np.max(bins))
-plt.ylim(0,1); {% endcodeblock %}
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">probability_histogram_class</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">221</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">counts</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">probability</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span> <span class="n">probability</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">]],</span> <span class="n">stacked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bins</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bins</span><span class="p">))</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">222</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">probability</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">],</span> <span class="n">cumulative</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">normed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;tab:orange&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bins</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bins</span><span class="p">))</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([])</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">224</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">probability</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span> <span class="n">cumulative</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">normed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;tab:blue&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bins</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bins</span><span class="p">))</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">()</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">223</span><span class="p">)</span>
+</span><span class='line'><span class="n">proportion</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="o">-</span><span class="n">proportion</span><span class="p">)</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bins</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bins</span><span class="p">))</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
 </code></pre>
 
 <p>The idea behind this plot is we can visualize the model’s threshold moving from LEFT to RIGHT through the plots. As the threshold decreases, the model will guess the positive class more often. This means more and more of each class will be included when calculating the numerator of TPR and FPR.</p>
@@ -156,46 +223,59 @@ plt.ylim(0,1); {% endcodeblock %}
 
 <p>In the bottom left plot, I plot the proportion of positive class that falls in each bin from the histogram in the top plot.  Because the proportion of positive and negative class are equal as the threshold varies (as depicted in the bottom plot) we consistently assign both positive and negative examples to the positive class at equal rates and the ROC stays along the identity and the area under the curve is 0.5.</p>
 
-<p>{% codeblock lang:python %}
-probability = grab_probability(sample_size)</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">probability</span> <span class="o">=</span> <span class="n">grab_probability</span><span class="p">(</span><span class="n">sample_size</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">probability_histogram_class</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>probability_histogram_class(probability, y)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_13_0.png" /></p>
+<p><img src="/images/roc_post/output_13_0.png" /></p>
 
 <p>Next, I do the same process as above but with fake probabilities that are predictive of the label. The function biased_probability produces probabilities that tend to be greater for the positive class and lesser for the negative class.</p>
 
-<p>{% codeblock lang:python %}
-def biased_probability(y):
-    “"”Return probabilities biased towards correct answer”””
-    probability = np.random.random(size=(len(y),))
-    probability[y==1] = np.random.random(size=(int(sum(y)),)) + 0.25
-    probability[y==0] = np.random.random(size=(int(sum(y==0)),)) - 0.25
-    probability = np.array([max(0, min(1, i)) for i in probability])
-    return probability
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">biased_probability</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Return probabilities biased towards correct answer”””</span>
+</span><span class='line'>    <span class="n">probability</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">),))</span>
+</span><span class='line'>    <span class="n">probability</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)),))</span> <span class="o">+</span> <span class="mf">0.25</span>
+</span><span class='line'>    <span class="n">probability</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="mi">0</span><span class="p">)),))</span> <span class="o">-</span> <span class="mf">0.25</span>
+</span><span class='line'>    <span class="n">probability</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">probability</span><span class="p">])</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">probability</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>I create this data for a balanced class problem again. using the same y vector, I adjust the probabilities so that they are predcitive of the values in this y vector. Below, you can see the probability data as a histogram. The data no longer appear to be drawn from a uniform distribution. Instead, there are modes near 0 and 1.</p>
 
-<p>{% codeblock lang:python %}
-probability = biased_probability(y)</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">probability</span> <span class="o">=</span> <span class="n">biased_probability</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">probability_hist</span><span class="p">(</span><span class="n">probability</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>probability_hist(probability)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_17_0.png" /></p>
+<p><img src="/images/roc_post/output_17_0.png" /></p>
 
 <p>Now, we get a nice roc curve which leaves the identity line. Not surprising since I designed the probabilities to be predictive. Notice how quickly the model acheives a TPR of 1. Remember this when looking at the plots below.</p>
 
-<p>{% codeblock lang:python %}
-fpr, tpr, _ = roc_curve(y, probability)
-roc_auc = auc(fpr, tpr)</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">probability</span><span class="p">)</span>
+</span><span class='line'><span class="n">roc_auc</span> <span class="o">=</span> <span class="n">auc</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plot_roc_curve</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">roc_auc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>plot_roc_curve(fpr, tpr, roc_auc)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_19_0.png" /></p>
+<p><img src="/images/roc_post/output_19_0.png" /></p>
 
 <p>In the upper left plot below, we can clearly see that the positive class occurs more often than the negative class on the right side of the plot.</p>
 
@@ -205,115 +285,140 @@ roc_auc = auc(fpr, tpr)</p>
 
 <p>In other words, because there model is quite certain that some examples are from the positive class the ROC curve quickly jumps up on the y-axis. Because the model is quite certain as to which examples are from the negative class, the ROC curves saturates on the y-axis well before the end of the x-axis.</p>
 
-<p>{% codeblock lang:python %}
-probability = biased_probability(y)</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">probability</span> <span class="o">=</span> <span class="n">biased_probability</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">probability_histogram_class</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>probability_histogram_class(probability, y)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_21_0.png" /></p>
+<p><img src="/images/roc_post/output_21_0.png" /></p>
 
 <p>After those two examples, I think we have a good handle on the ROC curve in the balanced class situation. Now let’s make some fake data when the classes are unbalanced. The probabilities will be completely random.</p>
 
-<p>{% codeblock lang:python %}
-sample_size = 1000
-positive = 0.7</p>
-
-<p>y = create_fake_binary_data(positive, sample_size)
-probability = grab_probability(sample_size)</p>
-
-<p>print(‘Average Test Value: %0.2f’ % np.mean(y))
-print(‘Average Probability: %0.2f’ % np.mean(probability))</p>
-
-<p>probability_hist(probability)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">sample_size</span> <span class="o">=</span> <span class="mi">1000</span>
+</span><span class='line'><span class="n">positive</span> <span class="o">=</span> <span class="mf">0.7</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">y</span> <span class="o">=</span> <span class="n">create_fake_binary_data</span><span class="p">(</span><span class="n">positive</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">)</span>
+</span><span class='line'><span class="n">probability</span> <span class="o">=</span> <span class="n">grab_probability</span><span class="p">(</span><span class="n">sample_size</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span><span class="p">(</span><span class="err">‘</span><span class="n">Average</span> <span class="n">Test</span> <span class="n">Value</span><span class="p">:</span> <span class="o">%</span><span class="mf">0.2</span><span class="n">f</span><span class="err">’</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="err">‘</span><span class="n">Average</span> <span class="n">Probability</span><span class="p">:</span> <span class="o">%</span><span class="mf">0.2</span><span class="n">f</span><span class="err">’</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">probability</span><span class="p">))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">probability_hist</span><span class="p">(</span><span class="n">probability</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>Average Test Value: 0.70
 Average Probability: 0.49
 </code></pre>
 
-<p><img src="{{ root_url }}/images/roc_post/output_23_1.png" /></p>
+<p><img src="/images/roc_post/output_23_1.png" /></p>
 
 <p>Again, this is fake data, so the probabilities do not reflect the fact that the classes are imbalanced.</p>
 
 <p>Below, we can see that the ROC curve agrees that the data are completely random.</p>
 
-<p>{% codeblock lang:python %}
-fpr, tpr, _ = roc_curve(y, probability)
-roc_auc = auc(fpr, tpr)</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">probability</span><span class="p">)</span>
+</span><span class='line'><span class="n">roc_auc</span> <span class="o">=</span> <span class="n">auc</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plot_roc_curve</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">roc_auc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>plot_roc_curve(fpr, tpr, roc_auc)
-{% endcodeblock %}</p>
+<p><img src="/images/roc_post/output_25_0.png" /></p>
 
-<p><img src="{{ root_url }}/images/roc_post/output_25_0.png" /></p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">probability_histogram_class</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>{% codeblock lang:python %}
-probability_histogram_class(probability, y)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_26_0.png" /></p>
+<p><img src="/images/roc_post/output_26_0.png" /></p>
 
 <p>Now, lets create biased probabilities and see if the ROC curve differs from chance</p>
 
-<p>{% codeblock lang:python %}
-from sklearn.utils import shuffle</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">shuffle</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">probability</span> <span class="o">=</span> <span class="n">biased_probability</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">probability</span><span class="p">)</span>
+</span><span class='line'><span class="n">roc_auc</span> <span class="o">=</span> <span class="n">auc</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plot_roc_curve</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">roc_auc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>probability = biased_probability(y)</p>
-
-<p>fpr, tpr, _ = roc_curve(y, probability)
-roc_auc = auc(fpr, tpr)</p>
-
-<p>plot_roc_curve(fpr, tpr, roc_auc)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_28_0.png" /></p>
+<p><img src="/images/roc_post/output_28_0.png" /></p>
 
 <p>It does as we expect.</p>
 
-<p>{% codeblock lang:python %}
-probability_histogram_class(probability, y)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">probability_histogram_class</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p><img src="{{ root_url }}/images/roc_post/output_30_0.png" /></p>
+<p><img src="/images/roc_post/output_30_0.png" /></p>
 
 <p>Importantly, the probabilities now reflect the biased classes</p>
 
-<p>{% codeblock lang:python %}
-print(np.mean(probability))
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">probability</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>0.602536255717
 </code></pre>
 
 <p>Using these same probabilities, lets remove the relationship between the probabilities and the output variable by shuffling the data.</p>
 
-<p>{% codeblock lang:python %}
-y = shuffle(y)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">y</span> <span class="o">=</span> <span class="n">shuffle</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>{% codeblock lang:python %}
-fpr, tpr, _ = roc_curve(y, probability)
-roc_auc = auc(fpr, tpr)</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">probability</span><span class="p">)</span>
+</span><span class='line'><span class="n">roc_auc</span> <span class="o">=</span> <span class="n">auc</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plot_roc_curve</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">roc_auc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>plot_roc_curve(fpr, tpr, roc_auc)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/roc_post/output_35_0.png" /></p>
+<p><img src="/images/roc_post/output_35_0.png" /></p>
 
 <p>Beautiful! the ROC curve stays on the identity line. We can see that this is because while the positive class is predicted more often, the positive class is evently distributed across the different thresholds.</p>
 
-<p>{% codeblock lang:python %}
-probability_histogram_class(probability, y)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">probability_histogram_class</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p><img src="{{ root_url }}/images/roc_post/output_37_0.png" /></p>
+<p><img src="/images/roc_post/output_37_0.png" /></p>
 
 <p>Importantly, this demonstrates that even with imbalanced classes, if a model is at chance, then the ROC curve will reflect this chance perforomance. I do a similar demonstration with fake data <a href="https://github.com/dvatterott/jupyter_notebooks/blob/master/ROC_curves_realData.ipynb">here</a>.</p>
 
-<p>{% codeblock lang:python %}
-%load_ext watermark
-%watermark -v -m -p numpy,matplotlib,sklearn
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span><span class="n">load_ext</span> <span class="n">watermark</span>
+</span><span class='line'><span class="o">%</span><span class="n">watermark</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">m</span> <span class="o">-</span><span class="n">p</span> <span class="n">numpy</span><span class="p">,</span><span class="n">matplotlib</span><span class="p">,</span><span class="n">sklearn</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>CPython 3.6.3
 IPython 6.1.0
