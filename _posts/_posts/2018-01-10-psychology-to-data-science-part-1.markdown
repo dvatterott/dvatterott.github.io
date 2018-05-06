@@ -6,7 +6,7 @@ comments: true
 categories: [data science, psychology, academia, industry]
 ---
 
-A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I've heard. Part 2 can be found [here](https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-2/).
+A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I've heard. Part 2 can be found [here](https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2/).
 
 Before I get started, I want to thank [Rick Wolf](https://www.linkedin.com/in/rickcwolf/) for providing comments on an earlier version of this post.
 
