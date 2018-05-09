@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Open-source, | Dan Vatterott]]></title>
-  <link href="https://danvatterott.com/blog/categories/open-source/atom.xml" rel="self"/>
+  <title><![CDATA[Category: Data | Dan Vatterott]]></title>
+  <link href="https://danvatterott.com/blog/categories/data/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
   <updated>2018-05-08T21:39:20-05:00</updated>
   <id>https://danvatterott.com/</id>
