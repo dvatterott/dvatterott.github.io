@@ -124,7 +124,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <span class="line-number">5</span>
 <span class="line-number">6</span>
 <span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import libraries and tell ipython we want inline figures rather than interactive figures.</span>
 </span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span><span class="o">,</span> <span class="nn">requests</span><span class="o">,</span> <span class="nn">time</span>
 </span><span class="line">
 </span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
@@ -218,7 +218,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span><span class="line">    <span class="k">return</span> <span class="n">players_df</span>
 </span><span class="line">
 </span><span class="line"><span class="c">#df = pd.DataFrame()</span>
-</span><span class="line"><span class="c">#player_list = players_df[&#39;PERSON_ID&#39;] </span>
+</span><span class="line"><span class="c">#player_list = players_df[&#39;PERSON_ID&#39;]</span>
 </span><span class="line"><span class="c">#df = df.append([careerPer36(x) for x in player_list]) #BEWARE. this takes forever.</span>
 </span><span class="line"><span class="c">#df.index = range(np.size(df,0))</span>
 </span><span class="line"><span class="c">#df.to_pickle(&#39;nba_career_stats_&#39;+time.strftime(&quot;%Y_%b_%d&quot;, time.gmtime())+&#39;.pkl&#39;)</span>
@@ -248,7 +248,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <span class="line-number">5</span>
 <span class="line-number">6</span>
 <span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;GP&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;GP&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span><span class="p">]</span> <span class="c">#only players with more than 50 games.</span>
 </span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c">#some players have &quot;None&quot; in some cells. Turn these into 0s</span>
 </span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;FG2M&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;FGM&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;FG3M&#39;</span><span class="p">]</span> <span class="c">#find number of 2pt field goals</span>
 </span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;FG2A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;FGA&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;FG3A&#39;</span><span class="p">]</span> <span class="c">#2 point field goal attempts</span>
@@ -311,7 +311,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">scale</span>
 </span><span class="line">
 </span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">scale</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#standardize the data before giving it to the PCA. </span>
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">scale</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#standardize the data before giving it to the PCA.</span>
 </span><span class="line"><span class="c">#I standardize the data because some features such as PF or steals have lower magnitudes than other features such as FG2A</span>
 </span><span class="line"><span class="c">#I want both to contribute equally to the PCA, so I make sure they&#39;re on the same scale.</span>
 </span><span class="line">
@@ -519,7 +519,6 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <span class="line-number">36</span>
 <span class="line-number">37</span>
 <span class="line-number">38</span>
-<span class="line-number">39</span>
 </pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">gaussian_kde</span>
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
 </span><span class="line">
@@ -558,7 +557,6 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span><span class="line">    <span class="n">density</span><span class="o">.</span><span class="n">_compute_covariance</span><span class="p">()</span>
 </span><span class="line">    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">[:,</span><span class="n">i</span><span class="p">]),</span><span class="nb">max</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]))</span>
 </span><span class="line">    <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">density</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-</span><span class="line">
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/scatter_mat2_nba.png" /></p>
@@ -567,8 +565,8 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 
 <p>Below I look at the players in each cluster. The first thing I do is identify the player closest to the cluster’s center. I call this player the prototype. It is the player that most exemplifies a cluster.</p>
 
-<p>I then show a picture of this player because… well I wanted to see who these players were. 
-I print out this player’s stats and the cluster’s centroid location. 
+<p>I then show a picture of this player because… well I wanted to see who these players were.
+I print out this player’s stats and the cluster’s centroid location.
 Finally, I print out the first ten players in this cluster. This is the first ten players alphabetically. Not the ten players closest to cluster center.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>

@@ -3,7 +3,7 @@ layout: post
 title: "My first Kodi Addon - PBS NewsHour (a tutorial)"
 date: 2017-03-11 13:21:03 -0500
 comments: true
-categories: [python, open source, Kodi, HTPC]
+categories: [python, open source, kodi, htpc]
 ---   
 
 NOTE: Since writing this post, PBS Newshour changed their site. They know use the url, https://www.pbs.org/newshour/video. The mechanics here will work but the url has changed and some of the queries need to be changed too. Check the repo for a working version of the code.

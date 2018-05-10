@@ -124,7 +124,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <span class="line-number">7</span>
 <span class="line-number">8</span>
 <span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures.</span>
 </span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
 </span><span class="line">
 </span><span class="line"><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
@@ -151,7 +151,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span><span class="line"><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
 </span><span class="line">
 </span><span class="line"><span class="c">#remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair</span>
-</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
+</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games.</span>
 </span><span class="line"><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
@@ -239,7 +239,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <span class="line-number">40</span>
 <span class="line-number">41</span>
 </pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="kn">as</span> <span class="nn">sm</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span> <span class="c">#import function for calculating mean squared error. </span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span> <span class="c">#import function for calculating mean squared error.</span>
 </span><span class="line">
 </span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
 </span><span class="line">

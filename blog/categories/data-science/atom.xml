@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Data-science | Dan Vatterott]]></title>
+  <title><![CDATA[Category: Data Science | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-science/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-05-08T21:39:20-05:00</updated>
+  <updated>2018-05-09T20:59:04-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,149 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Regression of a Proportion in Python]]></title>
+    <link href="https://danvatterott.com/blog/2018/05/03/regression-of-a-proportion-in-python/"/>
+    <updated>2018-05-03T21:20:09-05:00</updated>
+    <id>https://danvatterott.com/blog/2018/05/03/regression-of-a-proportion-in-python</id>
+    <content type="html"><![CDATA[<p>I frequently predict proportions (e.g., proportion of year during which a customer is active). This is a regression task because the dependent variables is a float, but the dependent variable is bound between the 0 and 1. Googling around, I had a hard time finding the a good way to model this situation, so I’ve written here what I think is the most straight forward solution.</p>
+
+<p>I am guessing there’s a better way to do this with MCMC, so please comment below if you know a better way.</p>
+
+<p>Let’s get started by importing some libraries for making random data.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">make_regression</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Create random regression data.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c"># fix random state</span>
+</span><span class='line'><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coef</span> <span class="o">=</span> <span class="n">make_regression</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+</span><span class='line'>                             <span class="n">n_features</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+</span><span class='line'>                             <span class="n">n_informative</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+</span><span class='line'>                             <span class="n">effective_rank</span><span class="o">=</span> <span class="mi">15</span><span class="p">,</span>
+</span><span class='line'>                             <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                             <span class="n">noise</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span>
+</span><span class='line'>                             <span class="n">bias</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+</span><span class='line'>                             <span class="n">coef</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Shrink down the dependent variable so it’s bound between 0 and 1.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">y_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span><span class='line'><span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">y_min</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">y</span><span class="p">]</span>  <span class="c"># min value will be 0</span>
+</span><span class='line'><span class="n">y_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span><span class='line'><span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="n">y_max</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">y</span><span class="p">]</span>  <span class="c"># max value will be 1</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Make a quick plot to confirm that the data is bound between 0 and 1.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span>
+</span><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="err">‘</span><span class="n">whitegrid</span><span class="err">’</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/images/prop_regression/hist.png" /></p>
+
+<p>All the data here is fake which worries me, but beggars can’t be choosers and this is just a quick example.</p>
+
+<p>Below, I apply a plain GLM to the data. This is what you would expect if you treated this as a plain regression problem</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="kn">as</span> <span class="nn">sm</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">linear_glm</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">GLM</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+</span><span class='line'><span class="n">linear_result</span> <span class="o">=</span> <span class="n">linear_glm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+</span><span class='line'><span class="c"># print(linear_result.summary2())  # too much output for a blog post</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Here’s the actual values plotted (x-axis) against the predicted values (y-axis). The model does a decent job, but check out the values on the y-axis - the linear model predicts negative values!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">linear_result</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="err">‘</span><span class="n">o</span><span class="err">’</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/images/prop_regression/linear.png" /></p>
+
+<p>Obviously the linear model above isn’t correctly modeling this data since it’s guessing values that are impossible.</p>
+
+<p>I followed <a href="https://stats.idre.ucla.edu/stata/faq/how-does-one-do-regression-when-the-dependent-variable-is-a-proportion/">this tutorial</a> which recommends using a GLM with a logit link and the binomial family. Checking out the <a href="http://www.statsmodels.org/stable/generated/statsmodels.genmod.families.family.Binomial.html#statsmodels.genmod.families.family.Binomial">statsmodels module reference</a>, we can see the default link for the binomial family is logit.</p>
+
+<p>Below I apply a GLM with a logit link and the binomial family to the data.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">binom_glm</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">GLM</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">families</span><span class="o">.</span><span class="n">Binomial</span><span class="p">())</span>
+</span><span class='line'><span class="n">binom_results</span> <span class="o">=</span> <span class="n">binom_glm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+</span><span class='line'><span class="c">#print(binom_results.summary2())  # too much output for a blog post</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Here’s the actual data (x-axis) plotted against teh predicted data. You can see the fit is much better!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">binom_results</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="err">‘</span><span class="n">o</span><span class="err">’</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/images/prop_regression/binomial.png" /></p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span><span class="n">load_ext</span> <span class="n">watermark</span>
+</span><span class='line'><span class="o">%</span><span class="n">watermark</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">m</span> <span class="o">-</span><span class="n">p</span> <span class="n">numpy</span><span class="p">,</span><span class="n">matplotlib</span><span class="p">,</span><span class="n">sklearn</span><span class="p">,</span><span class="n">seaborn</span><span class="p">,</span><span class="n">statsmodels</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<pre><code>CPython 3.6.3
+IPython 6.1.0
+
+numpy 1.13.3
+matplotlib 2.0.2
+sklearn 0.19.1
+seaborn 0.8.0
+statsmodels 0.8.0
+
+compiler   : GCC 7.2.0
+system     : Linux
+release    : 4.13.0-38-generic
+machine    : x86_64
+processor  : x86_64
+CPU cores  : 4
+interpreter: 64bit
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Exploring ROC Curves]]></title>
@@ -435,6 +578,263 @@ processor  : x86_64
 CPU cores  : 4
 interpreter: 64bit
 </code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA['Is Not in' With Pyspark]]></title>
+    <link href="https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark/"/>
+    <updated>2018-02-06T21:10:32-06:00</updated>
+    <id>https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark</id>
+    <content type="html"><![CDATA[<p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
+
+<p>Here is a tidbit of code which replicates SQL’s “not in” command, while keeping your data with the workers (it will require a shuffle).</p>
+
+<p>I start by creating some small dataframes.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pyspark</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueA</span><span class="err">’</span><span class="p">])</span>
+</span><span class='line'><span class="n">b</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="err">‘</span><span class="n">d</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="err">‘</span><span class="n">e</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueB</span><span class="err">’</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Take a quick look at dataframe <em>a</em>.
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>a</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>b</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>c</td>
+ </tr>
+</table>
+
+<p>And dataframe <em>b</em>.
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>a</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>d</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>e</td>
+ </tr>
+</table>
+
+<p>I create a new column in <em>a</em> that is all ones. I could have used an existing column, but this way I know the column is never null.
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+   <th>inA</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>a</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>b</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>c</td>
+   <td>1</td>
+ </tr>
+</table>
+
+<p>I join <em>a</em> and <em>b</em> with a left join. This way all values in <em>b</em> which are not in <em>a</em> have null values in the column “inA”.
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+   <th>valueB</th>
+   <th>inA</th>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>e</td>
+   <td>null</td>
+   <td>null</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>a</td>
+   <td>a</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>d</td>
+   <td>null</td>
+   <td>null</td>
+ </tr>
+</table>
+
+<p>By filtering out rows in the new dataframe <em>c</em>, which are not null, I remove all values of <em>b</em>, which were also in <em>a</em>.
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">isNull</span><span class="p">())</span>
+</span><span class='line'><span class="n">c</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+   <th>valueB</th>
+   <th>inA</th>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>e</td>
+   <td>null</td>
+   <td>null</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>d</td>
+   <td>null</td>
+   <td>null</td>
+ </tr>
+</table>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Psychology to Data Science: Part 2]]></title>
+    <link href="https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2/"/>
+    <updated>2018-01-16T20:18:34-06:00</updated>
+    <id>https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2</id>
+    <content type="html"><![CDATA[<p>This is the second post in a series of posts about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. The <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">first post</a> answers many of the best and most common questions I’ve heard about my transition. This post focuses on the technical skills that are often necessary for landing a data science job.</p>
+
+<p>Each header in this post represents a different technical area. Following the header I describe what I would know before walking into an interview.</p>
+
+<h3 id="sql">SQL</h3>
+<p>SQL is not often used in academia, but it’s probably the most important skill in data science (how do you think you’ll get your data??). It’s used every day by data scientists at every company, and while it’s 100% necessary to know, it’s stupidly boring to learn. But, once you get the hang of it, it’s a fun language because it requires a lot of creativity. To learn SQL, I would start by doing the <a href="https://community.modeanalytics.com/sql/tutorial/introduction-to-sql/">mode analytics tutorials</a>, then the <a href="http://sqlzoo.net/">sql zoo</a> problems. <a href="https://www.fullstackpython.com/blog/postgresql-python-3-psycopg2-ubuntu-1604.html">Installing postgres on your personal computer</a> and fetching data in Python with psycopg2 or sql-alchemy is a good idea. After, completing all this, move onto query optimization (where the creativity comes into play) - check out the <a href="https://www.postgresql.org/docs/9.3/static/sql-explain.html">explain function</a> and <a href="https://stackoverflow.com/questions/2617661/whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement">order of execution</a>. Shameless self promotion: I made a <a href="https://danvatterott.com/presentations/sql_presentation/index.html#_blank">SQL presentation</a> on what SQL problems to know for job interviews.</p>
+
+<h3 id="pythonr">Python/R</h3>
+<p>Some places use R. Some places use Python. It sucks, but these languages are not interchangeable (an R team will not hire someone who only knows Python). Whatever language you choose, you should know it well because this is a tool you will use every day. I use Python, so what follows is specific to Python.</p>
+
+<p>I learned Python with <a href="https://www.codecademy.com/">codeacademy</a> and liked it. If you’re already familiar with Python I would practice “white board” style questions. Feeling comfortable with the beginner questions on a site like <a href="https://leetcode.com/">leetcode</a> or <a href="https://www.hackerrank.com/">hackerrank</a> would be a good idea. Writing answers while thinking about code optimization is a plus.</p>
+
+<p><a href="https://jeffknupp.com/">Jeff Knupp’s blog</a> has great tid-bits about developing in python; it’s pure gold.</p>
+
+<p>Another good way to learn is to work on your digital profile. If you haven’t already, I would start a blog (I talk more about this is <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">Post 1</a>).</p>
+
+<h3 id="statisticsml">Statistics/ML</h3>
+<p>When starting here, the Andrew Ng <a href="https://www.coursera.org/learn/machine-learning">coursera course</a> is a great intro. While it’s impossible to learn all of it, I love to use <a href="https://web.stanford.edu/~hastie/ElemStatLearn/">elements of statistical learning</a> and it’s sibling book <a href="http://www-bcf.usc.edu/~gareth/ISL/">introduction to statistical learning</a> as a reference. I’ve heard good things about <a href="https://www.amazon.com/Python-Machine-Learning-Sebastian-Raschka/dp/1783555130">Python Machine Learning</a> but haven’t checked it out myself.</p>
+
+<p>As a psychology major, I felt relatively well prepared in this regard. Experience with linear-mixed effects, hypothesis-testing, regression, etc. serves Psychology PhDs well. This doesn’t mean you can forget Stats 101 though. Once, I found myself uncomfortably surprised by a very basic probability question.</p>
+
+<p>Here’s a quick list of Statistics/ML algorithms I often use: GLMs and their regularization methods are a must (L1 and L2 regularization probably come up in 75% of phone screens). Hyper-parameter search. Cross-validation! Tree-based models (e.g., random forests, boosted decision trees). I often use XGBoost and have found its <a href="http://xgboost.readthedocs.io/en/latest/model.html">intro post</a> helpful.</p>
+
+<p>I think you’re better off deeply (pun not intended) learning the basics (e.g., linear and logistic regression) than learning a smattering of newer, fancier methods (e.g., deep learning). This means thinking about linear regression from first principles (what are the assumptions and given these assumptions can you derive the best-fit parameters of a linear regression?). I can’t tell you how many hours I’ve spent studying Andrew Ng’s <a href="http://cs229.stanford.edu/notes/cs229-notes1.pdf">first supervised learning lecture</a> for this. It’s good to freshen up on linear algebra and there isn’t a better way to do this than the <a href="https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab">3Blue1Brown</a> videos; they’re amazing. This might seem too introductory/theoretical, but it’s necessary and often comes up in interviews.</p>
+
+<p>Be prepared to talk about the bias-variance tradeoff. Everything in ML comes back to the bias-variance tradeoff so it’s a great interview question. I know some people like to ask candidates about feature selection. I think this question is basically a rephrasing of the bias-variance tradeoff.</p>
+
+<h3 id="gitcode-etiquette">Git/Code Etiquette</h3>
+<p>Make a github account if you haven’t already. Get used to commits, pushing, and branching. This won’t take long to get the hang of, but, again, it’s something you will use every day.</p>
+
+<p>As much as possible I would watch code etiquette. I know this seems anal, but it matters to some people (myself included), and having pep8 quality code can’t hurt. There’s a number of <a href="https://pylint.readthedocs.io/en/latest/">python modules</a> that will help here. Jeff Knupp also has a <a href="https://jeffknupp.com/blog/2016/12/09/how-python-linters-will-save-your-large-python-project/">great post</a> about linting/automating code etiquette.</p>
+
+<p>Unit-tests are a good thing to practice/be familiar with. Like usual, Jeff Knupp has a great <a href="https://jeffknupp.com/blog/2013/12/09/improve-your-python-understanding-unit-testing/">post</a> on the topic.</p>
+
+<p>I want to mention that getting a data science job is a little like getting a grant. Each time you apply, there is a low chance of getting the job/grant (luckily, there are many more jobs than grants). When creating your application/grant, it’s important to find ways to get people excited about your application/grant (e.g., showing off your statistical chops). This is where code etiquette comes into play. The last thing you want is to diminish someone’s excitement about you because you didn’t include a doc string. Is code etiquette going to remove you from contention for a job? Probably not. But it could diminish someone’s excitement.</p>
+
+<h3 id="final-thoughts">Final Thoughts</h3>
+<p>One set of skills that I haven’t touched on is cluster computing (e.g., Hadoop, Spark). Unfortunately, I don’t think there is much you can do here. I’ve heard good things about the book <a href="http://shop.oreilly.com/product/0636920028512.do">Learning Spark</a>, but books can only get you so far. If you apply for a job that wants Spark, I would install Spark on your local computer and play around, but it’s hard to learn cluster computing when you’re not on a cluster. Spark is more or less fancy SQL (aside from the ML aspects), so learning SQL is a good way to prepare for a Spark mindset. I didn’t include cluster computing above, because many teams seem okay with employees learning this on the job.</p>
+
+<p>Not that there’s a lack of content here, but <a href="https://blog.insightdatascience.com/preparing-for-insight-ca7cc6087f91">here</a>’s a good list of must know topics that I used when transitioning from academia to data science.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Psychology to Data Science: Part 1]]></title>
+    <link href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/"/>
+    <updated>2018-01-10T19:21:28-06:00</updated>
+    <id>https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1</id>
+    <content type="html"><![CDATA[<p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard. Part 2 can be found <a href="https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2/">here</a>.</p>
+
+<p>Before I get started, I want to thank <a href="https://www.linkedin.com/in/rickcwolf/">Rick Wolf</a> for providing comments on an earlier version of this post.</p>
+
+<p>This first post is a series of general questions I’ve received. The second post will focus on technical skills required to get a job in data science.</p>
+
+<p>Each header in this post represents a question. Below the header/question I record my response.</p>
+
+<p>Anyone starting this process should know they are starting a marathon. Not a sprint. Making the leap from academia to data science is more than possible, but it takes time and dedication.</p>
+
+<h3 id="do-you-think-that-being-a-psychology-phd-is-a-disadvantage">Do you think that being a Psychology PhD is a disadvantage?</h3>
+<p>I think it can be a disadvantage in the job application process. Most people don’t understand how quantitative Psychology is, so psychology grads have to overcome these stereotypes. This doesn’t mean having a Psychology PhD is a disadvantage when it comes to BEING a data scientist. Having a Psychology PhD can be a huge advantage because Psychology PhDs have experience measuring behavior which is 90% of data science. Every company wants to know what their customers are doing and how to change their customers’ behavior. This is literally what Psychology PhDs do, so Psychology PhDs might have the most pertinent experience of any science PhD.</p>
+
+<h3 id="when-it-is-the-right-time-to-apply-for-a-boot-camp">When it is the right time to apply for a boot camp?</h3>
+<p>(I did the <a href="http://insightdatascience.com/">Insight Data Science</a> bootcamp)<br />
+Apply when you’re good enough to get a phone screen but not good enough to get a job. Don’t count on a boot camp to give you all the skills. Instead, think of boot camps as polishing your skills.<br />
+<br />
+Here is the game plan I would use:<br />
+Send out 3-4 job applications and see if you get any hits. If not, think about how you can improve your resume (see post #2), and go about those improvements. After a few iterations of this, you will start getting invitations to do phone screens. At this stage, a boot camp will be useful.<br />
+The boot camps are of varying quality. Ask around to get an idea for which boot camps are better or worse. Also, look into how each boot camp gets paid. If you pay tuition, the boot camp will care less about whether you get a job. If the boot camp gets paid through recruiting fees or collecting tuition from your paychecks, it is more invested in your job.</p>
+
+<h3 id="should-i-start-a-blog">Should I start a blog?</h3>
+<p>Yes, I consider this a must (and so do <a href="http://varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
+
+<p>Most people (including myself) host their page on github and generate the html with a static site generator. I use <a href="http://octopress.org/">octopress</a>, which works great. Most people seem to use <a href="http://docs.getpelican.com/en/stable/">pelican</a>. I would recommend pelican because it’s built in Python. I haven’t used it, but a quick google search led me to <a href="http://mathamy.com/migrating-to-github-pages-using-pelican.html">this tutorial</a> on building a github site with pelican.</p>
+
+<p>I wish I’d sent more of my posts to friends/colleagues. Peer review is always good for a variety of reasons. I’d be more than happy to review posts for anyone reading this blog.</p>
+
+<h3 id="how-should-i-frame-what-ive-done-in-academia-on-my-cvresume">How should I frame what I’ve done in academia on my CV/resume?</h3>
+<p>First, no one in industry cares about publications. People might notice if the journal is Science/Nature but most will not.
+Spend a few hours thinking about how to describe your academic accomplishments as technical skills. For example, as a Postdoc, I was on a Neurophysiology project that required writing code to collect, ingest, and transform electrophysiology data. In academia, none of this code mattered. In industry, it’s the only thing that matters. What I built was a data-pipeline, and this is a product many companies desire.</p>
+
+<p>We all have examples like this, but they’re not obvious because academics don’t know what companies want. Think of your data-pipelines, your interactive experiments, your scripted analytics.</p>
+
+<p>Transforming academic work into skills that companies desire will take a bit of creativity (I am happy to help with this), but remember that your goal here is to express how the technical skills you used in academia will apply to what you will do as a data scientist.</p>
+
+<p>Many people (including myself) love to say they can learn fast. While this is an important skill it’s hard to measure and it calls attention to what you do not know. In general, avoid it.</p>
+
+<h3 id="did-you-focus-on-one-specific-industry">Did you focus on one specific industry?</h3>
+<p>I think a better question than what industry is what size of team/company you want to work on. At a big company you will have a more specific job with more specific requirements (and probably more depth of knowledge). At a smaller company, you will be expected to have a broader skill set. This matters in terms of what you want in a job and what skills you have. Having industry specific knowledge is awesome, but most academics have never worked in an industry so by definition they don’t have industry specific knowledge. Unfortunately, we just have to punt on this aspect of the job application.</p>
+
+<h3 id="anything-to-be-wary-of">Anything to be wary of?</h3>
+<p>No matter what your job is, having a good boss is important. If you get a funny feeling about a potential boss in the interview process, don’t take the job.</p>
+
+<p>Some companies are trying to hire data scientists but don’t want to change their company. By this I mean they want their data scientists to work in excel. Excel is a great tool, but it’s not a tool I would want to use every day. If you feel the same way, then keep an eye out for this.</p>
 ]]></content>
   </entry>
   

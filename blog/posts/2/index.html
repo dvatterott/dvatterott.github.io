@@ -298,7 +298,6 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <pre><code>(-1.0, 0.0)
 (-1.0, 0.0)
 </code></pre>
-
 </div>
   
   
@@ -1255,7 +1254,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures.</span>
 </span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 </span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
@@ -1465,7 +1464,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span><span class="line">    <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span>
 </span><span class="line">
 </span><span class="line">    <span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_TYPE2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_TYPE&#39;</span><span class="p">]]</span> <span class="c">#create a vector with whether the shot is a 2 or 3 pointer</span>
-</span><span class="line">    <span class="n">points_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bins</span><span class="p">,</span><span class="n">bins</span><span class="p">))</span> <span class="c">#create a matrix to fill with shooting data. </span>
+</span><span class="line">    <span class="n">points_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bins</span><span class="p">,</span><span class="n">bins</span><span class="p">))</span> <span class="c">#create a matrix to fill with shooting data.</span>
 </span><span class="line">
 </span><span class="line">    <span class="n">shot_attempts</span><span class="p">,</span> <span class="n">xtest</span><span class="p">,</span> <span class="n">ytest</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">][</span><span class="s">&#39;LOC_X&#39;</span><span class="p">],</span> <span class="c">#use histtd to bin the data. These are attempts</span>
 </span><span class="line">                                                <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">][</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">],</span>
@@ -1531,7 +1530,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <span class="line-number">13</span>
 <span class="line-number">14</span>
 <span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">CMRmap_r</span> <span class="c">#start with the CMR map in reverse. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">CMRmap_r</span> <span class="c">#start with the CMR map in reverse.</span>
 </span><span class="line">
 </span><span class="line"><span class="n">maxer</span> <span class="o">=</span> <span class="mf">0.6</span> <span class="c">#max value to take in the CMR map</span>
 </span><span class="line">
@@ -1630,9 +1629,9 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span><span class="line">        <span class="c">#interest_measure[np.isnan(interest_measure)] = np.nanmean(interest_measure)</span>
 </span><span class="line">        <span class="c">#interest_measure = np.nan_to_num(interest_measure) #replace places where divide by 0 with a 0</span>
 </span><span class="line">    <span class="k">else</span><span class="p">:</span>
-</span><span class="line">        <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">shotDict</span><span class="p">[</span><span class="n">fig_type</span><span class="p">]</span> <span class="c">#else take the data from dictionary. </span>
+</span><span class="line">        <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">shotDict</span><span class="p">[</span><span class="n">fig_type</span><span class="p">]</span> <span class="c">#else take the data from dictionary.</span>
 </span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="n">league_shotDict</span><span class="p">:</span> <span class="c">#if we have league data, we have to select the relevant league data. </span>
+</span><span class="line">    <span class="k">if</span> <span class="n">league_shotDict</span><span class="p">:</span> <span class="c">#if we have league data, we have to select the relevant league data.</span>
 </span><span class="line">        <span class="k">if</span> <span class="n">fig_type</span> <span class="o">==</span> <span class="s">&#39;fg&#39;</span><span class="p">:</span>
 </span><span class="line">            <span class="n">league</span> <span class="o">=</span> <span class="n">league_shotDict</span><span class="p">[</span><span class="s">&#39;made&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">league_shotDict</span><span class="p">[</span><span class="s">&#39;attempted&#39;</span><span class="p">]</span>
 </span><span class="line">            <span class="n">league</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">league</span><span class="p">)</span>
@@ -1791,7 +1790,6 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/nba_shot_charts/points2.png" /></p>
-
 </div>
   
   
@@ -2555,7 +2553,7 @@ Output
 <span class="line-number">2</span>
 <span class="line-number">3</span>
 <span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#import important libraries. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#import important libraries.</span>
 </span><span class="line"><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 </span><span class="line"><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 </span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
@@ -2768,7 +2766,7 @@ Output
 </span><span class="line">    <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">target</span><span class="o">-</span><span class="n">Output</span><span class="p">)</span><span class="o">*</span><span class="n">Output</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Output</span><span class="p">)</span> <span class="c">#find the amount of error and derivative of activation function</span>
 </span><span class="line">
 </span><span class="line"><span class="k">def</span> <span class="nf">update_weights</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">delta</span><span class="p">,</span><span class="n">unit_input</span><span class="p">):</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span><span class="n">unit_input</span><span class="p">)</span> <span class="c">#multiply delta output by all the inputs and then multiply these by the learning rate </span>
+</span><span class="line">    <span class="k">return</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span><span class="n">unit_input</span><span class="p">)</span> <span class="c">#multiply delta output by all the inputs and then multiply these by the learning rate</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>Above I use the <a href="https://en.wikipedia.org/wiki/Outer_product">outer product</a> of our delta function and the input in order to spread the weight changes to all lines connecting to the output unit.</p>
@@ -2930,7 +2928,7 @@ Output
 <span class="line-number">7</span>
 <span class="line-number">8</span>
 <span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures.</span>
 </span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
 </span><span class="line">
 </span><span class="line"><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
@@ -2957,7 +2955,7 @@ Output
 </span><span class="line"><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
 </span><span class="line">
 </span><span class="line"><span class="c">#remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair</span>
-</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
+</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games.</span>
 </span><span class="line"><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
@@ -3045,7 +3043,7 @@ Output
 <span class="line-number">40</span>
 <span class="line-number">41</span>
 </pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="kn">as</span> <span class="nn">sm</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span> <span class="c">#import function for calculating mean squared error. </span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span> <span class="c">#import function for calculating mean squared error.</span>
 </span><span class="line">
 </span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
 </span><span class="line">
@@ -3271,7 +3269,7 @@ Cross Validation MAE: 0.0665
 <span class="line-number">7</span>
 <span class="line-number">8</span>
 <span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures.</span>
 </span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
 </span><span class="line">
 </span><span class="line"><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
@@ -3288,7 +3286,7 @@ Cross Validation MAE: 0.0665
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the career data. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the career data.</span>
 </span><span class="line"><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Mar_15.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the rookie year data</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
@@ -3326,7 +3324,7 @@ Cross Validation MAE: 0.0665
 </span><span class="line"><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span>
 </span><span class="line">
 </span><span class="line"><span class="c">#remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair</span>
-</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
+</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games.</span>
 </span><span class="line"><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
@@ -3544,8 +3542,8 @@ strong multicollinearity or other numerical problems.
 <p>Here’s a quick rehash of the groupings. See my <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">previous post</a> for more detail.</p>
 
 <ul>
-<li>**Group 1:** These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li> 
-<li>**Group 2:** These are the scorers who get to the free throw line, dish out assists, and carry a high usage.</li> 
+<li>**Group 1:** These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li>
+<li>**Group 2:** These are the scorers who get to the free throw line, dish out assists, and carry a high usage.</li>
 <li>**Group 3:** These are the bench players who don't score...or do much in general.</li>
 <li>**Group 4:** These are the 3 point shooters who shoot tons of 3 pointers, almost no free throws, and don't rebound well.</li>
 <li>**Group 5:** These are the mid-range shooters who shoot well, but don't shoot threes or draw free throws</li>
@@ -3569,7 +3567,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line"><span class="n">ScaleRookie</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#scale data</span>
 </span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleRookie</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data to scale</span>
 </span><span class="line">
-</span><span class="line"><span class="n">reduced_model_rookie</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#create pca model of first 10 components. </span>
+</span><span class="line"><span class="n">reduced_model_rookie</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#create pca model of first 10 components.</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>You might have noticed the giant condition number in the regression above. This indicates significant <a href="https://en.wikipedia.org/wiki/Multicollinearity">multicollinearity</a> of the features, which isn’t surprising since I have many features that reflect the same abilities.</p>
@@ -3604,7 +3602,6 @@ strong multicollinearity or other numerical problems.
 <span class="line-number">24</span>
 <span class="line-number">25</span>
 <span class="line-number">26</span>
-<span class="line-number">27</span>
 </pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">][</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="c">#limit labels to players after 1980</span>
 </span><span class="line"><span class="n">rookie_df_drop</span><span class="p">[</span><span class="s">&#39;kmeans_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span> <span class="c">#label each data point with its clusters</span>
 </span><span class="line">
@@ -3631,7 +3628,6 @@ strong multicollinearity or other numerical problems.
 </span><span class="line">    <span class="n">est</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 </span><span class="line">    <span class="c">#print(est.summary())</span>
 </span><span class="line">    <span class="n">estHold</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">est</span>
-</span><span class="line">
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
@@ -3869,7 +3865,7 @@ strong multicollinearity or other numerical problems.
 </span><span class="line">
 </span><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">gather_draftData</span><span class="p">(</span><span class="mi">2015</span><span class="p">)</span>
 </span><span class="line">
-</span><span class="line"><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">][</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span>  <span class="s">&#39;Kelly Oubre Jr.&#39;</span> <span class="c">#annoying name inconsistencies </span>
+</span><span class="line"><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">][</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span>  <span class="s">&#39;Kelly Oubre Jr.&#39;</span> <span class="c">#annoying name inconsistencies</span>
 </span><span class="line">
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span>
 </span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">31</span><span class="p">),</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
@@ -4291,7 +4287,6 @@ Warnings:
 [2] The condition number is large, 6.96e+05. This might indicate that there are
 strong multicollinearity or other numerical problems.
 </code></pre>
-
 </div>
   
   

@@ -120,7 +120,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures.</span>
 </span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 </span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
@@ -330,7 +330,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span><span class="line">    <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span>
 </span><span class="line">
 </span><span class="line">    <span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_TYPE2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_TYPE&#39;</span><span class="p">]]</span> <span class="c">#create a vector with whether the shot is a 2 or 3 pointer</span>
-</span><span class="line">    <span class="n">points_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bins</span><span class="p">,</span><span class="n">bins</span><span class="p">))</span> <span class="c">#create a matrix to fill with shooting data. </span>
+</span><span class="line">    <span class="n">points_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bins</span><span class="p">,</span><span class="n">bins</span><span class="p">))</span> <span class="c">#create a matrix to fill with shooting data.</span>
 </span><span class="line">
 </span><span class="line">    <span class="n">shot_attempts</span><span class="p">,</span> <span class="n">xtest</span><span class="p">,</span> <span class="n">ytest</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">][</span><span class="s">&#39;LOC_X&#39;</span><span class="p">],</span> <span class="c">#use histtd to bin the data. These are attempts</span>
 </span><span class="line">                                                <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">][</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">],</span>
@@ -396,7 +396,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <span class="line-number">13</span>
 <span class="line-number">14</span>
 <span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">CMRmap_r</span> <span class="c">#start with the CMR map in reverse. </span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">CMRmap_r</span> <span class="c">#start with the CMR map in reverse.</span>
 </span><span class="line">
 </span><span class="line"><span class="n">maxer</span> <span class="o">=</span> <span class="mf">0.6</span> <span class="c">#max value to take in the CMR map</span>
 </span><span class="line">
@@ -495,9 +495,9 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span><span class="line">        <span class="c">#interest_measure[np.isnan(interest_measure)] = np.nanmean(interest_measure)</span>
 </span><span class="line">        <span class="c">#interest_measure = np.nan_to_num(interest_measure) #replace places where divide by 0 with a 0</span>
 </span><span class="line">    <span class="k">else</span><span class="p">:</span>
-</span><span class="line">        <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">shotDict</span><span class="p">[</span><span class="n">fig_type</span><span class="p">]</span> <span class="c">#else take the data from dictionary. </span>
+</span><span class="line">        <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">shotDict</span><span class="p">[</span><span class="n">fig_type</span><span class="p">]</span> <span class="c">#else take the data from dictionary.</span>
 </span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="n">league_shotDict</span><span class="p">:</span> <span class="c">#if we have league data, we have to select the relevant league data. </span>
+</span><span class="line">    <span class="k">if</span> <span class="n">league_shotDict</span><span class="p">:</span> <span class="c">#if we have league data, we have to select the relevant league data.</span>
 </span><span class="line">        <span class="k">if</span> <span class="n">fig_type</span> <span class="o">==</span> <span class="s">&#39;fg&#39;</span><span class="p">:</span>
 </span><span class="line">            <span class="n">league</span> <span class="o">=</span> <span class="n">league_shotDict</span><span class="p">[</span><span class="s">&#39;made&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">league_shotDict</span><span class="p">[</span><span class="s">&#39;attempted&#39;</span><span class="p">]</span>
 </span><span class="line">            <span class="n">league</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">league</span><span class="p">)</span>
@@ -656,7 +656,6 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p><img src="/images/nba_shot_charts/points2.png" /></p>
-
 </div>
 
 
@@ -677,7 +676,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/nba/'>nba,</a>, <a class='category' href='/blog/categories/open/'>open</a>, <a class='category' href='/blog/categories/plotting/'>plotting,</a>, <a class='category' href='/blog/categories/python/'>python,</a>, <a class='category' href='/blog/categories/source/'>source</a>
+    <a class='category' href='/blog/categories/nba/'>nba</a>, <a class='category' href='/blog/categories/open-source/'>open source</a>, <a class='category' href='/blog/categories/plotting/'>plotting</a>, <a class='category' href='/blog/categories/python/'>python</a>
   
 </span>
 

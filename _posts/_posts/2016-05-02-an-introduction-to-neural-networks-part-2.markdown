@@ -3,7 +3,7 @@ layout: post
 title: "An Introduction to Neural Networks: Part 2"
 date: 2016-05-02 21:56:27 -0400
 comments: true
-categories: [Python, Open Source, Machine Learning, Neural Networks, AI, backpropogation]
+categories: [python, open source, machine learning, neural networks, ai, backpropogation]
 ---
 
 In a previous [post](http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/), I described how to do [backpropogation](https://en.wikipedia.org/wiki/Backpropagation) with a 1-layer [neural network](https://en.wikipedia.org/wiki/Artificial_neural_network). I've written this post assuming some familiarity with the previous post.

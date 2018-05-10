@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Analytics | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-analytics/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-05-08T21:39:20-05:00</updated>
+  <updated>2018-05-09T20:59:04-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -844,7 +844,7 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures.</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">from</span> <span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">future</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span> <span class="kn">import</span> <span class="nn">print_function</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
@@ -873,7 +873,7 @@
 </span><span class='line'><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">1980</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;remove-rookies-from-before-1980-and-who-have-played-less-than-50-games-i-also-remove-some-features-that-seem-irrelevant-or-unfair&quot;</span><span class="o">&gt;</span><span class="n">remove</span> <span class="n">rookies</span> <span class="kn">from</span> <span class="nn">before</span> <span class="mi">1980</span> <span class="ow">and</span> <span class="n">who</span> <span class="n">have</span> <span class="n">played</span> <span class="n">less</span> <span class="n">than</span> <span class="mi">50</span> <span class="n">games</span><span class="o">.</span> <span class="n">I</span> <span class="n">also</span> <span class="n">remove</span> <span class="n">some</span> <span class="n">features</span> <span class="n">that</span> <span class="n">seem</span> <span class="n">irrelevant</span> <span class="ow">or</span> <span class="n">unfair</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games.</span>
 </span><span class='line'><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Career</span> <span class="n">Games</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Name</span><span class="err">’</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
@@ -1171,7 +1171,7 @@ Cross Validation MAE: 0.0665
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures.</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">from</span> <span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">future</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span> <span class="kn">import</span> <span class="nn">print_function</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
@@ -1190,7 +1190,7 @@ Cross Validation MAE: 0.0665
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="err">‘</span><span class="n">nba_bballref_career_stats_2016_Mar_15</span><span class="o">.</span><span class="n">pkl</span><span class="err">’</span><span class="p">)</span> <span class="c">#here’s the career data. </span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="err">‘</span><span class="n">nba_bballref_career_stats_2016_Mar_15</span><span class="o">.</span><span class="n">pkl</span><span class="err">’</span><span class="p">)</span> <span class="c">#here’s the career data.</span>
 </span><span class='line'><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="err">‘</span><span class="n">nba_bballref_rookie_stats_2016_Mar_15</span><span class="o">.</span><span class="n">pkl</span><span class="err">’</span><span class="p">)</span> <span class="c">#here’s the rookie year data</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
@@ -1228,7 +1228,7 @@ Cross Validation MAE: 0.0665
 </span><span class='line'><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="mi">1980</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;remove-rookies-from-before-1980-and-who-have-played-less-than-50-games-i-also-remove-some-features-that-seem-irrelevant-or-unfair&quot;</span><span class="o">&gt;</span><span class="n">remove</span> <span class="n">rookies</span> <span class="kn">from</span> <span class="nn">before</span> <span class="mi">1980</span> <span class="ow">and</span> <span class="n">who</span> <span class="n">have</span> <span class="n">played</span> <span class="n">less</span> <span class="n">than</span> <span class="mi">50</span> <span class="n">games</span><span class="o">.</span> <span class="n">I</span> <span class="n">also</span> <span class="n">remove</span> <span class="n">some</span> <span class="n">features</span> <span class="n">that</span> <span class="n">seem</span> <span class="n">irrelevant</span> <span class="ow">or</span> <span class="n">unfair</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games.</span>
 </span><span class='line'><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="err">‘</span><span class="n">Year</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Career</span> <span class="n">Games</span><span class="err">’</span><span class="p">,</span><span class="err">’</span><span class="n">Name</span><span class="err">’</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
@@ -1446,8 +1446,8 @@ strong multicollinearity or other numerical problems.
 <p>Here’s a quick rehash of the groupings. See my <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">previous post</a> for more detail.</p>
 
 <ul>
-<li>**Group 1:** These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li> 
-<li>**Group 2:** These are the scorers who get to the free throw line, dish out assists, and carry a high usage.</li> 
+<li>**Group 1:** These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li>
+<li>**Group 2:** These are the scorers who get to the free throw line, dish out assists, and carry a high usage.</li>
 <li>**Group 3:** These are the bench players who don't score...or do much in general.</li>
 <li>**Group 4:** These are the 3 point shooters who shoot tons of 3 pointers, almost no free throws, and don't rebound well.</li>
 <li>**Group 5:** These are the mid-range shooters who shoot well, but don't shoot threes or draw free throws</li>
@@ -1471,7 +1471,7 @@ strong multicollinearity or other numerical problems.
 </span><span class='line'><span class="n">ScaleRookie</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#scale data</span>
 </span><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleRookie</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data to scale&lt;/p&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">reduced_model_rookie</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#create pca model of first 10 components. </span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">reduced_model_rookie</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#create pca model of first 10 components.</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
 <p>You might have noticed the giant condition number in the regression above. This indicates significant <a href="https://en.wikipedia.org/wiki/Multicollinearity">multicollinearity</a> of the features, which isn’t surprising since I have many features that reflect the same abilities.</p>
@@ -2207,7 +2207,6 @@ Warnings:
 [2] The condition number is large, 6.96e+05. This might indicate that there are
 strong multicollinearity or other numerical problems.
 </code></pre>
-
 ]]></content>
   </entry>
   

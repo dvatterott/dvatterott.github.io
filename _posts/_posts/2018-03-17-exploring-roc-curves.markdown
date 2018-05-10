@@ -3,7 +3,7 @@ layout: post
 title: "Exploring ROC Curves"
 date: 2018-03-17 14:06:15 -0500
 comments: true
-categories: [data-science, open-science, python, machine-learning]
+categories: [data science, open science, python, machine learning]
 ---
 
 I've always found ROC curves a little confusing. Particularly when it comes to ROC curves with imbalanced classes. This blog post is an exploration into receiver operating characteristic (i.e. [ROC](http://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html#sphx-glr-auto-examples-model-selection-plot-roc-py)) curves and how they react to imbalanced classes.

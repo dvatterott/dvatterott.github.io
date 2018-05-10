@@ -3,30 +3,30 @@ layout: post
 title: "NBA Shot Charts: Updated"
 date: 2016-05-13 11:08:22 -0400
 comments: true
-categories: nba, plotting, python, open source
+categories: [nba, plotting, python, open source]
 ---
 
 
-For some reason I recently got it in my head that I wanted to go back and create more NBA shot charts. [My previous shotcharts](http://www.danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/) used colored circles to depict the frequency and effectiveness of shots at different locations. This is an extremely efficient method of representing shooting profiles, but I thought it would be fun to create shot charts that represent a player's shooting profile continously across the court rather than in discrete hexagons. 
+For some reason I recently got it in my head that I wanted to go back and create more NBA shot charts. [My previous shotcharts](http://www.danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/) used colored circles to depict the frequency and effectiveness of shots at different locations. This is an extremely efficient method of representing shooting profiles, but I thought it would be fun to create shot charts that represent a player's shooting profile continously across the court rather than in discrete hexagons.
 
-By depicting the shooting data continously, I lose the ability to represent one dimenion - I can no longer use the size of circles to depict shot frequency at a location. Nonetheless, I thought it would be fun to create these charts. 
+By depicting the shooting data continously, I lose the ability to represent one dimenion - I can no longer use the size of circles to depict shot frequency at a location. Nonetheless, I thought it would be fun to create these charts.
 
-I explain how to create them below. I've also included the ability to compare a player's shooting performance to the league average. 
+I explain how to create them below. I've also included the ability to compare a player's shooting performance to the league average.
 
-In my previous shot charts, I query nba.com's API when creating a players shot chart, but querying nba.com's API for every shot taken in 2015-16 takes a little while (for computing league average), so I've uploaded this data to [my github](https://github.com/dvatterott/nba_project) and call the league data as a file rather than querying nba.com API. 
+In my previous shot charts, I query nba.com's API when creating a players shot chart, but querying nba.com's API for every shot taken in 2015-16 takes a little while (for computing league average), so I've uploaded this data to [my github](https://github.com/dvatterott/nba_project) and call the league data as a file rather than querying nba.com API.
 
 This code is also available as a jupyter notebook on [my github](https://github.com/dvatterott/jupyter_notebooks).
 
 
 {% codeblock lang:python %}
-#import some libraries and tell ipython we want inline figures rather than interactive figures. 
+#import some libraries and tell ipython we want inline figures rather than interactive figures.
 %matplotlib inline
 import matplotlib.pyplot as plt, pandas as pd, numpy as np, matplotlib as mpl
 {% endcodeblock %}
 
-Here, I create a function for querying shooting data from NBA.com's API. This is the same function I used in my previous post regarding shot charts. 
+Here, I create a function for querying shooting data from NBA.com's API. This is the same function I used in my previous post regarding shot charts.
 
-You can find a player's ID number by going to the players nba.com page and looking at the page address. There is [a python library](https://github.com/seemethere/nba_py) that you can use for querying player IDs (and other data from the nba.com API), but I've found this library to be a little shaky. 
+You can find a player's ID number by going to the players nba.com page and looking at the page address. There is [a python library](https://github.com/seemethere/nba_py) that you can use for querying player IDs (and other data from the nba.com API), but I've found this library to be a little shaky.
 
 
 {% codeblock lang:python %}
@@ -97,7 +97,7 @@ def draw_court(ax=None, color='black', lw=2, outer_lines=False):
 
     for element in court_elements:
         ax.add_patch(element)
-    
+
     ax.set_xticklabels([])
     ax.set_yticklabels([])
     ax.set_xticks([])
@@ -105,7 +105,7 @@ def draw_court(ax=None, color='black', lw=2, outer_lines=False):
     return ax
 {% endcodeblock %}
 
-Write a function for acquiring each player's picture. This isn't essential, but it makes things look nicer. This function takes a playerID number and the amount to zoom in on an image as the inputs. It by default places the image at the location 500,500. 
+Write a function for acquiring each player's picture. This isn't essential, but it makes things look nicer. This function takes a playerID number and the amount to zoom in on an image as the inputs. It by default places the image at the location 500,500.
 
 
 {% codeblock lang:python %}
@@ -120,11 +120,11 @@ def acquire_playerPic(PlayerID, zoom, offset=(500,500)):
     return img
 {% endcodeblock %}
 
-Here is where things get a little complicated. Below I write a function that divides the shooting data into a 25x25 matrix. Each shot taken within the xy coordinates encompassed by a given bin counts towards the shot count in that bin. In this way, the method I am using here is very similar to my previous hexbins (circles). So the difference just comes down to I present the data rather than how I preprocess it. 
+Here is where things get a little complicated. Below I write a function that divides the shooting data into a 25x25 matrix. Each shot taken within the xy coordinates encompassed by a given bin counts towards the shot count in that bin. In this way, the method I am using here is very similar to my previous hexbins (circles). So the difference just comes down to I present the data rather than how I preprocess it.
 
 This function takes a dataframe with a vector of shot locations in the X plane, a vector with shot locations in the Y plane, a vector with shot type (2 pointer or 3 pointer), and a vector with ones for made shots and zeros for missed shots. The function by default bins the data into a 25x25 matrix, but the number of bins is editable. The 25x25 bins are then expanded to encompass a 500x500 space.
 
-The output is a dictionary containing matrices for shots made, attempted, and points scored in each bin location. The dictionary also has the player's ID number. 
+The output is a dictionary containing matrices for shots made, attempted, and points scored in each bin location. The dictionary also has the player's ID number.
 
 
 {% codeblock lang:python %}
@@ -132,7 +132,7 @@ def shooting_matrices(df,bins=25):
     from math import floor
 
     df['SHOT_TYPE2'] = [int(x[0][0]) for x in df['SHOT_TYPE']] #create a vector with whether the shot is a 2 or 3 pointer
-    points_matrix = np.zeros((bins,bins)) #create a matrix to fill with shooting data. 
+    points_matrix = np.zeros((bins,bins)) #create a matrix to fill with shooting data.
 
     shot_attempts, xtest, ytest, p = plt.hist2d(df[df['LOC_Y']<425.1]['LOC_X'], #use histtd to bin the data. These are attempts
                                                 df[df['LOC_Y']<425.1]['LOC_Y'],
@@ -146,10 +146,10 @@ def shooting_matrices(df,bins=25):
     differy = np.diff(ytest)[0] #get the leading yedge
     differx = np.diff(xtest)[0] #get the leading xedge
     for i,(x,y) in enumerate(zip(df['LOC_X'],df['LOC_Y'])):
-        if x >= 250 or x <= -250 or y <= -25.1 or y >= 400: continue 
+        if x >= 250 or x <= -250 or y <= -25.1 or y >= 400: continue
         points_matrix[int(floor(np.divide(x+250,differx))),int(floor(np.divide(y+25,differy)))] += np.float(df['SHOT_MADE_FLAG'][i]*df['SHOT_TYPE2'][i])
         #loop through all the shots and tally the points made in each bin location.
-        
+
     shot_attempts = np.repeat(shot_attempts,500/bins,axis=0) #repeat the shot attempts matrix so that it fills all xy points
     shot_attempts = np.repeat(shot_attempts,500/bins,axis=1)
     shot_made = np.repeat(shot_made,500/bins,axis=0) #repeat shot made so that it fills all xy points (rather than just bin locations)
@@ -178,7 +178,7 @@ I really like playing with the different color maps, so here is a new color map 
 
 
 {% codeblock lang:python %}
-cmap = plt.cm.CMRmap_r #start with the CMR map in reverse. 
+cmap = plt.cm.CMRmap_r #start with the CMR map in reverse.
 
 maxer = 0.6 #max value to take in the CMR map
 
@@ -191,28 +191,28 @@ for item,place in zip(mapper,the_range2):
     cdict['red'].append((place,item[0], item[0]))
     cdict['green'].append((place,item[1],item[1]))
     cdict['blue'].append((place,item[2],item[2]))
-    
+
 mymap = mpl.colors.LinearSegmentedColormap('my_colormap', cdict, 1024) #linearly interpolate between color values
 {% endcodeblock %}
 
-Below, I write a function for creating the nba shot charts. The function takes a dictionary with martrices for shots attempted, made, and points scored. The matrices should be 500x500. By default, the shot chart depicts the number of shots taken across locations, but it can also depict the number of shots made, field goal percentage, and point scored across locations. 
+Below, I write a function for creating the nba shot charts. The function takes a dictionary with martrices for shots attempted, made, and points scored. The matrices should be 500x500. By default, the shot chart depicts the number of shots taken across locations, but it can also depict the number of shots made, field goal percentage, and point scored across locations.
 
-The function uses a gaussian kernel with standard deviation of 5 to smooth the data (make it look pretty). Again, this is editable. By default the function plots a players raw data, but it will plot how a player compares to league average if the input includes a matrix of league average data. 
+The function uses a gaussian kernel with standard deviation of 5 to smooth the data (make it look pretty). Again, this is editable. By default the function plots a players raw data, but it will plot how a player compares to league average if the input includes a matrix of league average data.
 
 
 {% codeblock lang:python %}
 def create_shotChart(shotDict,fig_type='attempted',smooth=5,league_shotDict=[],mymap=mymap):
     from scipy.ndimage.filters import gaussian_filter
-    
+
     if fig_type == 'fg': #how to treat the data if depicting fg percentage
-        interest_measure = shotDict['made']/shotDict['attempted'] 
+        interest_measure = shotDict['made']/shotDict['attempted']
         #interest_measure[np.isnan(interest_measure)] = np.nanmean(interest_measure)
         #interest_measure = np.nan_to_num(interest_measure) #replace places where divide by 0 with a 0
-    else: 
-        interest_measure = shotDict[fig_type] #else take the data from dictionary. 
-    
-    if league_shotDict: #if we have league data, we have to select the relevant league data. 
-        if fig_type == 'fg': 
+    else:
+        interest_measure = shotDict[fig_type] #else take the data from dictionary.
+
+    if league_shotDict: #if we have league data, we have to select the relevant league data.
+        if fig_type == 'fg':
             league = league_shotDict['made']/league_shotDict['attempted']
             league = np.nan_to_num(league)
             interest_measure[np.isfinite(interest_measure)] += -league[np.isfinite(interest_measure)] #compare league data and invidual player's data
@@ -225,10 +225,10 @@ def create_shotChart(shotDict,fig_type='attempted',smooth=5,league_shotDict=[],m
             interest_measure = player_percent-league_percent #compare league and individual data
             maxer = np.mean(interest_measure) + 1.5*np.std(interest_measure) #compute max and min values for color map
             minner = np.mean(interest_measure) - 1.5*np.std(interest_measure)
-        
+
         cmap = 'bwr' #use bwr color map if comparing to league average
         label = ['<Avg','Avg', '>Avg'] #color map legend label
-    
+
     else:
         cmap = mymap #else use my color map
         interest_measure = np.nan_to_num(interest_measure) #replace places where divide by 0 with a 0
@@ -245,7 +245,7 @@ def create_shotChart(shotDict,fig_type='attempted',smooth=5,league_shotDict=[],m
     ax.set_ylim(400, -25)
 
     ax2 = fig.add_axes(ax.get_position(), frameon=False)
-    
+
     colrange = mpl.colors.Normalize(vmin=minner, vmax=maxer, clip=False) #standardize color range
     ax2.imshow(ppr_smooth.T,cmap=cmap,norm=colrange,alpha=0.7,aspect='auto') #plot data
     ax2.set_xticklabels([])
@@ -261,25 +261,25 @@ def create_shotChart(shotDict,fig_type='attempted',smooth=5,league_shotDict=[],m
         cb.set_label('Field Goal Percentage')
     else:
         cb.set_label('Shots '+fig_type)
-        
+
     cb.set_ticks([0,0.5,1.0])
     ax3.set_yticklabels(label,rotation=45);
-    
+
     zoom = np.float(12)/(12.0*2) #place player pic
     img = acquire_playerPic(player_shotDict['id'], zoom)
     ax2.add_artist(img)
-    
+
     plt.show()
     return ax
 {% endcodeblock %}
 
-Alright, thats that. Now lets create some plots. I am a t-wolves fan, so I will plot data from Karl Anthony Towns. 
+Alright, thats that. Now lets create some plots. I am a t-wolves fan, so I will plot data from Karl Anthony Towns.
 
-First, here is the default plot - attempts. 
+First, here is the default plot - attempts.
 
 
 {% codeblock lang:python %}
-df = aqcuire_shootingData('1626157','2015-16') 
+df = aqcuire_shootingData('1626157','2015-16')
 player_shotDict = shooting_matrices(df)
 create_shotChart(player_shotDict);
 {% endcodeblock %}
@@ -292,7 +292,7 @@ Here's KAT's shots made
 
 
 {% codeblock lang:python %}
-df = aqcuire_shootingData('1626157','2015-16') 
+df = aqcuire_shootingData('1626157','2015-16')
 player_shotDict = shooting_matrices(df)
 create_shotChart(player_shotDict,fig_type='made');
 {% endcodeblock %}
@@ -301,11 +301,11 @@ create_shotChart(player_shotDict,fig_type='made');
 <img src="{{ root_url }}/images/nba_shot_charts/made1.png" />
 
 
-Here's field goal percentage. I don't like this one too much. It's hard to use similar scales for attempts and field goal percentage even though I'm using standard deviations rather than absolute scales. 
+Here's field goal percentage. I don't like this one too much. It's hard to use similar scales for attempts and field goal percentage even though I'm using standard deviations rather than absolute scales.
 
 
 {% codeblock lang:python %}
-df = aqcuire_shootingData('1626157','2015-16') 
+df = aqcuire_shootingData('1626157','2015-16')
 player_shotDict = shooting_matrices(df)
 create_shotChart(player_shotDict, fig_type='fg');
 {% endcodeblock %}
@@ -314,11 +314,11 @@ create_shotChart(player_shotDict, fig_type='fg');
 <img src="{{ root_url }}/images/nba_shot_charts/fg1.png" />
 
 
-Here's points across the court. 
+Here's points across the court.
 
 
 {% codeblock lang:python %}
-df = aqcuire_shootingData('1626157','2015-16') 
+df = aqcuire_shootingData('1626157','2015-16')
 player_shotDict = shooting_matrices(df)
 create_shotChart(player_shotDict, fig_type='points');
 {% endcodeblock %}
@@ -344,7 +344,7 @@ How KAT's shots made compares to league average.
 
 
 {% codeblock lang:python %}
-df = aqcuire_shootingData('1626157','2015-16') 
+df = aqcuire_shootingData('1626157','2015-16')
 player_shotDict = shooting_matrices(df)
 create_shotChart(player_shotDict, fig_type='made',league_shotDict=league_shotDict);
 {% endcodeblock %}
@@ -353,7 +353,7 @@ create_shotChart(player_shotDict, fig_type='made',league_shotDict=league_shotDic
 <img src="{{ root_url }}/images/nba_shot_charts/made2.png" />
 
 
-How KAT's field goal percentage compares to league average. Again, the scale on these is not too good. 
+How KAT's field goal percentage compares to league average. Again, the scale on these is not too good.
 
 
 {% codeblock lang:python %}
@@ -366,15 +366,14 @@ create_shotChart(player_shotDict, fig_type='fg',league_shotDict=league_shotDict)
 <img src="{{ root_url }}/images/nba_shot_charts/fg2.png" />
 
 
-And here is how KAT's points compare to league average. 
+And here is how KAT's points compare to league average.
 
 
 {% codeblock lang:python %}
-df = aqcuire_shootingData('1626157','2015-16') 
+df = aqcuire_shootingData('1626157','2015-16')
 player_shotDict = shooting_matrices(df)
 create_shotChart(player_shotDict, fig_type='points',league_shotDict=league_shotDict);
 {% endcodeblock %}
 
 
 <img src="{{ root_url }}/images/nba_shot_charts/points2.png" />
-

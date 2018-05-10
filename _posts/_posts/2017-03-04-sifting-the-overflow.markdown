@@ -3,7 +3,7 @@ layout: post
 title: "Sifting the Overflow"
 date: 2017-03-04 10:11:45 -0500
 comments: true
-categories: [python, open source, Insight, Data Science]
+categories: [python, open source, insight, data science]
 ---
 
 In January 2017, I started a fellowship at [Insight Data Science](http://insightdatascience.com/). Insight is a 7 week program for helping academics transition from academia to careers in data science. In the first 4 weeks, fellows build data science products, and fellows present these products to different companies in the last 3 weeks.  

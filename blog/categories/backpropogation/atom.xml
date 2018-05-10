@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Backpropogation | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/backpropogation/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-05-08T21:39:20-05:00</updated>
+  <updated>2018-05-09T20:59:04-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -741,7 +741,7 @@ Output
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#import important libraries. </span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#import important libraries.</span>
 </span><span class='line'><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 </span><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
@@ -956,7 +956,7 @@ Output
 </span><span class='line'>    <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">target</span><span class="o">-</span><span class="n">Output</span><span class="p">)</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">Output</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Output</span><span class="p">)</span> <span class="c">#find the amount of error and derivative of activation function&lt;/p&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">update_weights</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">delta</span><span class="p">,</span><span class="n">unit_input</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span><span class="n">unit_input</span><span class="p">)</span> <span class="c">#multiply delta output by all the inputs and then multiply these by the learning rate </span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span><span class="n">unit_input</span><span class="p">)</span> <span class="c">#multiply delta output by all the inputs and then multiply these by the learning rate</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
 <p>Above I use the <a href="https://en.wikipedia.org/wiki/Outer_product">outer product</a> of our delta function and the input in order to spread the weight changes to all lines connecting to the output unit.</p>

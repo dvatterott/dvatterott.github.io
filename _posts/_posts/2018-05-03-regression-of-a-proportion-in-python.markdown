@@ -3,7 +3,7 @@ layout: post
 title: "Regression of a Proportion in Python"
 date: 2018-05-03 21:20:09 -0500
 comments: true
-categories: python, statistics, open-source, regression, glm, data science
+categories: [python, statistics, open source, regression, glm, data science]
 ---
 
 I frequently predict proportions (e.g., proportion of year during which a customer is active). This is a regression task because the dependent variables is a float, but the dependent variable is bound between the 0 and 1. Googling around, I had a hard time finding the a good way to model this situation, so I've written here what I think is the most straight forward solution.
