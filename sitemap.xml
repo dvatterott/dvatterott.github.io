@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://danvatterott.com/blog/2018/06/13/integrating-apache-airflow-and-databricks/</loc>
+    <lastmod>2018-06-13T18:05:52-05:00</lastmod>
+  </url>
+  <url>
     <loc>https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/</loc>
     <lastmod>2018-06-02T17:58:52-05:00</lastmod>
   </url>
@@ -236,6 +240,9 @@
     <loc>https://danvatterott.com/blog/categories/glm/</loc>
   </url>
   <url>
+    <loc>https://danvatterott.com/blog/categories/data-engineering/</loc>
+  </url>
+  <url>
     <loc>https://danvatterott.com/presentations/sql_presentation/plugin/notes-server/notes.html</loc>
     <lastmod>2018-03-28T16:14:48-05:00</lastmod>
   </url>
@@ -309,7 +316,7 @@
   </url>
   <url>
     <loc>https://danvatterott.com/my-reads/2018.html</loc>
-    <lastmod>2018-05-03T20:03:39-05:00</lastmod>
+    <lastmod>2018-06-14T07:45:37-05:00</lastmod>
   </url>
   <url>
     <loc>https://danvatterott.com/my-reads/2017.html</loc>
