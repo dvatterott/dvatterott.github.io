@@ -31,7 +31,7 @@ Next, is the shell script called by Cron.
 #!/bin/bash
 source $HOME/.bash_profile
 
-$HOME/automated_jobs/launch_production_cluster.py
+python $HOME/automated_jobs/launch_production_cluster.py
 {% endcodeblock %}
 
 Again, $HOME is replaced with the actual path to my home directory.

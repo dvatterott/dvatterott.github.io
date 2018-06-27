@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Ubuntu | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/ubuntu/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-06-14T07:47:26-05:00</updated>
+  <updated>2018-06-26T19:45:45-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -47,7 +47,7 @@
 </pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
 </span><span class='line'><span class="nb">source</span> <span class="nv">$HOME</span>/.bash_profile&lt;/p&gt;
 </span><span class='line'>
-</span><span class='line'>&lt;p&gt;<span class="nv">$HOME</span>/automated_jobs/launch_production_cluster.py
+</span><span class='line'>&lt;p&gt;python <span class="nv">$HOME</span>/automated_jobs/launch_production_cluster.py
 </span></code></pre></td></tr></table></div></figure></p>
 
 <p>Again, $HOME is replaced with the actual path to my home directory.</p>
