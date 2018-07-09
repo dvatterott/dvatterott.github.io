@@ -107,9 +107,9 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   </header>
 
 
-<div class="entry-content"><p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+<div class="entry-content"><p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
 
-<p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of data in sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference, but can be hard to spot!</p>
+<p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -218,7 +218,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
  </tr>
 </table>
 
-<p>Now, let’s run through the same exercise with dense vectors. We start by create a spark dataframe with a column of dense vectors.</p>
+<p>Now, let’s run through the same exercise with dense vectors. We start by creating a spark dataframe with a column of dense vectors.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
