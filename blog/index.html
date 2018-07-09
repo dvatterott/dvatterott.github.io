@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="Cron is great for automation, but when tasks begin to rely on each other (task C can only run after both tasks A and B finish) cron does not do the &hellip;">
+  <meta name="description" content="Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the vector assembler &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,243 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2018-07-08T19:24:04-05:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>7:24 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+
+<p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of data in sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference, but can be hard to spot!</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.ml.linalg</span> <span class="kn">import</span> <span class="n">SparseVector</span><span class="p">,</span> <span class="n">DenseVector</span>
+</span><span class="line"><span class="c"># note that using Sparse and Dense Vectors from ml.linalg. There are other Sparse/Dense vectors in spark.</span>
+</span><span class="line">
+</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([</span>
+</span><span class="line">  <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">})),</span>
+</span><span class="line">  <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">9</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">})),</span>
+</span><span class="line">  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})),</span>
+</span><span class="line"><span class="p">])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&quot;row_num&quot;</span><span class="p">,</span> <span class="s">&quot;features&quot;</span><span class="p">])</span>
+</span><span class="line">
+</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>(10,[1,2,3,4,5],[1.0, 1.0, 2.0, 1.0, 3.0])</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>(10,[9],[100.0])</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>(10,[1],[1.0])</td>
+ </tr>
+</table>
+
+<p>Next, I write a <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.udf">udf</a>, which changes the sparse vector into a dense vector and then changes the dense vector into a python list. The python list is then turned into a spark array when it comes out of the udf.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">sparse_to_array</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+</span><span class="line">  <span class="n">v</span> <span class="o">=</span> <span class="n">DenseVector</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+</span><span class="line">  <span class="n">new_array</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">])</span>
+</span><span class="line">  <span class="k">return</span> <span class="n">new_array</span>
+</span><span class="line">
+</span><span class="line"><span class="n">sparse_to_array_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">sparse_to_array</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">FloatType</span><span class="p">()))</span>
+</span><span class="line">
+</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;features_array&#39;</span><span class="p">,</span> <span class="n">sparse_to_array_udf</span><span class="p">(</span><span class="s">&#39;features&#39;</span><span class="p">))</span>
+</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+   <th>features_array</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>(10,[1,2,3,4,5],[1.0, 1.0, 2.0, 1.0, 3.0])</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>(10,[9],[100.0])</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>(10,[1],[1.0])</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Now that the data is in a pyspark array, we can apply the desired pyspark aggregation to each item in the array.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df_agg</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;features_array&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;averages&quot;</span><span class="p">))</span>
+</span><span class="line"><span class="n">df_agg</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>averages</th>
+ </tr>
+ <tr>
+   <td>[0.0, 0.66667, 0.33333, 0.66667, 0.33333, 1.0, 0.0, 0.0, 0.0, 33.33333]</td>
+ </tr>
+</table>
+
+<p>Now, let’s run through the same exercise with dense vectors. We start by create a spark dataframe with a column of dense vectors.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([</span>
+</span><span class="line">  <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])),</span>
+</span><span class="line">  <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])),</span>
+</span><span class="line">  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])),</span>
+</span><span class="line"><span class="p">])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&quot;row_num&quot;</span><span class="p">,</span> <span class="s">&quot;features&quot;</span><span class="p">])</span>
+</span><span class="line">
+</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Next, we create another pyspark udf which changes the dense vector into a pyspark array.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">dense_to_array</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+</span><span class="line">  <span class="n">new_array</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">])</span>
+</span><span class="line">  <span class="k">return</span> <span class="n">new_array</span>
+</span><span class="line">
+</span><span class="line"><span class="n">dense_to_array_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">dense_to_array</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">FloatType</span><span class="p">()))</span>
+</span><span class="line">
+</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;features_array&#39;</span><span class="p">,</span> <span class="n">dense_to_array_udf</span><span class="p">(</span><span class="s">&#39;features&#39;</span><span class="p">))</span>
+</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+   <th>features_array</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Finally, we can use our standard pyspark aggregators to each item in the pyspark array.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df_agg</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;features_array&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;averages&quot;</span><span class="p">))</span>
+</span><span class="line"><span class="n">df_agg</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>averages</th>
+ </tr>
+ <tr>
+   <td>[0.0, 0.66667, 0.33333, 0.66667, 0.33333, 1.0, 0.0, 0.0, 0.0, 33.33333]</td>
+ </tr>
+</table>
+
+<p>There we go! Hope you find this info helpful!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -953,6 +1190,15 @@ interpreter: 64bit
    <td>null</td>
  </tr>
 </table>
+
+<p><strong>EDIT</strong>
+I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">pyspark documentation</a> a more thorough reading and realized that pyspark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
+
+<p>For example, the following code will produce rows in b where the id value is not present in a.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;left_anit&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 </div>
   
   
@@ -1374,309 +1620,6 @@ Before stating whether the hypothesis was rejected or not, I should note that th
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2017/03/11/my-first-kodi-addon-pbs-newshour/">My First Kodi Addon - PBS NewsHour (a Tutorial)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2017-03-11T12:21:03-06:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>12:21 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>NOTE: Since writing this post, PBS Newshour changed their site. They know use the url, https://www.pbs.org/newshour/video. The mechanics here will work but the url has changed and some of the queries need to be changed too. Check the repo for a working version of the code.</p>
-
-<p>I’ve been using <a href="https://kodi.tv/">Kodi/XBMC</a> since 2010. It provides a flexible and (relatively) intuitive interface for interacting with content through your TV (much like an apple TV). One of the best parts of Kodi is the addons - these are apps that you can build or download. For instance, I use the NBA League Pass addon for watching Wolves games. I’ve been looking for a reason to build my own Kodi addon for years.</p>
-
-<p>Enter <a href="http://www.pbs.org/newshour/">PBS NewsHour</a>. If you’re not watching PBS NewsHour, I’m not sure what you’re doing with your life because it’s the shit. It rocks. PBS NewsHour disseminates all their content on youtube and their website. For the past couple years, I’ve been watching their broadcasts every morning through the <a href="http://kodi.wiki/view/Add-on:YouTube">Youtube addon</a>. This works fine, but it’s clunky. I decided to stream line watching the NewsHour by building a Kodi addon for it.</p>
-
-<p>I used <a href="http://forum.kodi.tv/showthread.php?tid=254207">this tutorial</a> to build a Kodi addon that accesses the PBS NewsHour content through the youtube addon. This addon can be found on <a href="https://github.com/dvatterott/Kodi_addons/tree/master/plugin.video.pbsnewshouryoutube">my github</a>. The addon works pretty well, but it includes links to all NewsHour’s content, and I only want the full episodes. I am guessing I could have modified this addon to get what I wanted, but I really wanted to build my own addon from scratch.</p>
-
-<p>The addon I built is available on <a href="https://github.com/dvatterott/Kodi_addons/tree/master/plugin.video.pbsnewshour">my github</a>. To build my addon, I used <a href="http://kodi.wiki/view/HOW-TO:Video_addon">this tutorial</a>, and some code from <a href="https://github.com/learningit/Kodi-plugins-source">this github</a> repository. Below I describe how the addon works. I only describe the file default.py because this file does the majority of the work, and I found the linked tutorials did a good job explaining the other files.</p>
-
-<p>I start by importing libraries that I will use. Most these libraries are used for scraping content off the web. I then create some basic variables to describe the addon’s name (addonID), its name in kodi (base_url), the number used to refer to it (addon_handle - I am not sure how this number is used), and current arguments sent to my addon (args).</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">zlib</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">json</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">sys</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">urlparse</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">xbmc</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">xbmcgui</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">xbmcplugin</span>
-</span><span class="line">
-</span><span class="line"><span class="kn">import</span> <span class="nn">urllib2</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">re</span>
-</span><span class="line">
-</span><span class="line"><span class="n">addonID</span> <span class="o">=</span> <span class="s">&#39;plugin.video.pbsnewshour&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">base_url</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span class="line"><span class="n">addon_handle</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span class="line"><span class="n">args</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">parse_qs</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>The next function, getRequest, gathers html from a website (specified by the variable url). The dictionary httpHeaders tells the website a little about myself, and how I want the html. I use urllib2 to get a compressed version of the html, which is decompressed using zlib.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c"># -----------  Create some functions for fetching videos ---------------</span>
-</span><span class="line"><span class="c"># https://github.com/learningit/Kodi-plugins-source/blob/master/script.module.t1mlib/lib/t1mlib.py</span>
-</span><span class="line"><span class="n">UTF8</span> <span class="o">=</span> <span class="s">&#39;utf-8&#39;</span>
-</span><span class="line"><span class="n">USERAGENT</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 </span><span class="se">\</span>
-</span><span class="line"><span class="s">            (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36&quot;&quot;&quot;</span>
-</span><span class="line"><span class="n">httpHeaders</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;User-Agent&#39;</span><span class="p">:</span> <span class="n">USERAGENT</span><span class="p">,</span>
-</span><span class="line">               <span class="s">&#39;Accept&#39;</span><span class="p">:</span> <span class="s">&quot;application/json, text/javascript, text/html,*/*&quot;</span><span class="p">,</span>
-</span><span class="line">               <span class="s">&#39;Accept-Encoding&#39;</span><span class="p">:</span> <span class="s">&#39;gzip,deflate,sdch&#39;</span><span class="p">,</span>
-</span><span class="line">               <span class="s">&#39;Accept-Language&#39;</span><span class="p">:</span> <span class="s">&#39;en-US,en;q=0.8&#39;</span>
-</span><span class="line">               <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">getRequest</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">udata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">httpHeaders</span><span class="p">):</span>
-</span><span class="line">    <span class="n">req</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">UTF8</span><span class="p">),</span> <span class="n">udata</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
-</span><span class="line">    <span class="k">try</span><span class="p">:</span>
-</span><span class="line">        <span class="n">response</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
-</span><span class="line">        <span class="n">page</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-</span><span class="line">        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">getheader</span><span class="p">(</span><span class="s">&#39;Content-Encoding&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;gzip&#39;</span><span class="p">:</span>
-</span><span class="line">            <span class="n">page</span> <span class="o">=</span> <span class="n">zlib</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">zlib</span><span class="o">.</span><span class="n">MAX_WBITS</span> <span class="o">+</span> <span class="mi">16</span><span class="p">)</span>
-</span><span class="line">        <span class="n">response</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span class="line">    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-</span><span class="line">        <span class="n">page</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
-</span><span class="line">        <span class="n">xbmc</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">msg</span><span class="o">=</span><span class="s">&#39;REQUEST ERROR&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">xbmc</span><span class="o">.</span><span class="n">LOGDEBUG</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>The hardest part of building this addon was finding video links. I was able to find a <a href="https://github.com/learningit/Kodi-plugins-source/">github repo</a> with code for identifying links to PBS’s videos, but PBS initially posts their videos on youtube. I watch PBS NewsHour the morning after it airs, so I needed a way to watch these youtube links. I started this post by saying I wanted to avoid using Kodi’s youtube addon, but I punted and decided to use the youtube addon to play these links. Below is a function for finding the youtube id of a video.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">deal_with_youtube</span><span class="p">(</span><span class="n">html</span><span class="p">):</span>
-</span><span class="line">    <span class="n">vid_num</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;&lt;span class=&quot;youtubeid&quot;&gt;(.+?)&lt;/span&gt;&#39;</span><span class="p">,</span>
-</span><span class="line">                         <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class="line">    <span class="n">url</span> <span class="o">=</span> <span class="n">vid_num</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">url</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>This next function actually fetches the videos (the hard part of building this addon). This function fetches the html of the website that has PBS’s video. It then searches the html for “coveplayerid,” which is PBS’s name for the video. I use this name to create a url that will play the video. I get the html associated with this new url, and search it for a json file that contains the video. I grab this json file, and viola I have the video’s url! In the final part of the code, I request a higher version of the video than PBS would give me by default.</p>
-
-<p>If I fail to find “coveplayerid,” then I know this is a video with a youtube link, so I grab the youtube id. Some pages have a coveplayerid class, but no actual coveplayerid. I also detect these cases and find the youtube id when it occurs.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c"># https://github.com/learningit/Kodi-plugins-source/blob/master/plugin.video.thinktv/resources/lib/scraper.py</span>
-</span><span class="line"><span class="c"># modified from link above</span>
-</span><span class="line"><span class="k">def</span> <span class="nf">getAddonVideo</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">udata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">httpHeaders</span><span class="p">):</span>
-</span><span class="line">    <span class="n">html</span> <span class="o">=</span> <span class="n">getRequest</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">vid_num</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;&lt;span class=&quot;coveplayerid&quot;&gt;(.+?)&lt;/span&gt;&#39;</span><span class="p">,</span>
-</span><span class="line">                         <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">vid_num</span><span class="p">:</span>
-</span><span class="line">        <span class="n">vid_num</span> <span class="o">=</span> <span class="n">vid_num</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">        <span class="k">if</span> <span class="s">&#39;youtube&#39;</span> <span class="ow">in</span> <span class="n">vid_num</span><span class="p">:</span>
-</span><span class="line">            <span class="k">return</span> <span class="n">deal_with_youtube</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class="line">        <span class="n">pg</span> <span class="o">=</span> <span class="n">getRequest</span><span class="p">(</span><span class="s">&#39;http://player.pbs.org/viralplayer/</span><span class="si">%s</span><span class="s">/&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vid_num</span><span class="p">))</span>
-</span><span class="line">        <span class="n">query</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;PBS.videoData =.+?recommended_encoding.+?&#39;url&#39;.+?&#39;(.+?)&#39;&quot;&quot;&quot;</span>
-</span><span class="line">        <span class="n">urls</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">url</span> <span class="o">=</span> <span class="n">urls</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
-</span><span class="line">        <span class="n">pg</span> <span class="o">=</span> <span class="n">getRequest</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">?format=json&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
-</span><span class="line">        <span class="n">url</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pg</span><span class="p">)[</span><span class="s">&#39;url&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="k">else</span><span class="p">:</span>  <span class="c"># weekend links are initially posted as youtube vids</span>
-</span><span class="line">        <span class="n">deal_with_youtube</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;800k&#39;</span><span class="p">,</span> <span class="s">&#39;2500k&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="k">if</span> <span class="s">&#39;hd-1080p&#39;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
-</span><span class="line">        <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;-hls-&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-</span><span class="line">        <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">+</span><span class="s">&#39;-hls-6500k.m3u8&#39;</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">url</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>This next function identifies full episodes that have aired in the past week. It’s the meat of the addon. The function gets the html of <a href="http://www.pbs.org/newshour/videos/">PBS NewsHour’s page</a>, and finds all links in a side-bar where PBS lists their past week’s episodes. I loop through the links and create a menu item for each one. These menu items are python objects that Kodi can display to users. The items include a label/title (the name of the episode), an image, and a url that Kodi can use to find the video url.</p>
-
-<p>The most important part of this listing is the url I create. This url gives Kodi all the information I just described, associates the link with an addon, and tells Kodi that the link is playable. In the final part of the function, I pass the list of links to Kodi.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c"># -------------- Create list of videos --------------------</span>
-</span><span class="line"><span class="c"># http://kodi.wiki/view/HOW-TO:Video_addon</span>
-</span><span class="line"><span class="k">def</span> <span class="nf">list_videos</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s">&#39;http://www.pbs.org/newshour/videos/&#39;</span><span class="p">):</span>
-</span><span class="line">    <span class="n">html</span> <span class="o">=</span> <span class="n">getRequest</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">query</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;&lt;div class=&#39;sw-pic maxwidth&#39;&gt;.+?href=&#39;(.+?)&#39;.+?src=&quot;(.+?)&quot;.+?title=&quot;(.+?)&quot; &quot;&quot;&quot;</span>
-</span><span class="line">    <span class="n">videos</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">listing</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">vids</span> <span class="ow">in</span> <span class="n">videos</span><span class="p">:</span>
-</span><span class="line">        <span class="n">list_item</span> <span class="o">=</span> <span class="n">xbmcgui</span><span class="o">.</span><span class="n">ListItem</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">vids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-</span><span class="line">                                     <span class="n">thumbnailImage</span><span class="o">=</span><span class="n">vids</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span class="line">        <span class="n">list_item</span><span class="o">.</span><span class="n">setInfo</span><span class="p">(</span><span class="s">&#39;video&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="n">vids</span><span class="p">[</span><span class="mi">2</span><span class="p">]})</span>
-</span><span class="line">        <span class="n">list_item</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s">&#39;IsPlayable&#39;</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">url</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">?action=</span><span class="si">%s</span><span class="s">&amp;title=</span><span class="si">%s</span><span class="s">&amp;url=</span><span class="si">%s</span><span class="s">&amp;thumbnail=</span><span class="si">%s</span><span class="s">&quot;</span>
-</span><span class="line">               <span class="o">%</span> <span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="s">&#39;play&#39;</span><span class="p">,</span> <span class="n">vids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">vids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vids</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">listing</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">url</span><span class="p">,</span> <span class="n">list_item</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span>
-</span><span class="line">
-</span><span class="line">    <span class="c"># Add list to Kodi.</span>
-</span><span class="line">    <span class="n">xbmcplugin</span><span class="o">.</span><span class="n">addDirectoryItems</span><span class="p">(</span><span class="n">addon_handle</span><span class="p">,</span> <span class="n">listing</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">listing</span><span class="p">))</span>
-</span><span class="line">    <span class="n">xbmcplugin</span><span class="o">.</span><span class="n">endOfDirectory</span><span class="p">(</span><span class="n">handle</span><span class="o">=</span><span class="n">addon_handle</span><span class="p">,</span> <span class="n">succeeded</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Okay, thats the hard part. The rest of the code implements the functions I just described. The function below is executed when a user chooses to play a video. It gets the url of the video, and gives this to the xbmc function that will play the video. The only hiccup here is I check whether the link is for the standard PBS video type or not. If it is, then I give the link directly to Kodi. If it’s not, then this is a youtube link and I launch the youtube plugin with my youtube video id.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">play_video</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-</span><span class="line">    <span class="n">path</span> <span class="o">=</span> <span class="n">getAddonVideo</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span class="line">    <span class="k">if</span> <span class="s">&#39;00k&#39;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
-</span><span class="line">        <span class="n">play_item</span> <span class="o">=</span> <span class="n">xbmcgui</span><span class="o">.</span><span class="n">ListItem</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
-</span><span class="line">        <span class="n">xbmcplugin</span><span class="o">.</span><span class="n">setResolvedUrl</span><span class="p">(</span><span class="n">addon_handle</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="n">listitem</span><span class="o">=</span><span class="n">play_item</span><span class="p">)</span>
-</span><span class="line">    <span class="k">else</span><span class="p">:</span>  <span class="c"># deal with youtube links</span>
-</span><span class="line">        <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;plugin://plugin.video.youtube/?action=play_video&amp;videoid=&#39;</span> <span class="o">+</span> <span class="n">path</span>
-</span><span class="line">        <span class="n">play_item</span> <span class="o">=</span> <span class="n">xbmcgui</span><span class="o">.</span><span class="n">ListItem</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
-</span><span class="line">        <span class="n">xbmcplugin</span><span class="o">.</span><span class="n">setResolvedUrl</span><span class="p">(</span><span class="n">addon_handle</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="n">listitem</span><span class="o">=</span><span class="n">play_item</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>This final function is launched whenever a user calls the addon or executes an action in the addon (thats why I call the function in the final line of code here). params is an empty dictionary if the addon is being opened. params being empty causes the addon to call list_videos, creating the list of episodes that PBS has aired in the past week. If the user selects one of the episodes, then router is called again, but this time the argument is the url of the selected item. This url is passed to the play_video function, which plays the video for the user!</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">router</span><span class="p">():</span>
-</span><span class="line">    <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
-</span><span class="line">        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s">&#39;action&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;play&#39;</span><span class="p">:</span>
-</span><span class="line">            <span class="n">play_video</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s">&#39;url&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</span><span class="line">        <span class="k">else</span><span class="p">:</span>
-</span><span class="line">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid paramstring: {0}!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
-</span><span class="line">    <span class="k">else</span><span class="p">:</span>
-</span><span class="line">        <span class="n">list_videos</span><span class="p">()</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="n">router</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>That’s my addon! I hope this tutorial helps people create future Kodi addons. Definitely reach out if you have questions. Also, make sure to check out the NewsHour soon and often. It’s the bomb.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -1725,6 +1668,10 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
       </li>
     
@@ -1738,10 +1685,6 @@ Before stating whether the hypothesis was rejected or not, I should note that th
     
       <li class="post">
         <a href="/blog/2018/03/17/exploring-roc-curves/">Exploring ROC Curves</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/02/06/is-not-in-with-pyspark/">'Is Not in' With Pyspark</a>
       </li>
     
   </ul>

@@ -255,6 +255,15 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
    <td>null</td>
  </tr>
 </table>
+
+<p><strong>EDIT</strong>
+I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">pyspark documentation</a> a more thorough reading and realized that pyspark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
+
+<p>For example, the following code will produce rows in b where the id value is not present in a.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;left_anit&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 </div>
 
 
@@ -275,7 +284,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/data-science/'>data science</a>, <a class='category' href='/blog/categories/pyspark/'>pyspark</a>, <a class='category' href='/blog/categories/python/'>python</a>, <a class='category' href='/blog/categories/spark/'>spark</a>
+    <a class='category' href='/blog/categories/data-engineering/'>data engineering</a>, <a class='category' href='/blog/categories/data-science/'>data science</a>, <a class='category' href='/blog/categories/pyspark/'>pyspark</a>, <a class='category' href='/blog/categories/python/'>python</a>, <a class='category' href='/blog/categories/spark/'>spark</a>
   
 </span>
 
@@ -354,6 +363,10 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
       </li>
     
@@ -367,10 +380,6 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     
       <li class="post">
         <a href="/blog/2018/03/17/exploring-roc-curves/">Exploring ROC Curves</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/02/06/is-not-in-with-pyspark/">'Is Not in' With Pyspark</a>
       </li>
     
   </ul>

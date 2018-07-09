@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="In this post I wanted to do a quick follow up to a previous post about predicting career nba performance from rookie year data. After my previous &hellip;">
+  <meta name="description" content="We use our most advanced technologies as metaphors for the brain: The industrial revolution inspired descriptions of the brain as mechanical. The &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,378 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/04/29/an-introduction-to-neural-networks-part-1/">An Introduction to Neural Networks: Part 1</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-04-29T18:17:07-05:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>6:17 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>We use our most advanced technologies as metaphors for the brain: The industrial revolution inspired descriptions of the brain as mechanical. The telephone inspired descriptions of the brain as a telephone switchboard. The computer inspired descriptions of the brain as a computer. Recently, we have reached a point where our most advanced technologies - such as AI (e.g., <a href="https://en.wikipedia.org/wiki/AlphaGo">Alpha Go</a>), and our current understanding of the brain inform each other in an awesome synergy. Neural networks exemplify this synergy. Neural networks offer a relatively advanced description of the brain and are the software underlying some of our most advanced technology. As our understanding of the brain increases, neural networks become more sophisticated. As our understanding of neural networks increases, our understanding of the brain becomes more sophisticated.</p>
+
+<p>With the recent success of neural networks, I thought it would be useful to write a few posts describing the basics of neural networks.</p>
+
+<p>First, what are <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural networks</a> - neural networks are a family of machine learning algorithms that can learn data’s underlying structure. Neural networks are composed of many <em>neurons</em> that perform simple computations. By performing many simple computations, neural networks can answer even the most complicated problems.</p>
+
+<p>Lets get started.</p>
+
+<p>As usual, I will post this code as a jupyter notebook on <a href="https://github.com/dvatterott/jupyter_notebooks">my github</a>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#import important libraries.</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>When talking about neural networks, it’s nice to visualize the network with a figure. For drawing the neural networks, I forked a <a href="https://github.com/miloharper/visualise-neural-network">repository from miloharper</a> and made some changes so that this repository could be imported into python and so that I could label the network. <a href="https://github.com/dvatterott/visualise_neural_network">Here</a> is my forked repository.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">visualise_neural_network</span> <span class="kn">import</span> <span class="n">NeuralNetwork</span>
+</span><span class="line">
+</span><span class="line"><span class="n">network</span> <span class="o">=</span> <span class="n">NeuralNetwork</span><span class="p">()</span> <span class="c">#create neural network object</span>
+</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="s">&#39;Input A&#39;</span><span class="p">,</span><span class="s">&#39;Input B&#39;</span><span class="p">],[</span><span class="s">&#39;Weight A&#39;</span><span class="p">,</span><span class="s">&#39;Weight B&#39;</span><span class="p">])</span> <span class="c">#create the input layer which has two neurons.</span>
+</span><span class="line"><span class="c">#Each input neuron has a single line extending to the next layer up</span>
+</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">1</span><span class="p">,[</span><span class="s">&#39;Output&#39;</span><span class="p">])</span> <span class="c">#create output layer - a single output neuron</span>
+</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span> <span class="c">#draw the network</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><img src="/images/neural_net/example1.png" /></p>
+
+<p>Above is our neural network. It has two input neurons and a single output neuron. In this example, I’ll give the network an input of [0 1]. This means Input A will receive an input value of 0 and Input B will have an input value of 1.</p>
+
+<p>The input is the input unit’s <em>activity.</em> This activity is sent to the Output unit, but the activity changes when traveling to the Output unit. The <em>weights</em> between the input and output units change the activity. A large positive weight between the input and output units causes the input unit to send a large positive (excitatory) signal. A large negative weight between the input and output units causes the input unit to send a large negative (inhibitory) signal. A weight near zero means the input unit does not influence the output unit.</p>
+
+<p>In order to know the Output unit’s activity, we need to know its input. I will refer to the output unit’s input as <script type="math/tex">net_{Output}</script>. Here is how we can calculate <script type="math/tex">net_{Output}</script></p>
+
+<script type="math/tex; mode=display">net_{Output} = Input_A * Weight_A + Input_B * Weight_B</script>
+
+<p>a more general way of writing this is</p>
+
+<script type="math/tex; mode=display">net = \displaystyle\sum_{i=1}^{Inputs}Input_i * Weight_i</script>
+
+<p>Let’s pretend the inputs are [0 1] and the Weights are [0.25 0.5]. Here is the input to the output neuron -</p>
+
+<script type="math/tex; mode=display">net_{Output} = 0 * 0.25 + 1 * 0.5</script>
+
+<p>Thus, the input to the output neuron is 0.5. A quick way of programming this is through the function numpy.dot which finds the <a href="https://en.wikipedia.org/wiki/Dot_product">dot product</a> of two vectors (or matrices). This might sound a little scary, but in this case its just multiplying the items by each other and then summing everything up - like we did above.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Inputs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span class="line"><span class="n">Weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+</span><span class="line">
+</span><span class="line"><span class="n">net_Output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Inputs</span><span class="p">,</span><span class="n">Weights</span><span class="p">)</span>
+</span><span class="line"><span class="k">print</span> <span class="n">net_Output</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>0.5
+</code></pre>
+
+<p>All this is good, but we haven’t actually calculated the output unit’s activity we have only calculated its input. What makes neural networks able to solve complex problems is they include a non-linearity when translating the input into activity. In this case we will translate the input into activity by putting the input through a <a href="https://en.wikipedia.org/wiki/Logistic_function">logistic function</a>.</p>
+
+<script type="math/tex; mode=display">Logistic = \frac{1}{1+e^{-x}}</script>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">logistic</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="c">#each neuron has a logistic activation function</span>
+</span><span class="line">    <span class="k">return</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Lets take a look at a logistic function.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">)</span> <span class="c">#create vector of numbers between -5 and 5</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">logistic</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Activation&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Input&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><img src="/images/neural_net/logistic1.png" /></p>
+
+<p>As you can see above, the logistic used here transforms negative values into values near 0 and positive values into values near 1. Thus, when a unit receives a negative input it has activity near zero and when a unit receives a postitive input it has activity near 1. The most important aspect of this activation function is that its non-linear - it’s not a straight line.</p>
+
+<p>Now lets see the activity of our output neuron. Remember, the net input is 0.5</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Output_neuron</span> <span class="o">=</span> <span class="n">logistic</span><span class="p">(</span><span class="n">net_Output</span><span class="p">)</span>
+</span><span class="line"><span class="k">print</span> <span class="n">Output_neuron</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">logistic</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Activation&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Input&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">net_Output</span><span class="p">,</span><span class="n">Output_neuron</span><span class="p">,</span><span class="s">&#39;ro&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>0.622459331202
+</code></pre>
+
+<p><img src="/images/neural_net/logistic2.png" /></p>
+
+<p>The activity of our output neuron is depicted as the red dot.</p>
+
+<p>So far I’ve described how to find a unit’s activity, but I haven’t described how to find the weights of connections between units. In the example above, I chose the weights to be 0.25 and 0.5, but I can’t arbitrarily decide weights unless I already know the solution to the problem. If I want the network to find a solution for me, I need the network to find the weights itself.</p>
+
+<p>In order to find the weights of connections between neurons, I will use an algorithm called <a href="https://en.wikipedia.org/wiki/Backpropagation">backpropogation</a>. In backpropogation, we have the neural network guess the answer to a problem and adjust the weights so that this guess gets closer and closer to the correct answer. Backpropogation is the method by which we reduce the distance between guesses and the correct answer. After many iterations of guesses by the neural network and weight adjustments through backpropogation, the network can learn an answer to a problem.</p>
+
+<p>Lets say we want our neural network to give an answer of 0 when the left input unit is active and an answer of 1 when the right unit is active. In this case the inputs I will use are [1,0] and [0,1]. The corresponding correct answers will be [0] and [1].</p>
+
+<p>Lets see how close our network is to the correct answer. I am using the weights from above ([0.25, 0.5]).</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Inputs</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span>
+</span><span class="line"><span class="n">Answers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,]</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">logistic</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">Weights</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Inputs</span><span class="p">]</span> <span class="c">#loop through inputs and find logistic(sum(input*weights))</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Guesses</span><span class="p">,</span><span class="s">&#39;bo&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Answers</span><span class="p">,</span><span class="s">&#39;ro&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">])</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Activation&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Input #&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s">&#39;Guesses&#39;</span><span class="p">,</span><span class="s">&#39;Answers&#39;</span><span class="p">]);</span>
+</span><span class="line"><span class="k">print</span> <span class="n">Guesses</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>[0.56217650088579807, 0.62245933120185459]
+</code></pre>
+
+<p><img src="/images/neural_net/net_guess1.png" /></p>
+
+<p>The guesses are in blue and the answers are in red. As you can tell, the guesses and the answers look almost nothing alike. Our network likes to guess around 0.6 while the correct answer is 0 in the first example and 1 in the second.</p>
+
+<p>Lets look at how backpropogation reduces the distance between our guesses and the correct answers.</p>
+
+<p>First, we want to know how the amount of error changes with an adjustment to a given weight. We can write this as</p>
+
+<script type="math/tex; mode=display">\partial Error \over \partial Weight_{Input_{1}\to.Output}</script>
+
+<p>This change in error with changes in the weights has a number of different sub components.</p>
+
+<ul>
+  <li>Changes in error with changes in the output unit’s activity: <script type="math/tex">\partial Error \over \partial Output</script></li>
+  <li>Changes in the output unit’s activity with changes in this unit’s input: <script type="math/tex">\partial Output \over \partial net_{Output}</script></li>
+  <li>Changes in the output unit’s input with changes in the weight: <script type="math/tex">\partial net_{Output} \over \partial Weight_{Input_{1}\to.Output}</script></li>
+</ul>
+
+<p>Through the <a href="https://en.wikipedia.org/wiki/Chain_rule">chain rule</a> we know</p>
+
+<script type="math/tex; mode=display">\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}}</script>
+
+<p>This might look scary, but with a little thought it should make sense: (starting with the final term and moving left) When we change the weight of a connection to a unit, we change the input to that unit. When we change the input to a unit, we change its activity (written Output above). When we change a units activity, we change the amount of error.</p>
+
+<p>Let’s break this down using our example. During this portion, I am going to gloss over some details about how exactly to derive the partial derivatives. <a href="https://en.wikipedia.org/wiki/Delta_rule">Wikipedia has a more complete derivation</a>.</p>
+
+<p>In the first example, the input is [1,0] and the correct answer is [0]. Our network’s guess in this example was about 0.56.</p>
+
+<script type="math/tex; mode=display">\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)</script>
+
+<script type="math/tex; mode=display">\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)</script>
+
+<p>Please note that this is specific to our example with a logistic activation function</p>
+
+<script type="math/tex; mode=display">\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1</script>
+
+<p>To summarize:</p>
+
+<script type="math/tex; mode=display">\begin{multline}
+\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} \\
+= -(0-0.56) * 0.56(1-0.56) * 1 = 0.14
+\end{multline}</script>
+
+<p>This is the direction we want to move in, but taking large steps in this direction can prevent us from finding the optimal weights. For this reason, we reduce our step size. We will reduce our step size with a parameter called the <em>learning rate</em> (<script type="math/tex">\alpha</script>). <script type="math/tex">\alpha</script> is bound between 0 and 1.</p>
+
+<p>Here is how we can write our change in weights</p>
+
+<script type="math/tex; mode=display">\Delta Weight_{Input_{1}\to.Output} = \alpha * \frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}}</script>
+
+<p>This is known as the <a href="https://en.wikipedia.org/wiki/Delta_rule">delta rule</a>.</p>
+
+<p>We will set <script type="math/tex">\alpha</script> to be 0.5. Here is how we will calculate the new <script type="math/tex">Weight_{Input_{1}\to.Output}</script>.</p>
+
+<script type="math/tex; mode=display">Weight_{Input_{1}\to.Output}^{\prime} = Weight_{Input_{1}\to.Output} - 0.5 * 0.14 = 0.25 - 0.5 * 0.14 = 0.18</script>
+
+<p>Thus, <script type="math/tex">Weight_{Input_{1}\to.Output}</script> is shrinking which will move the output towards 0. Below I write the code to implement our backpropogation.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span>
+</span><span class="line">
+</span><span class="line"><span class="k">def</span> <span class="nf">delta_Output</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">Output</span><span class="p">):</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">target</span><span class="o">-</span><span class="n">Output</span><span class="p">)</span><span class="o">*</span><span class="n">Output</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Output</span><span class="p">)</span> <span class="c">#find the amount of error and derivative of activation function</span>
+</span><span class="line">
+</span><span class="line"><span class="k">def</span> <span class="nf">update_weights</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">delta</span><span class="p">,</span><span class="n">unit_input</span><span class="p">):</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span><span class="n">unit_input</span><span class="p">)</span> <span class="c">#multiply delta output by all the inputs and then multiply these by the learning rate</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Above I use the <a href="https://en.wikipedia.org/wiki/Outer_product">outer product</a> of our delta function and the input in order to spread the weight changes to all lines connecting to the output unit.</p>
+
+<p>Okay, hopefully you made it through that. I promise thats as bad as it gets. Now that we’ve gotten through the nasty stuff, lets use backpropogation to find an answer to our problem.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">network_guess</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights</span><span class="p">):</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">logistic</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights</span><span class="o">.</span><span class="n">T</span><span class="p">))</span> <span class="c">#input by weights then through a logistic</span>
+</span><span class="line">
+</span><span class="line"><span class="k">def</span> <span class="nf">back_prop</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Output</span><span class="p">,</span><span class="n">target</span><span class="p">,</span><span class="n">Weights</span><span class="p">):</span>
+</span><span class="line">    <span class="n">delta</span> <span class="o">=</span> <span class="n">delta_Output</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">Output</span><span class="p">)</span> <span class="c">#find delta portion</span>
+</span><span class="line">    <span class="n">delta_weight</span> <span class="o">=</span> <span class="n">update_weights</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">delta</span><span class="p">,</span><span class="n">Input</span><span class="p">)</span> <span class="c">#find amount to update weights</span>
+</span><span class="line">    <span class="n">Weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">Weights</span><span class="p">)</span> <span class="c">#convert weights to array</span>
+</span><span class="line">    <span class="n">Weights</span> <span class="o">+=</span> <span class="o">-</span><span class="n">delta_weight</span> <span class="c">#update weights</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">Weights</span>
+</span><span class="line">
+</span><span class="line"><span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choice</span><span class="p">,</span> <span class="n">seed</span>
+</span><span class="line"><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c">#seed random number generator so that these results can be replicated</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Error</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class="line"><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Trial_Type</span> <span class="o">=</span> <span class="n">choice</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span> <span class="c">#generate random number to choose between the two inputs</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">Inputs</span><span class="p">[</span><span class="n">Trial_Type</span><span class="p">])</span> <span class="c">#choose input and convert to array</span>
+</span><span class="line">    <span class="n">Answer</span> <span class="o">=</span> <span class="n">Answers</span><span class="p">[</span><span class="n">Trial_Type</span><span class="p">]</span> <span class="c">#get the correct answer</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Output</span> <span class="o">=</span> <span class="n">network_guess</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights</span><span class="p">)</span> <span class="c">#compute the networks guess</span>
+</span><span class="line">    <span class="n">Weights</span> <span class="o">=</span> <span class="n">back_prop</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Output</span><span class="p">,</span><span class="n">Answer</span><span class="p">,</span><span class="n">Weights</span><span class="p">)</span> <span class="c">#change the weights based on the error</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Error</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Output</span><span class="o">-</span><span class="n">Answer</span><span class="p">))</span> <span class="c">#record error</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Error</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">6</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Error</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:])</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span> <span class="k">break</span> <span class="c">#tell the code to stop iterating when mean error is &lt; 0.05 in the last 5 guesses</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>It seems our code has found an answer, so lets see how the amount of error changed as the code progressed.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Error_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Error</span><span class="p">)[:,</span><span class="mi">0</span><span class="p">]</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Error_vec</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Error&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Iteration #&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><img src="/images/neural_net/net_learn1.png" /></p>
+
+<p>It looks like the while loop excecuted about 1000 iterations before converging. As you can see the error decreases. Quickly at first then slowly as the weights zone in on the correct answer. lets see how our guesses compare to the correct answers.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Inputs</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span>
+</span><span class="line"><span class="n">Answers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,]</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">logistic</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">Weights</span><span class="o">.</span><span class="n">T</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Inputs</span><span class="p">]</span> <span class="c">#loop through inputs and find logistic(sum(input*weights))</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Guesses</span><span class="p">,</span><span class="s">&#39;bo&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Answers</span><span class="p">,</span><span class="s">&#39;ro&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">])</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Activation&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Input #&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s">&#39;Guesses&#39;</span><span class="p">,</span><span class="s">&#39;Answers&#39;</span><span class="p">]);</span>
+</span><span class="line"><span class="k">print</span> <span class="n">Guesses</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>[array([ 0.05420561]), array([ 0.95020512])]
+</code></pre>
+
+<p><img src="/images/neural_net/net_guess2.png" /></p>
+
+<p>Not bad! Our guesses are much closer to the correct answers than before we started running the backpropogation procedure! Now, you might say, “HEY! But you haven’t reached the <em>correct</em> answers.” That’s true, but note that acheiving the values of 0 and 1 with a logistic function are only possible at -<script type="math/tex">\infty</script> and <script type="math/tex">\infty</script>, respectively. Because of this, we treat 0.05 as 0 and 0.95 as 1.</p>
+
+<p>Okay, all this is great, but that was a really simple problem, and I said that neural networks could solve interesting problems!</p>
+
+<p>Well… this post is already longer than I anticipated. I will follow-up this post with another post explaining how we can expand neural networks to solve more interesting problems.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -4036,6 +4408,10 @@ Match vs Mismatch
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
       </li>
     
@@ -4049,10 +4425,6 @@ Match vs Mismatch
     
       <li class="post">
         <a href="/blog/2018/03/17/exploring-roc-curves/">Exploring ROC Curves</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/02/06/is-not-in-with-pyspark/">'Is Not in' With Pyspark</a>
       </li>
     
   </ul>

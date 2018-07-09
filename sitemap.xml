@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/</loc>
+    <lastmod>2018-07-08T19:24:04-05:00</lastmod>
+  </url>
+  <url>
     <loc>https://danvatterott.com/blog/2018/06/13/integrating-apache-airflow-and-databricks/</loc>
     <lastmod>2018-06-13T18:05:52-05:00</lastmod>
   </url>
@@ -237,10 +241,10 @@
     <loc>https://danvatterott.com/blog/categories/pyspark/</loc>
   </url>
   <url>
-    <loc>https://danvatterott.com/blog/categories/glm/</loc>
+    <loc>https://danvatterott.com/blog/categories/data-engineering/</loc>
   </url>
   <url>
-    <loc>https://danvatterott.com/blog/categories/data-engineering/</loc>
+    <loc>https://danvatterott.com/blog/categories/glm/</loc>
   </url>
   <url>
     <loc>https://danvatterott.com/presentations/sql_presentation/plugin/notes-server/notes.html</loc>

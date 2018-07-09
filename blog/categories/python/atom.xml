@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-06-26T19:45:45-05:00</updated>
+  <updated>2018-07-08T20:33:03-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,223 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in Pyspark]]></title>
+    <link href="https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/"/>
+    <updated>2018-07-08T19:24:04-05:00</updated>
+    <id>https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark</id>
+    <content type="html"><![CDATA[<p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+
+<p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of data in sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference, but can be hard to spot!</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.linalg</span> <span class="kn">import</span> <span class="n">SparseVector</span><span class="p">,</span> <span class="n">DenseVector</span>
+</span><span class='line'><span class="c"># note that using Sparse and Dense Vectors from ml.linalg. There are other Sparse/Dense vectors in spark.&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([</span>
+</span><span class='line'>  <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">})),</span>
+</span><span class='line'>  <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">9</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">})),</span>
+</span><span class='line'>  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})),</span>
+</span><span class='line'><span class="p">])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">“</span><span class="n">row_num</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">features</span><span class="err">”</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>(10,[1,2,3,4,5],[1.0, 1.0, 2.0, 1.0, 3.0])</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>(10,[9],[100.0])</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>(10,[1],[1.0])</td>
+ </tr>
+</table>
+
+<p>Next, I write a <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.udf">udf</a>, which changes the sparse vector into a dense vector and then changes the dense vector into a python list. The python list is then turned into a spark array when it comes out of the udf.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">sparse_to_array</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">v</span> <span class="o">=</span> <span class="n">DenseVector</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">new_array</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">])</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">new_array</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sparse_to_array_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">sparse_to_array</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">FloatType</span><span class="p">()))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">features_array</span><span class="err">’</span><span class="p">,</span> <span class="n">sparse_to_array_udf</span><span class="p">(</span><span class="err">‘</span><span class="n">features</span><span class="err">’</span><span class="p">))</span>
+</span><span class='line'><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+   <th>features_array</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>(10,[1,2,3,4,5],[1.0, 1.0, 2.0, 1.0, 3.0])</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>(10,[9],[100.0])</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>(10,[1],[1.0])</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Now that the data is in a pyspark array, we can apply the desired pyspark aggregation to each item in the array.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df_agg</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">features_array</span><span class="err">’</span><span class="p">)[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">averages</span><span class="err">”</span><span class="p">))</span>
+</span><span class='line'><span class="n">df_agg</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>averages</th>
+ </tr>
+ <tr>
+   <td>[0.0, 0.66667, 0.33333, 0.66667, 0.33333, 1.0, 0.0, 0.0, 0.0, 33.33333]</td>
+ </tr>
+</table>
+
+<p>Now, let’s run through the same exercise with dense vectors. We start by create a spark dataframe with a column of dense vectors.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([</span>
+</span><span class='line'>  <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])),</span>
+</span><span class='line'>  <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])),</span>
+</span><span class='line'>  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])),</span>
+</span><span class='line'><span class="p">])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">“</span><span class="n">row_num</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">features</span><span class="err">”</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Next, we create another pyspark udf which changes the dense vector into a pyspark array.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">dense_to_array</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">new_array</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">])</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">new_array</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">dense_to_array_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">dense_to_array</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">FloatType</span><span class="p">()))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">features_array</span><span class="err">’</span><span class="p">,</span> <span class="n">dense_to_array_udf</span><span class="p">(</span><span class="err">‘</span><span class="n">features</span><span class="err">’</span><span class="p">))</span>
+</span><span class='line'><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+   <th>features_array</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Finally, we can use our standard pyspark aggregators to each item in the pyspark array.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df_agg</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">features_array</span><span class="err">’</span><span class="p">)[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">averages</span><span class="err">”</span><span class="p">))</span>
+</span><span class='line'><span class="n">df_agg</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>averages</th>
+ </tr>
+ <tr>
+   <td>[0.0, 0.66667, 0.33333, 0.66667, 0.33333, 1.0, 0.0, 0.0, 0.0, 33.33333]</td>
+ </tr>
+</table>
+
+<p>There we go! Hope you find this info helpful!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Random Weekly Reminders]]></title>
@@ -755,107 +972,15 @@ interpreter: 64bit
    <td>null</td>
  </tr>
 </table>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Using Cron to Automate Jobs on Ubuntu]]></title>
-    <link href="https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
-    <updated>2017-09-01T17:04:17-05:00</updated>
-    <id>https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
-    <content type="html"><![CDATA[<p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
 
-<p>Hopefully, I can save someone the same pain by writing this blog post.</p>
+<p><strong>EDIT</strong>
+I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">pyspark documentation</a> a more thorough reading and realized that pyspark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
 
-<p>I decided to use Cron to launch the weekly jobs. Actually launching a weekly job on Cron was not difficult. Check out the <a href="https://help.ubuntu.com/community/CronHowto">Ubuntu Cron manual</a> for a good description on how to use Cron.</p>
-
-<p>What took me forever was realizing that <strong>Cron jobs have an extremely limited path</strong>. Because of this, specifying the complete path to executed files <strong>and their executors</strong> is necessary.</p>
-
-<p>Below I describe how I used an ec2 instance (Ubuntu 16.04) to automatically launch this weekly job.</p>
-
-<p>First, here is what my Cron job list looks like (call “crontab -e” in the terminal).</p>
+<p>For example, the following code will produce rows in b where the id value is not present in a.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">SHELL</span><span class="o">=</span>/bin/bash
-</span><span class='line'><span class="m">05</span> <span class="m">01</span> * * <span class="m">2</span> <span class="nv">$HOME</span>/automated_jobs/production_cluster.sh
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left_anit</span><span class="err">’</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure></p>
-
-<p>The important thing to note here is that I am creating the variable SHELL, and $HOME is replaced by the actual path to my home directory.</p>
-
-<p>Next, is the shell script called by Cron.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
-</span><span class='line'><span class="nb">source</span> <span class="nv">$HOME</span>/.bash_profile&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;python <span class="nv">$HOME</span>/automated_jobs/launch_production_cluster.py
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Again, $HOME is replaced with the actual path to my home directory.</p>
-
-<p>I had to make this shell script and the python script called within it executable (call “chmod +x” in the terminal). The reason that I used this shell script rather than directly launching the python script from Cron is I wanted access to environment variables in my bash_profile. In order to get access to them, I had to source bash_profile.</p>
-
-<p>Finally, below I have the python file that executes the week job that I wanted. I didn’t include the code that actually launches our emr cluster because that wasn’t the hard part here, but just contact me if you would like to see it.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!$HOME/anaconda2/bin/python</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">os</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">datetime</span> <span class="kn">as</span> <span class="nn">dt</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">check_output</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;setup-logging&quot;</span><span class="o">&gt;</span><span class="n">setup</span> <span class="n">logging</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">old_stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
-</span><span class='line'><span class="n">log_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="err">“</span><span class="n">production_cluster_</span><span class="o">%</span><span class="n">s</span><span class="o">.</span><span class="n">log</span><span class="err">”</span> <span class="o">%</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="err">‘</span><span class="o">%</span><span class="n">Y_</span><span class="o">%</span><span class="n">m_</span><span class="o">%</span><span class="n">d</span><span class="err">’</span><span class="p">),</span> <span class="err">“</span><span class="n">w</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">log_file</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span> <span class="err">‘</span><span class="n">created</span> <span class="n">log</span> <span class="nb">file</span><span class="err">’</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;organize-local-files-and-s3-files&quot;</span><span class="o">&gt;</span><span class="n">organize</span> <span class="n">local</span> <span class="n">files</span> <span class="ow">and</span> <span class="n">s3</span> <span class="n">files</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span> <span class="err">‘</span><span class="n">organized</span> <span class="n">files</span><span class="err">’</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;call-emr-cluster&quot;</span><span class="o">&gt;</span><span class="n">call</span> <span class="n">emr</span> <span class="n">cluster</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span> <span class="err">‘</span><span class="n">launched</span> <span class="n">production</span> <span class="n">job</span><span class="err">’</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;close-log-file&quot;</span><span class="o">&gt;</span><span class="n">close</span> <span class="n">log</span> <span class="nb">file</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">old_stdout</span>
-</span><span class='line'><span class="n">log_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>While the code is not included here, I use aws cli to launch my emr cluster, and I had to specify the path to aws (call “which aws” in the terminal) when making this call.</p>
-
-<p>You might have noticed the logging I am doing in this script. I found logging both within this python script and piping the output of this script to additional logs helpful when debugging.</p>
-
-<p>The Ubuntu Cron manual I linked above, makes it perfectly clear that my Cron path issues are common, but I wanted to post my solution in case other people needed a little guidance.</p>
 ]]></content>
   </entry>
   
