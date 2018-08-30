@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="NOTE: Since writing this post, PBS Newshour changed their site. They know use the url, https://www.pbs.org/newshour/video. The mechanics here will &hellip;">
+  <meta name="description" content="I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,158 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2017/07/15/are-we-in-a-tv-golden-age/">Are We in a TV Golden Age?</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-07-15T15:12:26-05:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>3:12 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 years ago. My wife contended that there was simply more TV content being produced, and that this led to more good shows, but shows are not inherently any better.</p>
+
+<p>This struck me as a great opportunity to do some quick data science. For this post, I scraped the names (from wikipedia) and ratings (from <a href="https://www.themoviedb.org/">TMDb</a>) of all American TV shows. I did the same for major American movies, so that I could have a comparison group (maybe all content is better or worse). The ratings are given by TMDb’s users and are scores between 1 and 10 (where 10 is a great show/movie and 1 is a lousy show/movie).</p>
+
+<p>All the code for this post can be found <a href="https://github.com/dvatterott/tv_vs_movies">on my github</a>.</p>
+
+<p>I decided to operationalize my “golden age of TV” hypothesis as the average TV show is better now than previously. This would be expressed as a positive slope (beta coefficient) when building a linear regression that outputs the rating of a show given the date on which the show first aired. My wife predicted a slope near zero or negative (shows are no better or worse than previously).</p>
+
+<p>Below, I plot the ratings of TV shows and movies across time. Each show is a dot in the scatter plot. Show rating (average rating given my TMBb) is on the y-axis. The date of the show’s first airing is on the x-axis. When I encountered shows with the same name, I just tacked a number onto the end. For instance, show “x” would become show “x_1.” The size of each point in the scatter plot is the show’s “popularity”, which is a bit of a black box, but it’s given by TMBb’s API. TMDb does not give a full description of how they calculate popularity, but they do say its a function of how many times an item is viewed on TMDb, how many times an item is rated, and how many times the item has been added to watch or favorite list. I decided to depict it here just to give the figures a little more detail. The larger the dot, the more popular the show.</p>
+
+<p>Here’s a plot of all TV shows across time.</p>
+
+<iframe src="/images/tv_movies/index_tv.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
+
+<p>To test the “golden age of TV” hypothesis, I coded up a linear regression in javascript (below). I put the regression’s output as a comment at the end of the code.
+Before stating whether the hypothesis was rejected or not, I should note that that I removed shows with less than 10 votes because these shows had erratic ratings.</p>
+
+<p>As you can see, there is no evidence that TV is better now that previously. In fact, if anything, this dataset says that TV is worse (but more on this later).</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">linearRegression</span><span class="p">(</span><span class="nx">y</span><span class="p">,</span><span class="nx">x</span><span class="p">){</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">var</span> <span class="nx">lr</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class="line">    <span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">y</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+</span><span class="line">    <span class="kd">var</span> <span class="nx">sum_x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="kd">var</span> <span class="nx">sum_y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="kd">var</span> <span class="nx">sum_xy</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="kd">var</span> <span class="nx">sum_xx</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="kd">var</span> <span class="nx">sum_yy</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">y</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">
+</span><span class="line">        <span class="nx">sum_x</span> <span class="o">+=</span> <span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+</span><span class="line">        <span class="nx">sum_y</span> <span class="o">+=</span> <span class="nx">y</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+</span><span class="line">        <span class="nx">sum_xy</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">*</span><span class="nx">y</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+</span><span class="line">        <span class="nx">sum_xx</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">*</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+</span><span class="line">        <span class="nx">sum_yy</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">y</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">*</span><span class="nx">y</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="nx">lr</span><span class="p">[</span><span class="s1">&#39;slope&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">n</span> <span class="o">*</span> <span class="nx">sum_xy</span> <span class="o">-</span> <span class="nx">sum_x</span> <span class="o">*</span> <span class="nx">sum_y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">n</span><span class="o">*</span><span class="nx">sum_xx</span> <span class="o">-</span> <span class="nx">sum_x</span> <span class="o">*</span> <span class="nx">sum_x</span><span class="p">);</span>
+</span><span class="line">    <span class="nx">lr</span><span class="p">[</span><span class="s1">&#39;intercept&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">sum_y</span> <span class="o">-</span> <span class="nx">lr</span><span class="p">.</span><span class="nx">slope</span> <span class="o">*</span> <span class="nx">sum_x</span><span class="p">)</span><span class="o">/</span><span class="nx">n</span><span class="p">;</span>
+</span><span class="line">    <span class="nx">lr</span><span class="p">[</span><span class="s1">&#39;r2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">((</span><span class="nx">n</span><span class="o">*</span><span class="nx">sum_xy</span> <span class="o">-</span> <span class="nx">sum_x</span><span class="o">*</span><span class="nx">sum_y</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">((</span><span class="nx">n</span><span class="o">*</span><span class="nx">sum_xx</span><span class="o">-</span><span class="nx">sum_x</span><span class="o">*</span><span class="nx">sum_x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="nx">n</span><span class="o">*</span><span class="nx">sum_yy</span><span class="o">-</span><span class="nx">sum_y</span><span class="o">*</span><span class="nx">sum_y</span><span class="p">)),</span><span class="mi">2</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="nx">lr</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">yval</span> <span class="o">=</span> <span class="nx">data</span>
+</span><span class="line">    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">vote_count</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="p">})</span>
+</span><span class="line">    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">parseFloat</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">vote_average</span><span class="p">);</span> <span class="p">});</span>
+</span><span class="line"><span class="kd">var</span> <span class="nx">xval</span> <span class="o">=</span> <span class="nx">data</span>
+</span><span class="line">    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">vote_count</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="p">})</span>
+</span><span class="line">    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">first_air_date</span><span class="p">.</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">;</span> <span class="p">});</span>
+</span><span class="line"><span class="kd">var</span> <span class="nx">lr</span> <span class="o">=</span> <span class="nx">linearRegression</span><span class="p">(</span><span class="nx">yval</span><span class="p">,</span><span class="nx">xval</span><span class="p">);</span>
+</span><span class="line"><span class="c1">// Object { slope: -3.754543948800799e-10, intercept: 7.0808230581192815, r2: 0.038528573017115 }</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>I wanted to include movies as a comparison to TV. Here’s a plot of all movies across time.</p>
+
+<iframe src="/images/tv_movies/index_movie.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
+
+<p>It’s important to note that I removed all movies with less than 1000 votes. This is completely 100% unfair, BUT I am very proud of my figures here and things get a little laggy when including too many movies in the plot. Nonetheless, movies seem to be getting worse over time! More dramatically than TV shows!</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">var</span> <span class="nx">yval</span> <span class="o">=</span> <span class="nx">data</span>
+</span><span class="line">    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">vote_count</span> <span class="o">&gt;</span> <span class="mi">1000</span> <span class="p">})</span>
+</span><span class="line">    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">parseFloat</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">vote_average</span><span class="p">);</span> <span class="p">});</span>
+</span><span class="line"><span class="kd">var</span> <span class="nx">xval</span> <span class="o">=</span> <span class="nx">data</span>
+</span><span class="line">    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">vote_count</span> <span class="o">&gt;</span> <span class="mi">1000</span> <span class="p">})</span>
+</span><span class="line">    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">first_air_date</span><span class="p">.</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">;</span> <span class="p">});</span>
+</span><span class="line"><span class="kd">var</span> <span class="nx">lr</span> <span class="o">=</span> <span class="nx">linearRegression</span><span class="p">(</span><span class="nx">yval</span><span class="p">,</span><span class="nx">xval</span><span class="p">);</span>
+</span><span class="line"><span class="c1">// Object { slope: -8.11645196776367e-10, intercept: 7.659366705415847, r2: 0.16185069580043676 }</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Okay, so this was a fun little analysis, but I have to come out and say that I wasn’t too happy with my dataset and the conclusions we can draw from this analysis are only as good as the dataset.</p>
+
+<p>The first limitation is that recent content is much more likely to receive a rating than older content, which could systematically bias the ratings of older content (e.g., only good shows from before 2000 receive ratings). It’s easy to imagine how this would lead us to believing that all older content is better than it actually was.</p>
+
+<p>Also, TMDb seems to have IMDB type tastes by which I mean its dominated by young males. For instance, while I don’t like the show “Keeping up the Kardashians,” it’s definitely not the worst show ever. Also, “Girls” is an amazing show which gets no respect here. The quality of a show is in the eye of the beholder, which in this case seems to be boys.</p>
+
+<p>I would have used Rotten Tomatoes’ API, but they don’t provide access to TV ratings.</p>
+
+<p>Even with all these caveats in mind, it’s hard to defend my “golden age of TV” hypothesis. Instead, it seems like there is just more content being produced, which leads to more good shows (yay!), but the average show is no better or worse than previously.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2336,727 +2488,6 @@ Probability of difference arising from chance: 0.57546
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/05/02/an-introduction-to-neural-networks-part-2/">An Introduction to Neural Networks: Part 2</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-05-02T20:56:27-05:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>8:56 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>In a previous <a href="http://www.danvatterott.com/blog/2016/04/29/an-introduction-to-neural-networks-part-1/">post</a>, I described how to do <a href="https://en.wikipedia.org/wiki/Backpropagation">backpropogation</a> with a 1-layer <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural network</a>. I’ve written this post assuming some familiarity with the previous post.</p>
-
-<p>When first created, 1-layer neural networks <a href="https://en.wikipedia.org/wiki/Perceptron">brought about quite a bit of excitement</a>, but this excitement quickly dissipated when researchers realized that 1-layer <a href="https://en.wikipedia.org/wiki/Perceptrons_%28book%29">neural networks could only solve a limited set of problems</a>.</p>
-
-<p>Researchers knew that adding an extra layer to the neural networks enabled neural networks to solve much more complex problems, but they didn’t know how to train these more complex networks.</p>
-
-<p>In the previous post, I described “backpropogation,” but this wasn’t the portion of backpropogation that really changed the history of neural networks. What really changed neural networks is backpropogation with an extra layer. This extra layer enabled researchers to train more complex networks. The extra layer(s) is(are) called the <em>hidden layer(s)</em>. In this post, I will describe backpropogation with a hidden layer.</p>
-
-<p>To describe backpropogation with a hidden layer, I will demonstrate how neural networks can solve the <a href="https://en.wikipedia.org/wiki/Exclusive_or">XOR problem</a>.</p>
-
-<p>In this example of the XOR problem there are four items. Each item is defined by two values. If these two values are the same, then the item belongs to one group (blue here). If the two values are different, then the item belongs to another group (red here).</p>
-
-<p>Below, I have depicted the XOR problem. The goal is to find a model that can distinguish between the blue and red groups based on an item’s values.</p>
-
-<p>This code is also available as a jupyter notebook on <a href="https://github.com/dvatterott/jupyter_notebooks">my github</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#import important libraries.</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;bo&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="s">&#39;ro&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Value 2&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Value 1&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/exampleXOR.png" /></p>
-
-<p>Again, each item has two values. An item’s first value is represented on the x-axis. An items second value is represented on the y-axis. The red items belong to one category and the blue items belong to another.</p>
-
-<p>This is a non-linear problem because no linear function can segregate the groups. For instance, a horizontal line could segregate the upper and lower items and a vertical line could segregate the left and right items, but no single linear function can segregate the red and blue items.</p>
-
-<p>We need a non-linear function to seperate the groups, and neural networks can emulate a non-linear function that segregates them.</p>
-
-<p>While this problem may seem relatively simple, it gave the initial neural networks quite a hard time. In fact, this is the problem that depleted much of the original enthusiasm for neural networks.</p>
-
-<p>Neural networks can easily solve this problem, but they require an extra layer. Below I depict a network with an extra layer (a 2-layer network). To depict the network, I use a repository available on my <a href="https://github.com/dvatterott/visualise_neural_network">github</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">visualise_neural_network</span> <span class="kn">import</span> <span class="n">NeuralNetwork</span>
-</span><span class="line">
-</span><span class="line"><span class="n">network</span> <span class="o">=</span> <span class="n">NeuralNetwork</span><span class="p">()</span> <span class="c">#create neural network object</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="s">&#39;Input 1&#39;</span><span class="p">,</span><span class="s">&#39;Input 2&#39;</span><span class="p">])</span> <span class="c">#input layer with names</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="s">&#39;Hidden 1&#39;</span><span class="p">,</span><span class="s">&#39;Hidden 2&#39;</span><span class="p">])</span> <span class="c">#hidden layer with names</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">1</span><span class="p">,[</span><span class="s">&#39;Output&#39;</span><span class="p">])</span> <span class="c">#output layer with name</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/3_layer_net.png" /></p>
-
-<p>Notice that this network now has 5 total neurons. The two units at the bottom are the <em>input layer</em>. The activity of input units is the value of the inputs (same as the inputs in my previous post). The two units in the middle are the <em>hidden layer</em>. The activity of hidden units are calculated in the same manner as the output units from my previous post. The unit at the top is the <em>output layer</em>. The activity of this unit is found in the same manner as in my previous post, but the activity of the hidden units replaces the input units.</p>
-
-<p>Thus, when the neural network makes its guess, the only difference is we have to compute an extra layer’s activity.</p>
-
-<p>The goal of this network is for the output unit to have an activity of 0 when presented with an item from the blue group (inputs are same) and to have an activity of 1 when presented with an item from the red group (inputs are different).</p>
-
-<p>One additional aspect of neural networks that I haven’t discussed is each non-input unit can have a <em>bias</em>. You can think about bias as a propensity for the unit to become active or not to become active. For instance, a unit with a postitive bias is more likely to be active than a unit with no bias.</p>
-
-<p>I will implement bias as an extra line feeding into each unit. The weight of this line is the bias, and the bias line is always active, meaning this bias is always present.</p>
-
-<p>Below, I seed this 3-layer neural network with a random set of weights.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="c">#seed random number generator for reproducibility</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Weights_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="mi">2</span> <span class="c">#connections between hidden and output</span>
-</span><span class="line"><span class="n">Weights_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="mi">2</span> <span class="c">#connections between input and hidden</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Weight_Dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Weights_1&#39;</span><span class="p">:</span><span class="n">Weights_1</span><span class="p">,</span><span class="s">&#39;Weights_2&#39;</span><span class="p">:</span><span class="n">Weights_2</span><span class="p">}</span> <span class="c">#place weights in a dictionary</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Train_Set</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]]</span> <span class="c">#train set</span>
-</span><span class="line">
-</span><span class="line"><span class="n">network</span> <span class="o">=</span> <span class="n">NeuralNetwork</span><span class="p">()</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="s">&#39;Input 1&#39;</span><span class="p">,</span><span class="s">&#39;Input 2&#39;</span><span class="p">],</span>
-</span><span class="line">                  <span class="p">[[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">]],</span>
-</span><span class="line">                   <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][:</span><span class="mi">2</span><span class="p">]]])</span>
-</span><span class="line"><span class="c">#add input layer with names and weights leaving the input neurons</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">)],</span>
-</span><span class="line">                  <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">]])</span>
-</span><span class="line"><span class="c">#add hidden layer with names (each units&#39; bias) and weights leaving the hidden units</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">1</span><span class="p">,[</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">)])</span>
-</span><span class="line"><span class="c">#add output layer with name (the output unit&#39;s bias)</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/3_layer_weights.png" /></p>
-
-<p>Above we have out network. The depiction of <script type="math/tex">Weight_{Input_{1}\to.Hidden_{2}}</script> and <script type="math/tex">Weight_{Input_{2}\to.Hidden_{1}}</script> are confusing. -0.8 belongs to <script type="math/tex">Weight_{Input_{1}\to.Hidden_{2}}</script>. -0.5 belongs to <script type="math/tex">Weight_{Input_{2}\to.Hidden_{1}}</script>.</p>
-
-<p>Lets go through one example of our network receiving an input and making a guess. Lets say the input is [0 1].
-This means <script type="math/tex">Input_{1} = 0</script> and <script type="math/tex">Input_{2} = 1</script>. The correct answer in this case is 1.</p>
-
-<p>First, we have to calculate <script type="math/tex">Hidden _{1}</script>’s input. Remember we can write input as</p>
-
-<script type="math/tex; mode=display">net = \displaystyle\sum_{i=1}^{Inputs}Input_i * Weight_i</script>
-
-<p>with the a bias we can rewrite it as</p>
-
-<script type="math/tex; mode=display">net = Bias + \displaystyle\sum_{i=1}^{Inputs}Input_i * Weight_i</script>
-
-<p>Specifically for <script type="math/tex">Hidden_{1}</script></p>
-
-<script type="math/tex; mode=display">net_{Hidden_{1}} = -0.78 + -0.25*0 + -0.5*1 = -1.28</script>
-
-<p>Remember the first term in the equation above is the bias term. Lets see what this looks like in code.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-</span><span class="line"><span class="n">net_Hidden</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="mf">1.0</span><span class="p">),</span><span class="n">Weights_1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="c">#append the bias input</span>
-</span><span class="line"><span class="k">print</span> <span class="n">net_Hidden</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>[-1.27669634 -1.07035845]
-</code></pre>
-
-<p>Note that by using np.dot, I can calculate both hidden unit’s input in a single line of code.</p>
-
-<p>Next, we have to find the activity of units in the hidden layer.</p>
-
-<p>I will translate input into activity with a logistic function, as I did in the previous post.</p>
-
-<script type="math/tex; mode=display">Logistic = \frac{1}{1+e^{-x}}</script>
-
-<p>Lets see what this looks like in code.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">logistic</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="c">#each neuron has a logistic activation function</span>
-</span><span class="line">    <span class="k">return</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">))</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Hidden_Units</span> <span class="o">=</span> <span class="n">logistic</span><span class="p">(</span><span class="n">net_Hidden</span><span class="p">)</span>
-</span><span class="line"><span class="k">print</span> <span class="n">Hidden_Units</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>[ 0.2181131   0.25533492]
-</code></pre>
-
-<p>So far so good, the logistic function has transformed the negative inputs into values near 0.</p>
-
-<p>Now we have to compute the output unit’s acitivity.</p>
-
-<script type="math/tex; mode=display">net_{Output} = Bias + Hidden_{1}*Weight_{Hidden_{1}\to.Output} + Hidden_{2}*Weight_{Hidden_{2}\to.Output}</script>
-
-<p>plugging in the numbers</p>
-
-<script type="math/tex; mode=display">net_{Output} = -0.37 + 0.22*-0.23 + 0.26*-0.98 = -0.67</script>
-
-<p>Now the code for computing <script type="math/tex">net_{Output}</script> and the Output unit’s activity.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">net_Output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hidden_Units</span><span class="p">,</span><span class="mf">1.0</span><span class="p">),</span><span class="n">Weights_2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;net_Output&#39;</span>
-</span><span class="line"><span class="k">print</span> <span class="n">net_Output</span>
-</span><span class="line"><span class="n">Output</span> <span class="o">=</span> <span class="n">logistic</span><span class="p">(</span><span class="n">net_Output</span><span class="p">)</span>
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;Output&#39;</span>
-</span><span class="line"><span class="k">print</span> <span class="n">Output</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>net_Output
-[-0.66626595]
-Output
-[ 0.33933346]
-</code></pre>
-
-<p>Okay, thats the network’s guess for one input…. no where near the correct answer (1). Let’s look at what the network predicts for the other input patterns. Below I create a feedfoward, 1-layer neural network and plot the neural nets’ guesses to the four input patterns.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">layer_InputOutput</span><span class="p">(</span><span class="n">Inputs</span><span class="p">,</span><span class="n">Weights</span><span class="p">):</span> <span class="c">#find a layers input and activity</span>
-</span><span class="line">    <span class="n">Inputs_with_bias</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Inputs</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span> <span class="c">#input 1 for each unit&#39;s bias</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">logistic</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Inputs_with_bias</span><span class="p">,</span><span class="n">Weights</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">neural_net</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights_1</span><span class="p">,</span><span class="n">Weights_2</span><span class="p">,</span><span class="n">Training</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> <span class="c">#this function creates and runs the neural net    </span>
-</span><span class="line">
-</span><span class="line">    <span class="n">target</span> <span class="o">=</span> <span class="mi">1</span> <span class="c">#set target value</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Input</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Input</span><span class="p">[</span><span class="mi">1</span><span class="p">]]):</span> <span class="n">target</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#change target value if needed</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#forward pass</span>
-</span><span class="line">    <span class="n">Hidden_Units</span> <span class="o">=</span> <span class="n">layer_InputOutput</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights_1</span><span class="p">)</span> <span class="c">#find hidden unit activity</span>
-</span><span class="line">    <span class="n">Output</span> <span class="o">=</span> <span class="n">layer_InputOutput</span><span class="p">(</span><span class="n">Hidden_Units</span><span class="p">,</span><span class="n">Weights_2</span><span class="p">)</span> <span class="c">#find Output layer actiity</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;output&#39;</span><span class="p">:</span><span class="n">Output</span><span class="p">,</span><span class="s">&#39;target&#39;</span><span class="p">:</span><span class="n">target</span><span class="p">,</span><span class="s">&#39;input&#39;</span><span class="p">:</span><span class="n">Input</span><span class="p">}</span> <span class="c">#record trial output</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Train_Set</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]]</span> <span class="c">#the four input patterns</span>
-</span><span class="line"><span class="n">tempdict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;output&#39;</span><span class="p">:[],</span><span class="s">&#39;target&#39;</span><span class="p">:[],</span><span class="s">&#39;input&#39;</span><span class="p">:[]}</span> <span class="c">#data dictionary</span>
-</span><span class="line"><span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">neural_net</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights_1</span><span class="p">,</span><span class="n">Weights_2</span><span class="p">)</span> <span class="k">for</span> <span class="n">Input</span> <span class="ow">in</span> <span class="n">Train_Set</span><span class="p">]</span> <span class="c">#get the data</span>
-</span><span class="line"><span class="p">[</span><span class="n">tempdict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">temp</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="p">))])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">tempdict</span><span class="p">]</span> <span class="c">#combine all the output dictionaries</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plotter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tempdict</span><span class="p">[</span><span class="s">&#39;output&#39;</span><span class="p">]),(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">plotter</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">bwr</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">ticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.75</span><span class="p">,</span><span class="mi">1</span><span class="p">]);</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Input 1&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Input 2&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">])</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/net_guess1_1.png" /></p>
-
-<p>In the plot above, I have Input 1 on the x-axis and Input 2 on the y-axis. So if the Input is [0,0], the network produces the activity depicted in the lower left square. If the Input is [1,0], the network produces the activity depicted in the lower right square. If the network produces an output of 0, then the square will be blue. If the network produces an output of 1, then the square will be red. As you can see, the network produces all output between 0.25 and 0.5… no where near the correct answers.</p>
-
-<p>So how do we update the weights in order to reduce the error between our guess and the correct answer?</p>
-
-<p>First, we will do backpropogation between the output and hidden layers. This is exactly the same as backpropogation in the previous post.</p>
-
-<p>In the previous post I described how our goal was to decrease error by changing the weights between units. This is the equation we used to describe changes in error with changes in the weights. The equation below expresses changes in error with changes to weights between the <script type="math/tex">Hidden_{1}</script> and the Output unit.</p>
-
-<script type="math/tex; mode=display">\frac{\partial Error}{\partial Weight_{Hidden_{1}\to.Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Weight_{Hidden_{1}\to.Output}}</script>
-
-<script type="math/tex; mode=display">\begin{multline}
-\frac{\partial Error}{\partial Weight_{Hidden_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Hidden_{1} \\= -(1-0.34) * 0.34(1-0.34) * 0.22 = -0.03
-\end{multline}</script>
-
-<p>Now multiply this weight adjustment by the learning rate.</p>
-
-<script type="math/tex; mode=display">\Delta Weight_{Input_{1}\to.Output} = \alpha * \frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}}</script>
-
-<p>Finally, we apply the weight adjustment to <script type="math/tex">Weight_{Hidden_{1}\to.Output}</script>.</p>
-
-<script type="math/tex; mode=display">Weight_{Hidden_{1}\to.Output}^{\prime} = Weight_{Hidden_{1}\to.Output} - 0.5 * -0.03 = -0.23 - 0.5 * -0.03 = -0.21</script>
-
-<p>Now lets do the same thing, but for both the weights and in the code.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="c">#learning rate</span>
-</span><span class="line"><span class="n">target</span> <span class="o">=</span> <span class="mi">1</span> <span class="c">#target outpu</span>
-</span><span class="line">
-</span><span class="line"><span class="n">error</span> <span class="o">=</span> <span class="n">target</span> <span class="o">-</span> <span class="n">Output</span> <span class="c">#amount of error</span>
-</span><span class="line"><span class="n">delta_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">error</span><span class="o">*</span><span class="p">(</span><span class="n">Output</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Output</span><span class="p">)))</span> <span class="c">#first two terms of error by weight derivative</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Hidden_Units</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hidden_Units</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span> <span class="c">#add an input of 1 for the bias</span>
-</span><span class="line"><span class="k">print</span> <span class="n">Weights_2</span> <span class="o">+</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta_out</span><span class="p">,</span><span class="n">Hidden_Units</span><span class="p">)</span> <span class="c">#apply weight change</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>[[-0.21252673 -0.96033892 -0.29229558]]
-</code></pre>
-
-<p>The hidden layer changes things when we do backpropogation. Above, we computed the new weights using the output unit’s error. Now, we want to find how adjusting a weight changes the error, but this weight connects an input to the hidden layer rather than connecting to the output layer. This means we have to propogate the error backwards to the hidden layer.</p>
-
-<p>We will describe backpropogation for the line connecting <script type="math/tex">Input_{1}</script> and <script type="math/tex">Hidden_{1}</script> as</p>
-
-<script type="math/tex; mode=display">\frac{\partial Error}{\partial Weight_{Input_{1}\to.Hidden_{1}}} = \frac{\partial Error}{\partial Hidden_{1}} * \frac{\partial Hidden_{1}}{\partial net_{Hidden_{1}}} * \frac{\partial net_{Hidden_{1}}}{\partial Weight_{Input_{1}\to.Hidden_{1}}}</script>
-
-<p>Pretty similar. We just replaced Output with <script type="math/tex">Hidden_{1}</script>. The interpretation (starting with the final term and moving left) is that changing the <script type="math/tex">Weight_{Input_{1}\to.Hidden_{1}}</script> changes <script type="math/tex">Hidden_{1}</script>’s input. Changing <script type="math/tex">Hidden_{1}</script>’s input changes <script type="math/tex">Hidden_{1}</script>’s activity. Changing <script type="math/tex">Hidden_{1}</script>’s activity changes the error. This last assertion (the first term) is where things get complicated. Lets take a closer look at this first term</p>
-
-<script type="math/tex; mode=display">\frac{\partial Error}{\partial Hidden_{1}} = \frac{\partial Error}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Hidden_{1}}</script>
-
-<p>Changing <script type="math/tex">Hidden_{1}</script>’s activity changes changes the input to the Output unit. Changing the output unit’s input changes the error. hmmmm still not quite there yet. Lets look at how changes to the output unit’s input changes the error.</p>
-
-<script type="math/tex; mode=display">\frac{\partial Error}{\partial net_{Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}}</script>
-
-<p>You can probably see where this is going. Changing the output unit’s input changes the output unit’s activity. Changing the output unit’s activity changes error. There we go.</p>
-
-<p>Okay, this got a bit heavy, but here comes some good news. Compare the two terms of the equation above to the first two terms of our original backpropogation equation. They’re the same! Now lets look at <script type="math/tex">\frac{\partial net_{Output}}{\partial Hidden_{1}}</script> (the second term from the first equation after our new backpropogation equation).</p>
-
-<script type="math/tex; mode=display">\frac{\partial net_{Output}}{\partial Hidden_{1}} = Weight_{Hidden_{1}\to Output}</script>
-
-<p>Again, I am glossing over how to derive these partial derivatives. For a more complete explantion, I recommend <a href="http://www-psych.stanford.edu/~jlm/papers/PDP/Volume%201/Chap8_PDP86.pdf">Chapter 8 of Rumelhart and McClelland’s PDP book</a>. Nonetheless, this means we can take the output of our function <em>delta_output</em> multiplied by <script type="math/tex">Weight_{Hidden_{1}\to Output}</script> and we have the first term of our backpropogation equation! We want <script type="math/tex">Weight_{Hidden_{1}\to Output}</script> to be the weight used in the forward pass. Not the updated weight.</p>
-
-<p>The second two terms from our backpropogation equation are the same as in our original backpropogation equation.</p>
-
-<p><script type="math/tex">\frac{\partial Hidden_{1}}{\partial net_{Hidden_{1}}} = Hidden_{1}(1-Hidden_{1})</script> - this is specific to logistic activation functions.</p>
-
-<p>and</p>
-
-<script type="math/tex; mode=display">\frac{\partial net_{Hidden_{1}}}{\partial Weight_{1}} = Input_{1}</script>
-
-<p>Lets try and write this out.</p>
-
-<script type="math/tex; mode=display">\begin{multline}
-\frac{\partial Error}{\partial Weight_{Input_{1}\to.Hidden_{1}}} = -(target-Output) * Output(1-Output) * Weight_{Hidden_{1}\to Output}\\* Hidden_{1}(1-Hidden_{1}) * Input_{1}
-\end{multline}</script>
-
-<p>It’s not short, but its doable. Let’s plug in the numbers.</p>
-
-<script type="math/tex; mode=display">\frac{\partial Error}{\partial Weight_{Input_{1}\to.Hidden_{1}}} = -(1-0.34)*0.34(1-0.34)*-0.23*0.22(1-0.22)*0 = 0</script>
-
-<p>Not too bad. Now lets see the code.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">delta_hidden</span> <span class="o">=</span> <span class="n">delta_out</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Weights_2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">Hidden_Units</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Hidden_Units</span><span class="p">))</span> <span class="c">#find delta portion of weight update</span>
-</span><span class="line">
-</span><span class="line"><span class="n">delta_hidden</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">delta_hidden</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="c">#remove the bias input</span>
-</span><span class="line"><span class="k">print</span> <span class="n">Weights_1</span> <span class="o">+</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta_hidden</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="mf">1.0</span><span class="p">))</span> <span class="c">#append bias input and multiply input by delta portion</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>[[-0.25119612 -0.50149299 -0.77809147]
- [-0.80193714 -0.23946929 -0.84467792]]
-</code></pre>
-
-<p>Alright! Lets implement all of this into a single model and train the model on the XOR problem. Below I create a neural network that includes both a forward pass and an optional backpropogation pass.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">neural_net</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights_1</span><span class="p">,</span><span class="n">Weights_2</span><span class="p">,</span><span class="n">Training</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> <span class="c">#this function creates and runs the neural net    </span>
-</span><span class="line">
-</span><span class="line">    <span class="n">target</span> <span class="o">=</span> <span class="mi">1</span> <span class="c">#set target value</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Input</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Input</span><span class="p">[</span><span class="mi">1</span><span class="p">]]):</span> <span class="n">target</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#change target value if needed</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#forward pass</span>
-</span><span class="line">    <span class="n">Hidden_Units</span> <span class="o">=</span> <span class="n">layer_InputOutput</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights_1</span><span class="p">)</span> <span class="c">#find hidden unit activity</span>
-</span><span class="line">    <span class="n">Output</span> <span class="o">=</span> <span class="n">layer_InputOutput</span><span class="p">(</span><span class="n">Hidden_Units</span><span class="p">,</span><span class="n">Weights_2</span><span class="p">)</span> <span class="c">#find Output layer actiity</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="n">Training</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
-</span><span class="line">        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="c">#learning rate</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">Weights_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">Weights_2</span><span class="p">)</span> <span class="c">#make sure this weight vector is 2d.</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">error</span> <span class="o">=</span> <span class="n">target</span> <span class="o">-</span> <span class="n">Output</span> <span class="c">#error</span>
-</span><span class="line">        <span class="n">delta_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">error</span><span class="o">*</span><span class="p">(</span><span class="n">Output</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Output</span><span class="p">)))</span> <span class="c">#delta between output and hidden</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">Hidden_Units</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hidden_Units</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span> <span class="c">#append an input for the bias</span>
-</span><span class="line">        <span class="n">delta_hidden</span> <span class="o">=</span> <span class="n">delta_out</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">Weights_2</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">Hidden_Units</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Hidden_Units</span><span class="p">))</span> <span class="c">#delta between hidden and input</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">Weights_2</span> <span class="o">+=</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta_out</span><span class="p">,</span><span class="n">Hidden_Units</span><span class="p">)</span> <span class="c">#update weights</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">delta_hidden</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">delta_hidden</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="c">#remove bias activity</span>
-</span><span class="line">        <span class="n">Weights_1</span> <span class="o">+=</span> <span class="n">alpha</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta_hidden</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="mf">1.0</span><span class="p">))</span>  <span class="c">#update weights</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="n">Training</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
-</span><span class="line">        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;output&#39;</span><span class="p">:</span><span class="n">Output</span><span class="p">,</span><span class="s">&#39;target&#39;</span><span class="p">:</span><span class="n">target</span><span class="p">,</span><span class="s">&#39;input&#39;</span><span class="p">:</span><span class="n">Input</span><span class="p">}</span> <span class="c">#record trial output</span>
-</span><span class="line">    <span class="k">elif</span> <span class="n">Training</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
-</span><span class="line">        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;Weights_1&#39;</span><span class="p">:</span><span class="n">Weights_1</span><span class="p">,</span><span class="s">&#39;Weights_2&#39;</span><span class="p">:</span><span class="n">Weights_2</span><span class="p">,</span><span class="s">&#39;target&#39;</span><span class="p">:</span><span class="n">target</span><span class="p">,</span><span class="s">&#39;output&#39;</span><span class="p">:</span><span class="n">Output</span><span class="p">,</span><span class="s">&#39;error&#39;</span><span class="p">:</span><span class="n">error</span><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Okay, thats the network. Below, I train the network until its answers are very close to the correct answer.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choice</span>
-</span><span class="line"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="c">#seed random number generator for reproducibility</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Weights_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="mi">2</span> <span class="c">#connections between hidden and output</span>
-</span><span class="line"><span class="n">Weights_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="mi">2</span> <span class="c">#connections between input and hidden</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Weight_Dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Weights_1&#39;</span><span class="p">:</span><span class="n">Weights_1</span><span class="p">,</span><span class="s">&#39;Weights_2&#39;</span><span class="p">:</span><span class="n">Weights_2</span><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Train_Set</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]]</span> <span class="c">#train set</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Error</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line"><span class="k">while</span> <span class="bp">True</span><span class="p">:</span> <span class="c">#train the neural net</span>
-</span><span class="line">    <span class="n">Train_Dict</span> <span class="o">=</span> <span class="n">neural_net</span><span class="p">(</span><span class="n">choice</span><span class="p">(</span><span class="n">Train_Set</span><span class="p">),</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">],</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">],</span><span class="n">Training</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">Error</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Train_Dict</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]))</span>
-</span><span class="line">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Error</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">6</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Error</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:])</span> <span class="o">&lt;</span> <span class="mf">0.025</span><span class="p">:</span> <span class="k">break</span> <span class="c">#tell the code to stop iterating when recent mean error is small</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Lets see how error changed across training</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Error_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Error</span><span class="p">)[:,</span><span class="mi">0</span><span class="p">]</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Error_vec</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Error&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Iteration #&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/net_learn1_1.png" /></p>
-
-<p>Really cool. The network start with volatile error - sometimes being nearly correct ans sometimes being completely incorrect. Then After about 5000 iterations, the network starts down the slow path of perfecting an answer scheme. Below, I create a plot depicting the networks’ activity for the different input patterns.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Weights_1</span> <span class="o">=</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">]</span>
-</span><span class="line"><span class="n">Weights_2</span> <span class="o">=</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">]</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Train_Set</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]]</span> <span class="c">#train set</span>
-</span><span class="line">
-</span><span class="line"><span class="n">tempdict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;output&#39;</span><span class="p">:[],</span><span class="s">&#39;target&#39;</span><span class="p">:[],</span><span class="s">&#39;input&#39;</span><span class="p">:[]}</span> <span class="c">#data dictionary</span>
-</span><span class="line"><span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">neural_net</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights_1</span><span class="p">,</span><span class="n">Weights_2</span><span class="p">)</span> <span class="k">for</span> <span class="n">Input</span> <span class="ow">in</span> <span class="n">Train_Set</span><span class="p">]</span> <span class="c">#get the data</span>
-</span><span class="line"><span class="p">[</span><span class="n">tempdict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">temp</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="p">))])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">tempdict</span><span class="p">]</span> <span class="c">#combine all the output dictionaries</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plotter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tempdict</span><span class="p">[</span><span class="s">&#39;output&#39;</span><span class="p">]),(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">plotter</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">bwr</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">ticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.75</span><span class="p">,</span><span class="mi">1</span><span class="p">]);</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Input 1&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Input 2&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">])</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/net_guess2_1.png" /></p>
-
-<p>Again, the Input 1 value is on the x-axis and the Input 2 value is on the y-axis. As you can see, the network guesses 1 when the inputs are different and it guesses 0 when the inputs are the same. Perfect! Below I depict the network with these correct weights.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Weight_Dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Weights_1&#39;</span><span class="p">:</span><span class="n">Weights_1</span><span class="p">,</span><span class="s">&#39;Weights_2&#39;</span><span class="p">:</span><span class="n">Weights_2</span><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="n">network</span> <span class="o">=</span> <span class="n">NeuralNetwork</span><span class="p">()</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="s">&#39;Input 1&#39;</span><span class="p">,</span><span class="s">&#39;Input 2&#39;</span><span class="p">],</span>
-</span><span class="line">                  <span class="p">[[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">]],</span>
-</span><span class="line">                   <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][:</span><span class="mi">2</span><span class="p">]]])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">)],</span>
-</span><span class="line">                  <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">][:</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">1</span><span class="p">,[</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">)])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/3_layer_weights1.png" /></p>
-
-<p>The network finds a pretty cool solution. Both hidden units are relatively active, but one hidden unit sends a strong postitive signal and the other sends a strong negative signal. The output unit has a negative bias, so if neither input is on, it will have an activity around 0. If both Input units are on, then the hidden unit that sends a postitive signal will be inhibited, and the output unit will have activity near 0. Otherwise, the hidden unit with a positive signal gives the output unit an acitivty near 1.</p>
-
-<p>This is all well and good, but if you try to train this network with random weights you might find that it produces an incorrect set of weights sometimes. This is because the network runs into a <a href="https://en.wikipedia.org/wiki/Maxima_and_minima">local minima</a>. A local minima is an instance when any change in the weights would increase the error, so the network is left with a sub-optimal set of weights.</p>
-
-<p>Below I hand-pick of set of weights that produce a local optima.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Weights_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">4.5</span><span class="p">,</span><span class="mf">5.3</span><span class="p">,</span><span class="o">-</span><span class="mf">0.8</span><span class="p">])</span> <span class="c">#connections between hidden and output</span>
-</span><span class="line"><span class="n">Weights_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span><span class="mf">9.2</span><span class="p">,</span><span class="mf">2.0</span><span class="p">],</span>
-</span><span class="line">                     <span class="p">[</span><span class="mf">4.3</span><span class="p">,</span><span class="mf">8.8</span><span class="p">,</span><span class="o">-</span><span class="mf">0.1</span><span class="p">]])</span><span class="c">#connections between input and hidden</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Weight_Dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Weights_1&#39;</span><span class="p">:</span><span class="n">Weights_1</span><span class="p">,</span><span class="s">&#39;Weights_2&#39;</span><span class="p">:</span><span class="n">Weights_2</span><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="n">network</span> <span class="o">=</span> <span class="n">NeuralNetwork</span><span class="p">()</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="s">&#39;Input 1&#39;</span><span class="p">,</span><span class="s">&#39;Input 2&#39;</span><span class="p">],</span>
-</span><span class="line">                  <span class="p">[[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">]],</span>
-</span><span class="line">                   <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][:</span><span class="mi">2</span><span class="p">]]])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">)],</span>
-</span><span class="line">                  <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">][:</span><span class="mi">2</span><span class="p">]])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">1</span><span class="p">,[</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">)])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/local_minimaWeights.png" /></p>
-
-<p>Using these weights as the start of the training set, lets see what the network will do with training.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Train_Set</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]]</span> <span class="c">#train set</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Error</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line"><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-</span><span class="line">    <span class="n">Train_Dict</span> <span class="o">=</span> <span class="n">neural_net</span><span class="p">(</span><span class="n">choice</span><span class="p">(</span><span class="n">Train_Set</span><span class="p">),</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">],</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">],</span><span class="n">Training</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">Error</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Train_Dict</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]))</span>
-</span><span class="line">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Error</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">6</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Error</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:])</span> <span class="o">&lt;</span> <span class="mf">0.025</span><span class="p">:</span> <span class="k">break</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Error_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Error</span><span class="p">)[:]</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Error_vec</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Error&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Iteration #&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/net_learn2_1.png" /></p>
-
-<p>As you can see the network never reduces error. Let’s see how the network answers to the different input patterns.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Weights_1</span> <span class="o">=</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">]</span>
-</span><span class="line"><span class="n">Weights_2</span> <span class="o">=</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">]</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Train_Set</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]]</span> <span class="c">#train set</span>
-</span><span class="line">
-</span><span class="line"><span class="n">tempdict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;output&#39;</span><span class="p">:[],</span><span class="s">&#39;target&#39;</span><span class="p">:[],</span><span class="s">&#39;input&#39;</span><span class="p">:[]}</span> <span class="c">#data dictionary</span>
-</span><span class="line"><span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">neural_net</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights_1</span><span class="p">,</span><span class="n">Weights_2</span><span class="p">)</span> <span class="k">for</span> <span class="n">Input</span> <span class="ow">in</span> <span class="n">Train_Set</span><span class="p">]</span> <span class="c">#get the data</span>
-</span><span class="line"><span class="p">[</span><span class="n">tempdict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">temp</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="p">))])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">tempdict</span><span class="p">]</span> <span class="c">#combine all the output dictionaries</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plotter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tempdict</span><span class="p">[</span><span class="s">&#39;output&#39;</span><span class="p">]),(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">plotter</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">bwr</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">ticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.75</span><span class="p">,</span><span class="mi">1</span><span class="p">]);</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Input 1&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Input 2&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">])</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">,</span><span class="s">&#39;1&#39;</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/net_guess3_1.png" /></p>
-
-<p>Looks like the network produces the correct answer in some cases but not others. The network is particularly confused when Inputs 2 is 0. Below I depict the weights after “training.” As you can see, they have not changed too much from where the weights started before training.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Weights_1</span> <span class="o">=</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">]</span>
-</span><span class="line"><span class="n">Weights_2</span> <span class="o">=</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">]</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Weight_Dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Weights_1&#39;</span><span class="p">:</span><span class="n">Weights_1</span><span class="p">,</span><span class="s">&#39;Weights_2&#39;</span><span class="p">:</span><span class="n">Weights_2</span><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="n">network</span> <span class="o">=</span> <span class="n">NeuralNetwork</span><span class="p">()</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="s">&#39;Input 1&#39;</span><span class="p">,</span><span class="s">&#39;Input 2&#39;</span><span class="p">],</span>
-</span><span class="line">                  <span class="p">[[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">]],</span>
-</span><span class="line">                   <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][:</span><span class="mi">2</span><span class="p">]]])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_1&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">)],</span>
-</span><span class="line">                  <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">][:</span><span class="mi">2</span><span class="p">]])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">1</span><span class="p">,[</span><span class="nb">round</span><span class="p">(</span><span class="n">Weight_Dict</span><span class="p">[</span><span class="s">&#39;Weights_2&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span><span class="mi">2</span><span class="p">)])</span>
-</span><span class="line"><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/neural_net/local_minimaWeights1.png" /></p>
-
-<p>This network was unable to push itself out of the local optima. While local optima are a problem, they’re are a couple things we can do to avoid them. First, we should always train a network multiple times with different random weights in order to test for local optima. If the network continually finds local optima, then we can increase the learning rate. By increasing the learning rate, the network can escape local optima in some cases. This should be done with care though as too big of a learning rate can also prevent finding the global minima.</p>
-
-<p>Alright, that’s it. Obviously the neural network behind <a href="https://en.wikipedia.org/wiki/AlphaGo">alpha go</a> is much more complex than this one, but I would guess that while alpha go is much larger the basic computations underlying it are similar.</p>
-
-<p>Hopefully these posts have given you an idea for how neural networks function and why they’re so cool!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/3">&larr; Older</a>
@@ -3107,6 +2538,10 @@ Output
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/08/29/custom-email-alerts-in-airflow/">Custom Email Alerts in Airflow</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
       </li>
     
@@ -3120,10 +2555,6 @@ Output
     
       <li class="post">
         <a href="/blog/2018/05/03/regression-of-a-proportion-in-python/">Regression of a Proportion in Python</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/03/17/exploring-roc-curves/">Exploring ROC Curves</a>
       </li>
     
   </ul>

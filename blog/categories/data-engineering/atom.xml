@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Engineering | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-engineering/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-08-04T12:40:28-05:00</updated>
+  <updated>2018-08-29T19:17:15-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,116 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Custom Email Alerts in Airflow]]></title>
+    <link href="https://danvatterott.com/blog/2018/08/29/custom-email-alerts-in-airflow/"/>
+    <updated>2018-08-29T18:19:42-05:00</updated>
+    <id>https://danvatterott.com/blog/2018/08/29/custom-email-alerts-in-airflow</id>
+    <content type="html"><![CDATA[<p><a href="https://airflow.apache.org/">Apache Airflow</a> is great for coordinating automated jobs, and it provides a simple interface for sending email alerts when these jobs fail. Typically, one can request these emails by setting <code>email_on_failure</code> to <code>True</code> in your operators.</p>
+
+<p>These email alerts work great, but I wanted to include additional links in them (I wanted to include a link to my spark cluster which can be grabbed from the <a href="https://airflow.incubator.apache.org/_modules/airflow/contrib/operators/databricks_operator.html#DatabricksSubmitRunOperator">Databricks Operator</a>). Here’s how I created a custom email alert on job failure.</p>
+
+<p>First, I set <code>email_on_failure</code> to <code>False</code> and use the operators’s <code>on_failure_callback</code>. I give <code>on_failure_callback</code> the function described below.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">airflow.utils.email</span> <span class="kn">import</span> <span class="n">send_email</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">notify_email</span><span class="p">(</span><span class="n">contextDict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Send custom email alerts.”””&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c"># email title.</span>
+</span><span class='line'><span class="n">title</span> <span class="o">=</span> <span class="s">&quot;Airflow alert: {task_name} Failed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">contextDict</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># email contents</span>
+</span><span class='line'><span class="n">body</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="s">Hi Everyone, &amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">&amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">There&#39;s been an error in the {task_name} job.&amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">&amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">Forever yours,&amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">Airflow bot &amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">contextDict</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">send_email</span><span class="p">(</span><span class="s">&#39;you_email@address.com&#39;</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+</code></pre>
+
+<p><code>send_email</code> is a function imported from Airflow. <code>contextDict</code> is a dictionary given to the callback function on error. Importantly, <code>contextDict</code> contains lots of relevant information. This includes the Task Instance (key=’ti’) and Operator Instance (key=’task’) associated with your error. I was able to use the Operator Instance, to grab the relevant cluster’s address and I included this address in my email (this exact code is not present here).</p>
+
+<p>To use the <code>notify_email</code>, I set <code>on_failure_callback</code> equal to <code>notify_email</code>.</p>
+
+<p>I write out a short example airflow dag below.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">airflow.models</span> <span class="kn">import</span> <span class="n">DAG</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">airflow.operators</span> <span class="kn">import</span> <span class="n">PythonOperator</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="err">‘</span><span class="n">owner</span><span class="err">’</span><span class="p">:</span> <span class="err">‘</span><span class="n">me</span><span class="err">’</span><span class="p">,</span>
+</span><span class='line'>  <span class="err">‘</span><span class="n">description</span><span class="err">’</span><span class="p">:</span> <span class="err">‘</span><span class="n">my_example</span><span class="err">’</span><span class="p">,</span>
+</span><span class='line'>  <span class="err">‘</span><span class="n">start_date</span><span class="err">’</span><span class="p">:</span> <span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;run-every-day-at-1205-utc&quot;</span><span class="o">&gt;</span><span class="n">run</span> <span class="n">every</span> <span class="n">day</span> <span class="n">at</span> <span class="mi">12</span><span class="p">:</span><span class="mo">05</span> <span class="n">UTC</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">dag_id</span><span class="o">=</span><span class="err">’</span><span class="n">example_dag</span><span class="err">’</span><span class="p">,</span> <span class="n">default_args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">schedule_interval</span><span class="o">=</span><span class="err">’</span><span class="mi">0</span> <span class="mi">5</span> <span class="o">*</span> <span class="o">*</span> <span class="o">*</span><span class="err">’</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">print_hello</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="err">‘</span><span class="n">hello</span><span class="err">!’</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">py_task</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span><span class="n">task_id</span><span class="o">=</span><span class="err">’</span><span class="n">example</span><span class="err">’</span><span class="p">,</span>
+</span><span class='line'>                         <span class="n">python_callable</span><span class="o">=</span><span class="n">print_hello</span><span class="p">,</span>
+</span><span class='line'>                         <span class="n">on_failure_callback</span><span class="o">=</span><span class="n">notify_email</span><span class="p">,</span>
+</span><span class='line'>                         <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">py_task</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Note where set <code>on_failure_callback</code> equal to <code>notify_email</code> in the <code>PythonOperator</code>.</p>
+
+<p>Hope you find this helpful! Don’t hesitate to reach out if you have a question.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in Pyspark]]></title>
