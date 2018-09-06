@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-08-29T19:17:15-05:00</updated>
+  <updated>2018-09-06T17:27:54-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,214 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Python Aggregate UDFs in Pyspark]]></title>
+    <link href="https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark/"/>
+    <updated>2018-09-06T16:04:43-05:00</updated>
+    <id>https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark</id>
+    <content type="html"><![CDATA[<p>Pyspark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
+
+<p>Pyspark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
+
+<p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">])</span>
+</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>          <span class="o">&lt;</span><span class="n">br</span> <span class="o">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>'c'</td>
+ </tr>
+</table>
+
+<p>I use <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.collect_list">collect_list</a> to bring all data from a given group into a single row. I print the output of this operation below.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">value_list</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value_list</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>['a', 'b', 'b']</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>['c']</td>
+ </tr>
+</table>
+
+<p>I then create a <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.udf">UDF</a> which will count all the occurences of the letter ‘a’ in these lists (this can be easily done without a UDF but you get the point). This UDF wraps around collect_list, so it acts on the output of collect_list.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">find_a</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span><span class='line'>  <span class="err">“</span><span class="s">&quot;”Count ‘a’s in list.”””</span>
+</span><span class='line'>  <span class="n">output_count</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">output_count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">output_count</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">find_a_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">find_a</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">())</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">find_a_udf</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">a_count</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>a_count</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>There we go! A UDF that acts on aggregated data! Next, I show the power of this approach when combined with <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.when">when</a> which let’s us control which data enters F.collect_list.</p>
+
+<p>First, let’s create a dataframe with an extra column.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">value1</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">value2</span><span class="err">’</span><span class="p">])</span>
+</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>          <span class="o">&lt;</span><span class="n">br</span> <span class="o">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value1</th>
+   <th>value2</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>1</td>
+   <td>'c'</td>
+ </tr>
+</table>
+
+<p>Notice, how I included a when in the collect_list. Note that the UDF still wraps around collect_list.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">find_a_udf</span><span class="p">(</span> <span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value1</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value2</span><span class="err">’</span><span class="p">))))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">a_count</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>a_count</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>There we go! Hope you find this info helpful!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in Pyspark]]></title>
@@ -816,171 +1024,6 @@ processor  : x86_64
 CPU cores  : 4
 interpreter: 64bit
 </code></pre>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA['Is Not in' With Pyspark]]></title>
-    <link href="https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark/"/>
-    <updated>2018-02-06T21:10:32-06:00</updated>
-    <id>https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark</id>
-    <content type="html"><![CDATA[<p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
-
-<p>Here is a tidbit of code which replicates SQL’s “not in” command, while keeping your data with the workers (it will require a shuffle).</p>
-
-<p>I start by creating some small dataframes.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pyspark</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueA</span><span class="err">’</span><span class="p">])</span>
-</span><span class='line'><span class="n">b</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="err">‘</span><span class="n">d</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="err">‘</span><span class="n">e</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueB</span><span class="err">’</span><span class="p">])</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Take a quick look at dataframe <em>a</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>b</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>c</td>
- </tr>
-</table>
-
-<p>And dataframe <em>b</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
- </tr>
-</table>
-
-<p>I create a new column in <em>a</em> that is all ones. I could have used an existing column, but this way I know the column is never null.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>b</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>c</td>
-   <td>1</td>
- </tr>
-</table>
-
-<p>I join <em>a</em> and <em>b</em> with a left join. This way all values in <em>b</em> which are not in <em>a</em> have null values in the column “inA”.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>valueB</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
-   <td>a</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
-</table>
-
-<p>By filtering out rows in the new dataframe <em>c</em>, which are not null, I remove all values of <em>b</em>, which were also in <em>a</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">isNull</span><span class="p">())</span>
-</span><span class='line'><span class="n">c</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>valueB</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
-</table>
-
-<p><strong>EDIT</strong>
-I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">pyspark documentation</a> a more thorough reading and realized that pyspark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
-
-<p>For example, the following code will produce rows in b where the id value is not present in a.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left_anit</span><span class="err">’</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
 ]]></content>
   </entry>
   

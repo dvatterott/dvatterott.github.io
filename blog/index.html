@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="Apache Airflow is great for coordinating automated jobs, and it provides a simple interface for sending email alerts when these jobs fail. Typically &hellip;">
+  <meta name="description" content="Pyspark has a great set of aggregate functions (e.g., count, countDistinct, min, max, avg, sum), but these are not enough for all cases (particularly &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,222 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2018-09-06T16:04:43-05:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>4:04 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Pyspark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
+
+<p>Pyspark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
+
+<p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
+</span><span class="line">
+</span><span class="line"><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">])</span>
+</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>'c'</td>
+ </tr>
+</table>
+
+<p>I use <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.collect_list">collect_list</a> to bring all data from a given group into a single row. I print the output of this operation below.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;value_list&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value_list</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>['a', 'b', 'b']</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>['c']</td>
+ </tr>
+</table>
+
+<p>I then create a <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.udf">UDF</a> which will count all the occurences of the letter ‘a’ in these lists (this can be easily done without a UDF but you get the point). This UDF wraps around collect_list, so it acts on the output of collect_list.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">find_a</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span><span class="line">  <span class="sd">&quot;&quot;&quot;Count &#39;a&#39;s in list.&quot;&quot;&quot;</span>
+</span><span class="line">  <span class="n">output_count</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class="line">  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+</span><span class="line">    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="s">&#39;a&#39;</span><span class="p">:</span>
+</span><span class="line">      <span class="n">output_count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class="line">  <span class="k">return</span> <span class="n">output_count</span>
+</span><span class="line">
+</span><span class="line"><span class="n">find_a_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">find_a</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">())</span>
+</span><span class="line">
+</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">find_a_udf</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;a_count&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>a_count</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>There we go! A UDF that acts on aggregated data! Next, I show the power of this approach when combined with <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.when">when</a> which let’s us control which data enters F.collect_list.</p>
+
+<p>First, let’s create a dataframe with an extra column.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
+</span><span class="line">
+</span><span class="line"><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;value1&#39;</span><span class="p">,</span> <span class="s">&#39;value2&#39;</span><span class="p">])</span>
+</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value1</th>
+   <th>value2</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>1</td>
+   <td>'c'</td>
+ </tr>
+</table>
+
+<p>Notice, how I included a when in the collect_list. Note that the UDF still wraps around collect_list.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">find_a_udf</span><span class="p">(</span> <span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value1&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value2&#39;</span><span class="p">))))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;a_count&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>a_count</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>There we go! Hope you find this info helpful!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1476,127 +1692,6 @@ Spend a few hours thinking about how to describe your academic accomplishments a
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2017/09/01/automating-jobs-on-ubuntu/">Using Cron to Automate Jobs on Ubuntu</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2017-09-01T17:04:17-05:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2017</span></span> <span class='time'>5:04 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
-
-<p>Hopefully, I can save someone the same pain by writing this blog post.</p>
-
-<p>I decided to use Cron to launch the weekly jobs. Actually launching a weekly job on Cron was not difficult. Check out the <a href="https://help.ubuntu.com/community/CronHowto">Ubuntu Cron manual</a> for a good description on how to use Cron.</p>
-
-<p>What took me forever was realizing that <strong>Cron jobs have an extremely limited path</strong>. Because of this, specifying the complete path to executed files <strong>and their executors</strong> is necessary.</p>
-
-<p>Below I describe how I used an ec2 instance (Ubuntu 16.04) to automatically launch this weekly job.</p>
-
-<p>First, here is what my Cron job list looks like (call “crontab -e” in the terminal).</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">SHELL</span><span class="o">=</span>/bin/bash
-</span><span class="line"><span class="m">05</span> <span class="m">01</span> * * <span class="m">2</span> <span class="nv">$HOME</span>/automated_jobs/production_cluster.sh
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>The important thing to note here is that I am creating the variable SHELL, and $HOME is replaced by the actual path to my home directory.</p>
-
-<p>Next, is the shell script called by Cron.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="c">#!/bin/bash</span>
-</span><span class="line"><span class="nb">source</span> <span class="nv">$HOME</span>/.bash_profile
-</span><span class="line">
-</span><span class="line">python <span class="nv">$HOME</span>/automated_jobs/launch_production_cluster.py
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Again, $HOME is replaced with the actual path to my home directory.</p>
-
-<p>I had to make this shell script and the python script called within it executable (call “chmod +x” in the terminal). The reason that I used this shell script rather than directly launching the python script from Cron is I wanted access to environment variables in my bash_profile. In order to get access to them, I had to source bash_profile.</p>
-
-<p>Finally, below I have the python file that executes the week job that I wanted. I didn’t include the code that actually launches our emr cluster because that wasn’t the hard part here, but just contact me if you would like to see it.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#!$HOME/anaconda2/bin/python</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">os</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">sys</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">datetime</span> <span class="kn">as</span> <span class="nn">dt</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">check_output</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># setup logging</span>
-</span><span class="line"><span class="n">old_stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
-</span><span class="line"><span class="n">log_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;production_cluster_</span><span class="si">%s</span><span class="s">.log&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y_%m_</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">),</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
-</span><span class="line"><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">log_file</span>
-</span><span class="line">
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;created log file&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># organize local files and s3 files</span>
-</span><span class="line">
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;organized files&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># call emr cluster</span>
-</span><span class="line">
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;launched production job&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># close log file</span>
-</span><span class="line"><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">old_stdout</span>
-</span><span class="line"><span class="n">log_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>While the code is not included here, I use aws cli to launch my emr cluster, and I had to specify the path to aws (call “which aws” in the terminal) when making this call.</p>
-
-<p>You might have noticed the logging I am doing in this script. I found logging both within this python script and piping the output of this script to additional logs helpful when debugging.</p>
-
-<p>The Ubuntu Cron manual I linked above, makes it perfectly clear that my Cron path issues are common, but I wanted to post my solution in case other people needed a little guidance.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -1645,6 +1740,10 @@ Spend a few hours thinking about how to describe your academic accomplishments a
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/08/29/custom-email-alerts-in-airflow/">Custom Email Alerts in Airflow</a>
       </li>
     
@@ -1658,10 +1757,6 @@ Spend a few hours thinking about how to describe your academic accomplishments a
     
       <li class="post">
         <a href="/blog/2018/06/02/random-weekly-reminders/">Random Weekly Reminders</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/05/03/regression-of-a-proportion-in-python/">Regression of a Proportion in Python</a>
       </li>
     
   </ul>

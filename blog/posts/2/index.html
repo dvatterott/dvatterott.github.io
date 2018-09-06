@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 &hellip;">
+  <meta name="description" content="I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job. Hopefully, I can save someone the same pain &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,127 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2017/09/01/automating-jobs-on-ubuntu/">Using Cron to Automate Jobs on Ubuntu</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-09-01T17:04:17-05:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2017</span></span> <span class='time'>5:04 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
+
+<p>Hopefully, I can save someone the same pain by writing this blog post.</p>
+
+<p>I decided to use Cron to launch the weekly jobs. Actually launching a weekly job on Cron was not difficult. Check out the <a href="https://help.ubuntu.com/community/CronHowto">Ubuntu Cron manual</a> for a good description on how to use Cron.</p>
+
+<p>What took me forever was realizing that <strong>Cron jobs have an extremely limited path</strong>. Because of this, specifying the complete path to executed files <strong>and their executors</strong> is necessary.</p>
+
+<p>Below I describe how I used an ec2 instance (Ubuntu 16.04) to automatically launch this weekly job.</p>
+
+<p>First, here is what my Cron job list looks like (call “crontab -e” in the terminal).</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">SHELL</span><span class="o">=</span>/bin/bash
+</span><span class="line"><span class="m">05</span> <span class="m">01</span> * * <span class="m">2</span> <span class="nv">$HOME</span>/automated_jobs/production_cluster.sh
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>The important thing to note here is that I am creating the variable SHELL, and $HOME is replaced by the actual path to my home directory.</p>
+
+<p>Next, is the shell script called by Cron.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="c">#!/bin/bash</span>
+</span><span class="line"><span class="nb">source</span> <span class="nv">$HOME</span>/.bash_profile
+</span><span class="line">
+</span><span class="line">python <span class="nv">$HOME</span>/automated_jobs/launch_production_cluster.py
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Again, $HOME is replaced with the actual path to my home directory.</p>
+
+<p>I had to make this shell script and the python script called within it executable (call “chmod +x” in the terminal). The reason that I used this shell script rather than directly launching the python script from Cron is I wanted access to environment variables in my bash_profile. In order to get access to them, I had to source bash_profile.</p>
+
+<p>Finally, below I have the python file that executes the week job that I wanted. I didn’t include the code that actually launches our emr cluster because that wasn’t the hard part here, but just contact me if you would like to see it.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#!$HOME/anaconda2/bin/python</span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">os</span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">sys</span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">datetime</span> <span class="kn">as</span> <span class="nn">dt</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">check_output</span>
+</span><span class="line">
+</span><span class="line"><span class="c"># setup logging</span>
+</span><span class="line"><span class="n">old_stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+</span><span class="line"><span class="n">log_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;production_cluster_</span><span class="si">%s</span><span class="s">.log&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y_%m_</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">),</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">log_file</span>
+</span><span class="line">
+</span><span class="line"><span class="k">print</span> <span class="s">&#39;created log file&#39;</span>
+</span><span class="line">
+</span><span class="line"><span class="c"># organize local files and s3 files</span>
+</span><span class="line">
+</span><span class="line"><span class="k">print</span> <span class="s">&#39;organized files&#39;</span>
+</span><span class="line">
+</span><span class="line"><span class="c"># call emr cluster</span>
+</span><span class="line">
+</span><span class="line"><span class="k">print</span> <span class="s">&#39;launched production job&#39;</span>
+</span><span class="line">
+</span><span class="line"><span class="c"># close log file</span>
+</span><span class="line"><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">old_stdout</span>
+</span><span class="line"><span class="n">log_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>While the code is not included here, I use aws cli to launch my emr cluster, and I had to specify the path to aws (call “which aws” in the terminal) when making this call.</p>
+
+<p>You might have noticed the logging I am doing in this script. I found logging both within this python script and piping the output of this script to additional logs helpful when debugging.</p>
+
+<p>The Ubuntu Cron manual I linked above, makes it perfectly clear that my Cron path issues are common, but I wanted to post my solution in case other people needed a little guidance.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1911,583 +2032,6 @@ Probability of difference arising from chance: 0.57546
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/05/13/nba-shot-charts-updated/">NBA Shot Charts: Updated</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-05-13T10:08:22-05:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>10:08 am</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>For some reason I recently got it in my head that I wanted to go back and create more NBA shot charts. <a href="http://www.danvatterott.com/blog/2015/12/22/creating-nba-shot-charts/">My previous shotcharts</a> used colored circles to depict the frequency and effectiveness of shots at different locations. This is an extremely efficient method of representing shooting profiles, but I thought it would be fun to create shot charts that represent a player’s shooting profile continously across the court rather than in discrete hexagons.</p>
-
-<p>By depicting the shooting data continously, I lose the ability to represent one dimenion - I can no longer use the size of circles to depict shot frequency at a location. Nonetheless, I thought it would be fun to create these charts.</p>
-
-<p>I explain how to create them below. I’ve also included the ability to compare a player’s shooting performance to the league average.</p>
-
-<p>In my previous shot charts, I query nba.com’s API when creating a players shot chart, but querying nba.com’s API for every shot taken in 2015-16 takes a little while (for computing league average), so I’ve uploaded this data to <a href="https://github.com/dvatterott/nba_project">my github</a> and call the league data as a file rather than querying nba.com API.</p>
-
-<p>This code is also available as a jupyter notebook on <a href="https://github.com/dvatterott/jupyter_notebooks">my github</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures.</span>
-</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Here, I create a function for querying shooting data from NBA.com’s API. This is the same function I used in my previous post regarding shot charts.</p>
-
-<p>You can find a player’s ID number by going to the players nba.com page and looking at the page address. There is <a href="https://github.com/seemethere/nba_py">a python library</a> that you can use for querying player IDs (and other data from the nba.com API), but I’ve found this library to be a little shaky.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="n">Season</span><span class="p">):</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">requests</span>
-</span><span class="line">    <span class="n">header_data</span> <span class="o">=</span> <span class="p">{</span> <span class="c">#I pulled this header from the py goldsberry library</span>
-</span><span class="line">        <span class="s">&#39;Accept-Encoding&#39;</span><span class="p">:</span> <span class="s">&#39;gzip, deflate, sdch&#39;</span><span class="p">,</span>
-</span><span class="line">        <span class="s">&#39;Accept-Language&#39;</span><span class="p">:</span> <span class="s">&#39;en-US,en;q=0.8&#39;</span><span class="p">,</span>
-</span><span class="line">        <span class="s">&#39;Upgrade-Insecure-Requests&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">,</span>
-</span><span class="line">        <span class="s">&#39;User-Agent&#39;</span><span class="p">:</span> <span class="s">&#39;Mozilla/5.0 (Windows NT 10.0; WOW64)&#39;</span>\
-</span><span class="line">        <span class="s">&#39; AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 &#39;</span>\
-</span><span class="line">        <span class="s">&#39;Safari/537.36&#39;</span><span class="p">,</span>
-</span><span class="line">        <span class="s">&#39;Accept&#39;</span><span class="p">:</span> <span class="s">&#39;text/html,application/xhtml+xml,application/xml;q=0.9&#39;</span>\
-</span><span class="line">        <span class="s">&#39;,image/webp,*/*;q=0.8&#39;</span><span class="p">,</span>
-</span><span class="line">        <span class="s">&#39;Cache-Control&#39;</span><span class="p">:</span> <span class="s">&#39;max-age=0&#39;</span><span class="p">,</span>
-</span><span class="line">        <span class="s">&#39;Connection&#39;</span><span class="p">:</span> <span class="s">&#39;keep-alive&#39;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="n">shot_chart_url</span> <span class="o">=</span> <span class="s">&#39;http://stats.nba.com/stats/shotchartdetail?CFID=33&amp;CFPARAMS=&#39;</span><span class="o">+</span><span class="n">Season</span><span class="o">+</span><span class="s">&#39;&amp;ContextFilter=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;&amp;ContextMeasure=FGA&amp;DateFrom=&amp;DateTo=&amp;GameID=&amp;GameSegment=&amp;LastNGames=0&amp;LeagueID=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;00&amp;Location=&amp;MeasureType=Base&amp;Month=0&amp;OpponentTeamID=0&amp;Outcome=&amp;PaceAdjust=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;N&amp;PerMode=PerGame&amp;Period=0&amp;PlayerID=&#39;</span><span class="o">+</span><span class="n">PlayerID</span><span class="o">+</span><span class="s">&#39;&amp;PlusMinus=N&amp;Position=&amp;Rank=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;N&amp;RookieYear=&amp;Season=&#39;</span><span class="o">+</span><span class="n">Season</span><span class="o">+</span><span class="s">&#39;&amp;SeasonSegment=&amp;SeasonType=Regular+Season&amp;TeamID=&#39;</span>\
-</span><span class="line">                    <span class="s">&#39;0&amp;VsConference=&amp;VsDivision=&amp;mode=Advanced&amp;showDetails=0&amp;showShots=1&amp;showZones=0&#39;</span>
-</span><span class="line">    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">shot_chart_url</span><span class="p">,</span><span class="n">headers</span> <span class="o">=</span> <span class="n">header_data</span><span class="p">)</span>
-</span><span class="line">    <span class="n">headers</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s">&#39;resultSets&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;headers&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">shots</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s">&#39;resultSets&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;rowSet&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">shot_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">shots</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">shot_df</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Create a function for drawing the nba court. This function was taken directly from <a href="http://savvastjortjoglou.com/nba-shot-sharts.html">Savvas Tjortjoglou’s post on shot charts</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">draw_court</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">outer_lines</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Circle</span><span class="p">,</span> <span class="n">Rectangle</span><span class="p">,</span> <span class="n">Arc</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-</span><span class="line">        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-</span><span class="line">    <span class="n">hoop</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="mf">7.5</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">backboard</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.5</span><span class="p">),</span> <span class="mi">60</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">outer_box</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
-</span><span class="line">                          <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">inner_box</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
-</span><span class="line">                          <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">top_free_throw</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">142.5</span><span class="p">),</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
-</span><span class="line">                         <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="n">bottom_free_throw</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">142.5</span><span class="p">),</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span class="line">                            <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;dashed&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">restricted</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
-</span><span class="line">                     <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">corner_three_a</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">220</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
-</span><span class="line">                               <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">corner_three_b</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="mi">220</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">three_arc</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">475</span><span class="p">,</span> <span class="mi">475</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">22</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">158</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
-</span><span class="line">                    <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">center_outer_arc</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">422.5</span><span class="p">),</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span class="line">                           <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">center_inner_arc</span> <span class="o">=</span> <span class="n">Arc</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">422.5</span><span class="p">),</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">theta1</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">theta2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span class="line">                           <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-</span><span class="line">    <span class="n">court_elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">hoop</span><span class="p">,</span> <span class="n">backboard</span><span class="p">,</span> <span class="n">outer_box</span><span class="p">,</span> <span class="n">inner_box</span><span class="p">,</span> <span class="n">top_free_throw</span><span class="p">,</span>
-</span><span class="line">                      <span class="n">bottom_free_throw</span><span class="p">,</span> <span class="n">restricted</span><span class="p">,</span> <span class="n">corner_three_a</span><span class="p">,</span>
-</span><span class="line">                      <span class="n">corner_three_b</span><span class="p">,</span> <span class="n">three_arc</span><span class="p">,</span> <span class="n">center_outer_arc</span><span class="p">,</span>
-</span><span class="line">                      <span class="n">center_inner_arc</span><span class="p">]</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">outer_lines</span><span class="p">:</span>
-</span><span class="line">        <span class="n">outer_lines</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mi">250</span><span class="p">,</span> <span class="o">-</span><span class="mf">47.5</span><span class="p">),</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">470</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
-</span><span class="line">                                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">        <span class="n">court_elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outer_lines</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">court_elements</span><span class="p">:</span>
-</span><span class="line">        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">ax</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Write a function for acquiring each player’s picture. This isn’t essential, but it makes things look nicer. This function takes a playerID number and the amount to zoom in on an image as the inputs. It by default places the image at the location 500,500.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">acquire_playerPic</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span> <span class="n">zoom</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span><span class="mi">500</span><span class="p">)):</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span>  <span class="n">offsetbox</span> <span class="k">as</span> <span class="n">osb</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">urllib</span>
-</span><span class="line">    <span class="n">pic</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="s">&quot;http://stats.nba.com/media/players/230x185/&quot;</span><span class="o">+</span><span class="n">PlayerID</span><span class="o">+</span><span class="s">&quot;.png&quot;</span><span class="p">,</span><span class="n">PlayerID</span><span class="o">+</span><span class="s">&quot;.png&quot;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">player_pic</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">pic</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span><span class="line">    <span class="n">img</span> <span class="o">=</span> <span class="n">osb</span><span class="o">.</span><span class="n">OffsetImage</span><span class="p">(</span><span class="n">player_pic</span><span class="p">,</span> <span class="n">zoom</span><span class="p">)</span>
-</span><span class="line">    <span class="c">#img.set_offset(offset)</span>
-</span><span class="line">    <span class="n">img</span> <span class="o">=</span> <span class="n">osb</span><span class="o">.</span><span class="n">AnnotationBbox</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span><span class="n">xycoords</span><span class="o">=</span><span class="s">&#39;data&#39;</span><span class="p">,</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">box_alignment</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">frameon</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">img</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Here is where things get a little complicated. Below I write a function that divides the shooting data into a 25x25 matrix. Each shot taken within the xy coordinates encompassed by a given bin counts towards the shot count in that bin. In this way, the method I am using here is very similar to my previous hexbins (circles). So the difference just comes down to I present the data rather than how I preprocess it.</p>
-
-<p>This function takes a dataframe with a vector of shot locations in the X plane, a vector with shot locations in the Y plane, a vector with shot type (2 pointer or 3 pointer), and a vector with ones for made shots and zeros for missed shots. The function by default bins the data into a 25x25 matrix, but the number of bins is editable. The 25x25 bins are then expanded to encompass a 500x500 space.</p>
-
-<p>The output is a dictionary containing matrices for shots made, attempted, and points scored in each bin location. The dictionary also has the player’s ID number.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">bins</span><span class="o">=</span><span class="mi">25</span><span class="p">):</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_TYPE2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_TYPE&#39;</span><span class="p">]]</span> <span class="c">#create a vector with whether the shot is a 2 or 3 pointer</span>
-</span><span class="line">    <span class="n">points_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bins</span><span class="p">,</span><span class="n">bins</span><span class="p">))</span> <span class="c">#create a matrix to fill with shooting data.</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">shot_attempts</span><span class="p">,</span> <span class="n">xtest</span><span class="p">,</span> <span class="n">ytest</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">][</span><span class="s">&#39;LOC_X&#39;</span><span class="p">],</span> <span class="c">#use histtd to bin the data. These are attempts</span>
-</span><span class="line">                                                <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">][</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">],</span>
-</span><span class="line">                                                <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span><span class="nb">range</span><span class="o">=</span><span class="p">[[</span><span class="o">-</span><span class="mi">250</span><span class="p">,</span><span class="mi">250</span><span class="p">],[</span><span class="o">-</span><span class="mi">25</span><span class="p">,</span><span class="mi">400</span><span class="p">]]);</span> <span class="c">#i limit the range of the bins because I don&#39;t care about super far away shots and I want the bins standardized across players</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">shot_made</span><span class="p">,</span> <span class="n">xtest2</span><span class="p">,</span> <span class="n">ytest2</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">df</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_MADE_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)][</span><span class="s">&#39;LOC_X&#39;</span><span class="p">],</span> <span class="c">#again use hist 2d to bin made shots</span>
-</span><span class="line">                                    <span class="n">df</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">425.1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_MADE_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)][</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">],</span>
-</span><span class="line">                                    <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span><span class="nb">range</span><span class="o">=</span><span class="p">[[</span><span class="o">-</span><span class="mi">250</span><span class="p">,</span><span class="mi">250</span><span class="p">],[</span><span class="o">-</span><span class="mi">25</span><span class="p">,</span><span class="mi">400</span><span class="p">]]);</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span class="line">    <span class="n">differy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">ytest</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#get the leading yedge</span>
-</span><span class="line">    <span class="n">differx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">xtest</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#get the leading xedge</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">i</span><span class="p">,(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_X&#39;</span><span class="p">],</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;LOC_Y&#39;</span><span class="p">])):</span>
-</span><span class="line">        <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">250</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mi">250</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mf">25.1</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">:</span> <span class="k">continue</span>
-</span><span class="line">        <span class="n">points_matrix</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">250</span><span class="p">,</span><span class="n">differx</span><span class="p">))),</span><span class="nb">int</span><span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">y</span><span class="o">+</span><span class="mi">25</span><span class="p">,</span><span class="n">differy</span><span class="p">)))]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_MADE_FLAG&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;SHOT_TYPE2&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
-</span><span class="line">        <span class="c">#loop through all the shots and tally the points made in each bin location.</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">shot_attempts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">shot_attempts</span><span class="p">,</span><span class="mi">500</span><span class="o">/</span><span class="n">bins</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c">#repeat the shot attempts matrix so that it fills all xy points</span>
-</span><span class="line">    <span class="n">shot_attempts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">shot_attempts</span><span class="p">,</span><span class="mi">500</span><span class="o">/</span><span class="n">bins</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">    <span class="n">shot_made</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">shot_made</span><span class="p">,</span><span class="mi">500</span><span class="o">/</span><span class="n">bins</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c">#repeat shot made so that it fills all xy points (rather than just bin locations)</span>
-</span><span class="line">    <span class="n">shot_made</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">shot_made</span><span class="p">,</span><span class="mi">500</span><span class="o">/</span><span class="n">bins</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">    <span class="n">points_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">points_matrix</span><span class="p">,</span><span class="mi">500</span><span class="o">/</span><span class="n">bins</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c">#again repeat with points</span>
-</span><span class="line">    <span class="n">points_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">points_matrix</span><span class="p">,</span><span class="mi">500</span><span class="o">/</span><span class="n">bins</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;attempted&#39;</span><span class="p">:</span><span class="n">shot_attempts</span><span class="p">,</span><span class="s">&#39;made&#39;</span><span class="p">:</span><span class="n">shot_made</span><span class="p">,</span><span class="s">&#39;points&#39;</span><span class="p">:</span><span class="n">points_matrix</span><span class="p">,</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;PLAYER_ID&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">])}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Below I load the league average data. I also have the code that I used to originally download the data and to preprocess it.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">pickle</span>
-</span><span class="line">
-</span><span class="line"><span class="c">#df = aqcuire_shootingData(&#39;0&#39;,&#39;2015-16&#39;) #here is how I acquired data about every shot taken in 2015-16</span>
-</span><span class="line"><span class="c">#df2 = pd.read_pickle(&#39;nba_shots_201516_2016_Apr_27.pkl&#39;) #here is how you can read all the league shot data</span>
-</span><span class="line"><span class="c">#league_shotDict = shooting_matrices(df2) #turn the shot data into the shooting matrix</span>
-</span><span class="line"><span class="c">#pickle.dump(league_shotDict, open(&#39;league_shotDictionary_2016.pkl&#39;, &#39;wb&#39; )) #save the data</span>
-</span><span class="line">
-</span><span class="line"><span class="c">#I should make it so this is the plot size by default, but people can change it if they want. this would be slower.</span>
-</span><span class="line"><span class="n">league_shotDict</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s">&#39;league_shotDictionary_2016.pkl&#39;</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span> <span class="p">))</span> <span class="c">#read in the a precreated shot chart for the entire league</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>I really like playing with the different color maps, so here is a new color map I created for these shot charts.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">CMRmap_r</span> <span class="c">#start with the CMR map in reverse.</span>
-</span><span class="line">
-</span><span class="line"><span class="n">maxer</span> <span class="o">=</span> <span class="mf">0.6</span> <span class="c">#max value to take in the CMR map</span>
-</span><span class="line">
-</span><span class="line"><span class="n">the_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">maxer</span><span class="o">+</span><span class="mf">0.1</span><span class="p">,</span><span class="n">maxer</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span> <span class="c">#divide the map into 4 values</span>
-</span><span class="line"><span class="n">the_range2</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.75</span><span class="p">,</span><span class="mf">1.0</span><span class="p">]</span> <span class="c">#or use these values</span>
-</span><span class="line">
-</span><span class="line"><span class="n">mapper</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmap</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">the_range</span><span class="p">]</span> <span class="c">#grab color values for this dictionary</span>
-</span><span class="line"><span class="n">cdict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;red&#39;</span><span class="p">:[],</span><span class="s">&#39;green&#39;</span><span class="p">:[],</span><span class="s">&#39;blue&#39;</span><span class="p">:[]}</span> <span class="c">#fill teh values into a color dictionary</span>
-</span><span class="line"><span class="k">for</span> <span class="n">item</span><span class="p">,</span><span class="n">place</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mapper</span><span class="p">,</span><span class="n">the_range2</span><span class="p">):</span>
-</span><span class="line">    <span class="n">cdict</span><span class="p">[</span><span class="s">&#39;red&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">place</span><span class="p">,</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-</span><span class="line">    <span class="n">cdict</span><span class="p">[</span><span class="s">&#39;green&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">place</span><span class="p">,</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-</span><span class="line">    <span class="n">cdict</span><span class="p">[</span><span class="s">&#39;blue&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">place</span><span class="p">,</span><span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
-</span><span class="line">
-</span><span class="line"><span class="n">mymap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="s">&#39;my_colormap&#39;</span><span class="p">,</span> <span class="n">cdict</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span> <span class="c">#linearly interpolate between color values</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Below, I write a function for creating the nba shot charts. The function takes a dictionary with martrices for shots attempted, made, and points scored. The matrices should be 500x500. By default, the shot chart depicts the number of shots taken across locations, but it can also depict the number of shots made, field goal percentage, and point scored across locations.</p>
-
-<p>The function uses a gaussian kernel with standard deviation of 5 to smooth the data (make it look pretty). Again, this is editable. By default the function plots a players raw data, but it will plot how a player compares to league average if the input includes a matrix of league average data.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-<span class="line-number">54</span>
-<span class="line-number">55</span>
-<span class="line-number">56</span>
-<span class="line-number">57</span>
-<span class="line-number">58</span>
-<span class="line-number">59</span>
-<span class="line-number">60</span>
-<span class="line-number">61</span>
-<span class="line-number">62</span>
-<span class="line-number">63</span>
-<span class="line-number">64</span>
-<span class="line-number">65</span>
-<span class="line-number">66</span>
-<span class="line-number">67</span>
-<span class="line-number">68</span>
-<span class="line-number">69</span>
-<span class="line-number">70</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">create_shotChart</span><span class="p">(</span><span class="n">shotDict</span><span class="p">,</span><span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;attempted&#39;</span><span class="p">,</span><span class="n">smooth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">league_shotDict</span><span class="o">=</span><span class="p">[],</span><span class="n">mymap</span><span class="o">=</span><span class="n">mymap</span><span class="p">):</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="kn">import</span> <span class="n">gaussian_filter</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="n">fig_type</span> <span class="o">==</span> <span class="s">&#39;fg&#39;</span><span class="p">:</span> <span class="c">#how to treat the data if depicting fg percentage</span>
-</span><span class="line">        <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">shotDict</span><span class="p">[</span><span class="s">&#39;made&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">shotDict</span><span class="p">[</span><span class="s">&#39;attempted&#39;</span><span class="p">]</span>
-</span><span class="line">        <span class="c">#interest_measure[np.isnan(interest_measure)] = np.nanmean(interest_measure)</span>
-</span><span class="line">        <span class="c">#interest_measure = np.nan_to_num(interest_measure) #replace places where divide by 0 with a 0</span>
-</span><span class="line">    <span class="k">else</span><span class="p">:</span>
-</span><span class="line">        <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">shotDict</span><span class="p">[</span><span class="n">fig_type</span><span class="p">]</span> <span class="c">#else take the data from dictionary.</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="n">league_shotDict</span><span class="p">:</span> <span class="c">#if we have league data, we have to select the relevant league data.</span>
-</span><span class="line">        <span class="k">if</span> <span class="n">fig_type</span> <span class="o">==</span> <span class="s">&#39;fg&#39;</span><span class="p">:</span>
-</span><span class="line">            <span class="n">league</span> <span class="o">=</span> <span class="n">league_shotDict</span><span class="p">[</span><span class="s">&#39;made&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">league_shotDict</span><span class="p">[</span><span class="s">&#39;attempted&#39;</span><span class="p">]</span>
-</span><span class="line">            <span class="n">league</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">league</span><span class="p">)</span>
-</span><span class="line">            <span class="n">interest_measure</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)]</span> <span class="o">+=</span> <span class="o">-</span><span class="n">league</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)]</span> <span class="c">#compare league data and invidual player&#39;s data</span>
-</span><span class="line">            <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span> <span class="c">#replace places where divide by 0 with a 0</span>
-</span><span class="line">            <span class="n">maxer</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="mf">1.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span> <span class="c">#min and max values for color map</span>
-</span><span class="line">            <span class="n">minner</span> <span class="o">=</span> <span class="mi">0</span><span class="o">-</span> <span class="mf">1.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span>
-</span><span class="line">        <span class="k">else</span><span class="p">:</span>
-</span><span class="line">            <span class="n">player_percent</span> <span class="o">=</span> <span class="n">interest_measure</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[::</span><span class="mi">20</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">player_shotDict</span><span class="p">[</span><span class="n">fig_type</span><span class="p">][::</span><span class="mi">20</span><span class="p">]])</span> <span class="c">#standardize data before comparing</span>
-</span><span class="line">            <span class="n">league_percent</span> <span class="o">=</span> <span class="n">league_shotDict</span><span class="p">[</span><span class="n">fig_type</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[::</span><span class="mi">20</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">league_shotDict</span><span class="p">[</span><span class="n">fig_type</span><span class="p">][::</span><span class="mi">20</span><span class="p">]])</span> <span class="c">#standardize league data</span>
-</span><span class="line">            <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">player_percent</span><span class="o">-</span><span class="n">league_percent</span> <span class="c">#compare league and individual data</span>
-</span><span class="line">            <span class="n">maxer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span> <span class="c">#compute max and min values for color map</span>
-</span><span class="line">            <span class="n">minner</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">cmap</span> <span class="o">=</span> <span class="s">&#39;bwr&#39;</span> <span class="c">#use bwr color map if comparing to league average</span>
-</span><span class="line">        <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&lt;Avg&#39;</span><span class="p">,</span><span class="s">&#39;Avg&#39;</span><span class="p">,</span> <span class="s">&#39;&gt;Avg&#39;</span><span class="p">]</span> <span class="c">#color map legend label</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">else</span><span class="p">:</span>
-</span><span class="line">        <span class="n">cmap</span> <span class="o">=</span> <span class="n">mymap</span> <span class="c">#else use my color map</span>
-</span><span class="line">        <span class="n">interest_measure</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span> <span class="c">#replace places where divide by 0 with a 0</span>
-</span><span class="line">        <span class="n">maxer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">)</span> <span class="c">#compute max for colormap</span>
-</span><span class="line">        <span class="n">minner</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class="line">        <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Less&#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">,</span><span class="s">&#39;More&#39;</span><span class="p">]</span> <span class="c">#color map legend label</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">ppr_smooth</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">interest_measure</span><span class="p">,</span><span class="n">smooth</span><span class="p">)</span> <span class="c">#smooth the data</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">7</span><span class="p">),</span><span class="n">frameon</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="c">#(12,7)</span>
-</span><span class="line">    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span> <span class="c">#where to place the plot within the figure</span>
-</span><span class="line">    <span class="n">draw_court</span><span class="p">(</span><span class="n">outer_lines</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="c">#draw court</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">250</span><span class="p">,</span><span class="mi">250</span><span class="p">)</span>
-</span><span class="line">    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="o">-</span><span class="mi">25</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">(),</span> <span class="n">frameon</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">colrange</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">minner</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">maxer</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="c">#standardize color range</span>
-</span><span class="line">    <span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ppr_smooth</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span><span class="n">norm</span><span class="o">=</span><span class="n">colrange</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s">&#39;auto&#39;</span><span class="p">)</span> <span class="c">#plot data</span>
-</span><span class="line">    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax2</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
-</span><span class="line">    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
-</span><span class="line">    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class="line">    <span class="n">ax2</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([]);</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">ax3</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.92</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span> <span class="c">#place colormap legend</span>
-</span><span class="line">    <span class="n">cb</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ColorbarBase</span><span class="p">(</span><span class="n">ax3</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s">&#39;vertical&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">fig_type</span> <span class="o">==</span> <span class="s">&#39;fg&#39;</span><span class="p">:</span> <span class="c">#colormap label</span>
-</span><span class="line">        <span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s">&#39;Field Goal Percentage&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="k">else</span><span class="p">:</span>
-</span><span class="line">        <span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s">&#39;Shots &#39;</span><span class="o">+</span><span class="n">fig_type</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">cb</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">])</span>
-</span><span class="line">    <span class="n">ax3</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">zoom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">12.0</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span> <span class="c">#place player pic</span>
-</span><span class="line">    <span class="n">img</span> <span class="o">=</span> <span class="n">acquire_playerPic</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="n">zoom</span><span class="p">)</span>
-</span><span class="line">    <span class="n">ax2</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">ax</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Alright, thats that. Now lets create some plots. I am a t-wolves fan, so I will plot data from Karl Anthony Towns.</p>
-
-<p>First, here is the default plot - attempts.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="s">&#39;1626157&#39;</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">player_shotDict</span> <span class="o">=</span> <span class="n">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/nba_shot_charts/attempts1.png" /></p>
-
-<p>Here’s KAT’s shots made</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="s">&#39;1626157&#39;</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">player_shotDict</span> <span class="o">=</span> <span class="n">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span><span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;made&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/nba_shot_charts/made1.png" /></p>
-
-<p>Here’s field goal percentage. I don’t like this one too much. It’s hard to use similar scales for attempts and field goal percentage even though I’m using standard deviations rather than absolute scales.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="s">&#39;1626157&#39;</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">player_shotDict</span> <span class="o">=</span> <span class="n">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;fg&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/nba_shot_charts/fg1.png" /></p>
-
-<p>Here’s points across the court.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="s">&#39;1626157&#39;</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">player_shotDict</span> <span class="o">=</span> <span class="n">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;points&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/nba_shot_charts/points1.png" /></p>
-
-<p>Here’s how KAT’s attempts compare to the league average. You can see the twolve’s midrange heavy offense.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="s">&#39;1626157&#39;</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">player_shotDict</span> <span class="o">=</span> <span class="n">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">league_shotDict</span><span class="o">=</span><span class="n">league_shotDict</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/nba_shot_charts/attempts2.png" /></p>
-
-<p>How KAT’s shots made compares to league average.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="s">&#39;1626157&#39;</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">player_shotDict</span> <span class="o">=</span> <span class="n">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;made&#39;</span><span class="p">,</span><span class="n">league_shotDict</span><span class="o">=</span><span class="n">league_shotDict</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/nba_shot_charts/made2.png" /></p>
-
-<p>How KAT’s field goal percentage compares to league average. Again, the scale on these is not too good.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="s">&#39;1626157&#39;</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">player_shotDict</span> <span class="o">=</span> <span class="n">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;fg&#39;</span><span class="p">,</span><span class="n">league_shotDict</span><span class="o">=</span><span class="n">league_shotDict</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/nba_shot_charts/fg2.png" /></p>
-
-<p>And here is how KAT’s points compare to league average.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">aqcuire_shootingData</span><span class="p">(</span><span class="s">&#39;1626157&#39;</span><span class="p">,</span><span class="s">&#39;2015-16&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">player_shotDict</span> <span class="o">=</span> <span class="n">shooting_matrices</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</span><span class="line"><span class="n">create_shotChart</span><span class="p">(</span><span class="n">player_shotDict</span><span class="p">,</span> <span class="n">fig_type</span><span class="o">=</span><span class="s">&#39;points&#39;</span><span class="p">,</span><span class="n">league_shotDict</span><span class="o">=</span><span class="n">league_shotDict</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="/images/nba_shot_charts/points2.png" /></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/3">&larr; Older</a>
@@ -2538,6 +2082,10 @@ Probability of difference arising from chance: 0.57546
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/08/29/custom-email-alerts-in-airflow/">Custom Email Alerts in Airflow</a>
       </li>
     
@@ -2551,10 +2099,6 @@ Probability of difference arising from chance: 0.57546
     
       <li class="post">
         <a href="/blog/2018/06/02/random-weekly-reminders/">Random Weekly Reminders</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/05/03/regression-of-a-proportion-in-python/">Regression of a Proportion in Python</a>
       </li>
     
   </ul>
