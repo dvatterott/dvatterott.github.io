@@ -8,6 +8,9 @@ categories: [python, spark, pyspark, data science, data engineering]
 
 In SQL it's easy to find people in one list who are not in a second list (i.e., the "not in" command), but there is no similar command in pyspark. Well, at least not [a command](https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin) that doesn't involve collecting the second list onto the master instance.
 
+**EDIT**<br>
+Check the note at the bottom regarding "anti joins". Using an anti join is much cleaner than the code described here.
+
 Here is a tidbit of code which replicates SQL's "not in" command, while keeping your data with the workers (it will require a shuffle).
 
 I start by creating some small dataframes.
@@ -150,11 +153,11 @@ c.show()
  </tr>
 </table>
 
-**EDIT**
+**EDIT**<br>
 I recently gave the [pyspark documentation](https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join) a more thorough reading and realized that pyspark's join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).
 
 For example, the following code will produce rows in b where the id value is not present in a.
 
 {% codeblock lang:python %}
-c = b.join(a, 'id', 'left_anit')
+c = b.join(a, 'id', 'left_anti')
 {% endcodeblock %}
