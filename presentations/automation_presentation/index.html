@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Automation in the Python, Machine-Learning Stack</title>
+
+		<meta name="description" content="Tour of the python, machine-learning libraries implementing automation.">
+		<meta name="author" content="Dan Vatterott">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/style.css" id="theme">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section data-external="slides/title/index.html"></section>
+				<section data-external="slides/about_me/index.html"></section>
+				<section data-external="slides/automated_machinelearning/index.html"></section>
+				<section data-external="slides/data_science_pipeline/index.html"></section> <!-- what we do and where we can automate -->
+				<section data-external="slides/what_matters/index.html"></section> <!-- talk about what areas of automation are useful-->
+				<section data-external="slides/libraries_pipeline/index.html"></section> <!-- where automation libraries fit in pipeline-->
+				<!--section data-external="slides/list_libraries/index.html"></section--> <!-- should merge this slide group with following-->
+				<section data-external="slides/feature_automation/index.html"></section> <!-- talk about feature tools. How it works. Why it's exciting. -->
+				<!-- In-depth look at feature tools??? -->
+				<section data-external="slides/when_not_use_automation/index.html"></section>
+				<section data-external="slides/conclusion/index.html"></section>
+				<section data-external="slides/questions/index.html"></section>
+				<section data-external="slides/other_considerations/index.html"></section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'plugin/external/external.js', condition: function() { return !!document.querySelector( '[data-external]' ); } },
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
