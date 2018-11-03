@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="Pyspark has a great set of aggregate functions (e.g., count, countDistinct, min, max, avg, sum), but these are not enough for all cases (particularly &hellip;">
+  <meta name="description" content="I recently gave a presentation at Venture Cafe describing how I see automation changing python, machine-learning workflows in the near future. In &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,67 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2018-11-03T08:27:07-05:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2018</span></span> <span class='time'>8:27 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I recently gave a <a href="https://vencafstl.org/event/where-automated-machine-learning-fits-in-your-data-science-toolbox-prepare-ai">presentation</a> at <a href="https://vencafstl.org/">Venture Cafe</a> describing how I see automation changing python, machine-learning workflows in the near future.</p>
+
+<p>In this post, I highlight the presentation’s main points. You can find the slides <a href="https://danvatterott.com/presentations/automation_presentation/">here</a>.</p>
+
+<p>From <a href="https://en.wikipedia.org/wiki/Ray_Kurzweil">Ray Kurzweil’s</a> excitement about a <a href="https://en.wikipedia.org/wiki/Technological_singularity">technological singularity</a> to Elon Musk’s warnings about an <a href="https://www.vanityfair.com/news/2017/03/elon-musk-billion-dollar-crusade-to-stop-ai-space-x">A.I. Apocalypse</a>, automated machine-learning evokes strong feelings. Neither of these futures will be true in the near-term, but where will automation fit in your machine-learning workflows?</p>
+
+<p>Our existing machine-learning workflows might look a little like the following (please forgive the drastic oversimplification of a purely sequential progression across stages!).</p>
+
+<p><img src="/presentations/automation_presentation/slides/data_science_pipeline/ds_pipeline.png" style="background-color:white;" /></p>
+
+<p>Where does automation exist in this workflow? Where can automation improve this workflow?</p>
+
+<p>Not all these stages are within the scope of machine-learning. For instance, while you should automate gathering data, I view this as a data engineering problem. In the image below, I depict the stages that I consider ripe for automation, and the stages I consider wrong for automation. For example, data cleaning is too idiosyncratic to each dataset for true automation. I “X” out model evaluation as wrong for automation. In retrospect, I believe this is a great place for automation, but I don’t know of any existing python packages handling it.</p>
+
+<p><img src="/presentations/automation_presentation/slides/libraries_pipeline/tpot_pipeline.png" style="background-color:white;" /></p>
+
+<p>I depict feature engineering and model selection as the most promising areas for automation. I consider feature engineering as the stage where advances in automation can have the largest impact on your model performance. In the presentation, I include a <a href="https://www.quora.com/What-generally-improves-a-models-score-more-on-average-feature-engineering-or-hyperparameter-tuning">strong quote</a> from a Quora user saying that <a href="https://en.wikipedia.org/wiki/Hyperparameter_optimization">hyper-parameter tuning</a> (a part of model selection) “hardly matters at all.” I agree with the sentiment of this quote, but it’s not true. Choosing roughly the correct hyper-parameter values is <em>VERY</em> important, and choosing the very best hyper-parameter values can be equally important depending on how your model is used. I highlight feature engineering over model selection because automated model selection is largely solved. For example <a href="http://scikit-learn.org/stable/modules/grid_search.html">grid-search</a> automates model selection. It’s not a fast solution, but given infinite time, it will find the best hyper-parameter values!</p>
+
+<p>There are many python libraries automating these parts of the workflow. I highlight three libraries that automate feature engineering.</p>
+
+<p><img src="/presentations/automation_presentation/slides/feature_automation/tpot-logo.jpg" width="200" style="background-color:white;" /></p>
+
+<p>The first is <a href="https://github.com/EpistasisLab/tpot">teapot</a>. Teapot (more or less) takes all the different operations and models available in <a href="http://scikit-learn.org/stable/">scikit-learn</a>, and allows you to assemble these operations into a pipeline. Many of these operations (e.g., <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a>) are forms of feature engineering. Teapot measures which operations lead to the best model performance. Because Teapot enables users to assemble <em>SO MANY</em> different operations, it utilizes a <a href="https://en.wikipedia.org/wiki/Genetic_algorithm">genetic search algorithm</a> to search through the different possibilities more efficiently than grid-search would.</p>
+
+<p>The second is <a href="https://github.com/ClimbsRocks/auto_ml">auto_ml</a>. In auto_ml users simply pass a dataset to the software and it will do model selection and hyper-parameter tuning for you. Users can also <a href="https://auto-ml.readthedocs.io/en/latest/deep_learning.html#feature-learning">ask the software to train a deep learning model that will learn new features</a> from your dataset. The authors claim this approach can improve model accuracy by 5%.</p>
+
+<p><img src="/presentations/automation_presentation/slides/feature_automation/featuretools.png" width="400" style="background-color:white;" /></p>
+
+<p>The third is <a href="https://github.com/Featuretools/featuretools">feature tools</a>. Feature Tools is the piece of automation software whose future I am most excited about. I find this software exciting because users can feed it pre-aggregated data. Most machine-learning models expect that for each value of the <a href="https://www.quora.com/What-is-a-response-variable-in-statistics">response variable</a>, you supply a vector of explanatory variables. This is an example of aggregated data. Teapot and auto_ml both expect users to supply aggregated data. Lots of important information is lost in the aggregation process, and allowing automation to thoroughly explore different aggregations will lead to predictive features that we would not have created otherwise (any many believe this is why deep learning is so effective). Feature tools explores different aggregations all while creating easily interpreted variables (in contrast to deep learning). While I am excited about the future of feature tools, it is a new piece of software and has a ways to go before I use it in my workflows. Like most automation machine-learning software it’s very slow/resource intensive. Also, the software is not very intuitive. That said, I created a <a href="https://mybinder.org/v2/gh/dvatterott/explore_feature_automation/master">binder notebook</a> demoing feature tools, so check it out yourself!</p>
+
+<p>We should always keep in mind the possible dangers of automation and machine-learning. Removing humans from decisions accentuates biases baked into data and algorithms. These accentuated biases can have dangerous effects. We should carefully choose which decisions we’re comfortable automating and what safeguards to build around these decisions. Check out <a href="https://en.wikipedia.org/wiki/Cathy_O%27Neil">Cathy O’Neil’s</a> amazing <a href="https://en.wikipedia.org/wiki/Weapons_of_Math_Destruction">Weapons for Math Destruction</a> for an excellent treatment of the topic.</p>
+
+<p>This post makes no attempt to give an exhaustive view of automated machine-learning. This is my single view point on where I think automated machine-learning can have an impact on your python workflows in the near-term. For a more thorough view of automated machine-learning, check out this <a href="https://twitter.com/randal_olson/status/992105498894831616">presentation</a> by <a href="http://www.randalolson.com/">Randy Olson</a> (the creator of teapot).</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1622,79 +1683,6 @@ I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pysp
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/01/10/psychology-to-data-science-part-1/">Psychology to Data Science: Part 1</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-01-10T19:21:28-06:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>7:21 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard. Part 2 can be found <a href="https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2/">here</a>.</p>
-
-<p>Before I get started, I want to thank <a href="https://www.linkedin.com/in/rickcwolf/">Rick Wolf</a> for providing comments on an earlier version of this post.</p>
-
-<p>This first post is a series of general questions I’ve received. The second post will focus on technical skills required to get a job in data science.</p>
-
-<p>Each header in this post represents a question. Below the header/question I record my response.</p>
-
-<p>Anyone starting this process should know they are starting a marathon. Not a sprint. Making the leap from academia to data science is more than possible, but it takes time and dedication.</p>
-
-<h3 id="do-you-think-that-being-a-psychology-phd-is-a-disadvantage">Do you think that being a Psychology PhD is a disadvantage?</h3>
-<p>I think it can be a disadvantage in the job application process. Most people don’t understand how quantitative Psychology is, so psychology grads have to overcome these stereotypes. This doesn’t mean having a Psychology PhD is a disadvantage when it comes to BEING a data scientist. Having a Psychology PhD can be a huge advantage because Psychology PhDs have experience measuring behavior which is 90% of data science. Every company wants to know what their customers are doing and how to change their customers’ behavior. This is literally what Psychology PhDs do, so Psychology PhDs might have the most pertinent experience of any science PhD.</p>
-
-<h3 id="when-it-is-the-right-time-to-apply-for-a-boot-camp">When it is the right time to apply for a boot camp?</h3>
-<p>(I did the <a href="http://insightdatascience.com/">Insight Data Science</a> bootcamp)<br />
-Apply when you’re good enough to get a phone screen but not good enough to get a job. Don’t count on a boot camp to give you all the skills. Instead, think of boot camps as polishing your skills.<br />
-<br />
-Here is the game plan I would use:<br />
-Send out 3-4 job applications and see if you get any hits. If not, think about how you can improve your resume (see post #2), and go about those improvements. After a few iterations of this, you will start getting invitations to do phone screens. At this stage, a boot camp will be useful.<br />
-The boot camps are of varying quality. Ask around to get an idea for which boot camps are better or worse. Also, look into how each boot camp gets paid. If you pay tuition, the boot camp will care less about whether you get a job. If the boot camp gets paid through recruiting fees or collecting tuition from your paychecks, it is more invested in your job.</p>
-
-<h3 id="should-i-start-a-blog">Should I start a blog?</h3>
-<p>Yes, I consider this a must (and so do <a href="http://varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
-
-<p>Most people (including myself) host their page on github and generate the html with a static site generator. I use <a href="http://octopress.org/">octopress</a>, which works great. Most people seem to use <a href="http://docs.getpelican.com/en/stable/">pelican</a>. I would recommend pelican because it’s built in Python. I haven’t used it, but a quick google search led me to <a href="http://mathamy.com/migrating-to-github-pages-using-pelican.html">this tutorial</a> on building a github site with pelican.</p>
-
-<p>I wish I’d sent more of my posts to friends/colleagues. Peer review is always good for a variety of reasons. I’d be more than happy to review posts for anyone reading this blog.</p>
-
-<h3 id="how-should-i-frame-what-ive-done-in-academia-on-my-cvresume">How should I frame what I’ve done in academia on my CV/resume?</h3>
-<p>First, no one in industry cares about publications. People might notice if the journal is Science/Nature but most will not.
-Spend a few hours thinking about how to describe your academic accomplishments as technical skills. For example, as a Postdoc, I was on a Neurophysiology project that required writing code to collect, ingest, and transform electrophysiology data. In academia, none of this code mattered. In industry, it’s the only thing that matters. What I built was a data-pipeline, and this is a product many companies desire.</p>
-
-<p>We all have examples like this, but they’re not obvious because academics don’t know what companies want. Think of your data-pipelines, your interactive experiments, your scripted analytics.</p>
-
-<p>Transforming academic work into skills that companies desire will take a bit of creativity (I am happy to help with this), but remember that your goal here is to express how the technical skills you used in academia will apply to what you will do as a data scientist.</p>
-
-<p>Many people (including myself) love to say they can learn fast. While this is an important skill it’s hard to measure and it calls attention to what you do not know. In general, avoid it.</p>
-
-<h3 id="did-you-focus-on-one-specific-industry">Did you focus on one specific industry?</h3>
-<p>I think a better question than what industry is what size of team/company you want to work on. At a big company you will have a more specific job with more specific requirements (and probably more depth of knowledge). At a smaller company, you will be expected to have a broader skill set. This matters in terms of what you want in a job and what skills you have. Having industry specific knowledge is awesome, but most academics have never worked in an industry so by definition they don’t have industry specific knowledge. Unfortunately, we just have to punt on this aspect of the job application.</p>
-
-<h3 id="anything-to-be-wary-of">Anything to be wary of?</h3>
-<p>No matter what your job is, having a good boss is important. If you get a funny feeling about a potential boss in the interview process, don’t take the job.</p>
-
-<p>Some companies are trying to hire data scientists but don’t want to change their company. By this I mean they want their data scientists to work in excel. Excel is a great tool, but it’s not a tool I would want to use every day. If you feel the same way, then keep an eye out for this.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -1740,6 +1728,10 @@ Spend a few hours thinking about how to describe your academic accomplishments a
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a>
       </li>
     
@@ -1753,10 +1745,6 @@ Spend a few hours thinking about how to describe your academic accomplishments a
     
       <li class="post">
         <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/06/02/random-weekly-reminders/">Random Weekly Reminders</a>
       </li>
     
   </ul>

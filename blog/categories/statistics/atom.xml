@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Statistics | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/statistics/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-10-28T14:36:40-05:00</updated>
+  <updated>2018-11-03T11:47:59-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -161,7 +161,9 @@ interpreter: 64bit
     <link href="https://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda/"/>
     <updated>2016-02-28T20:52:03-06:00</updated>
     <id>https://danvatterott.com/blog/2016/02/28/repeated-measures-anova-in-python-kinda</id>
-    <content type="html"><![CDATA[<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
+    <content type="html"><![CDATA[<p><em>If you’re just finding this post, please check out Erik Marsja’s <a href="https://www.marsja.se/repeated-measures-anova-in-python-using-statsmodels/">post</a> describing the same functionality in well-maintained python software that wasn’t available when I originally wrote this post.</em></p>
+
+<p>I love doing data analyses with pandas, numpy, sci-py etc., but I often need to run <a href="https://en.wikipedia.org/wiki/Repeated_measures_design">repeated measures ANOVAs</a>, which are not implemented in any major python libraries. <a href="http://pythonpsychologist.tumblr.com/post/139246503057/repeated-measures-anova-using-python">Python Psychologist</a> shows how to do repeated measures ANOVAs yourself in python, but I find using a widley distributed implementation comforting…</p>
 
 <p>In this post I show how to execute a repeated measures ANOVAs using the <a href="http://rpy2.bitbucket.org/">rpy2</a> library, which allows us to move data between python and R, and execute R commands from python. I use rpy2 to load the <a href="http://www.inside-r.org/packages/cran/car/docs/Anova">car</a> library and run the ANOVA.</p>
 
@@ -179,7 +181,7 @@ interpreter: 64bit
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#first import the libraries I always use. </span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#first import the libraries I always use.</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">scipy.stats</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
@@ -280,8 +282,8 @@ interpreter: 64bit
 <pre><code>Type III Repeated Measures MANOVA Tests:
 
 ------------------------------------------
- 
-Term: (Intercept) 
+
+Term: (Intercept)
 
  Response transformation matrix:
        (Intercept)
@@ -307,8 +309,8 @@ Roy               1 1301.8736 37754.33      1     29 &lt; 2.22e-16 ***
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ------------------------------------------
- 
-Term: Factor 
+
+Term: Factor
 
  Response transformation matrix:
        Factor1 Factor2
@@ -437,8 +439,8 @@ Factor 1.03025 1.163294e-11
 <pre><code>Type III Repeated Measures MANOVA Tests:
 
 ------------------------------------------
- 
-Term: (Intercept) 
+
+Term: (Intercept)
 
  Response transformation matrix:
         (Intercept)
@@ -467,8 +469,8 @@ Roy               1 2165.2575 62792.47      1     29 &lt; 2.22e-16 ***
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ------------------------------------------
- 
-Term: Factor1 
+
+Term: Factor1
 
  Response transformation matrix:
         Factor11
@@ -497,8 +499,8 @@ Roy               1 0.2702499 7.837247      1     29 0.0090091 **
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ------------------------------------------
- 
-Term: Factor2 
+
+Term: Factor2
 
  Response transformation matrix:
         Factor21 Factor22
@@ -529,8 +531,8 @@ Roy               1 1.0988223 15.38351      2     28 3.107e-05 ***
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ------------------------------------------
- 
-Term: Factor1:Factor2 
+
+Term: Factor1:Factor2
 
  Response transformation matrix:
         Factor11:Factor21 Factor11:Factor22
@@ -564,7 +566,7 @@ Univariate Type III Repeated-Measures ANOVA Assuming Sphericity
 
                       SS num Df Error SS den Df          F    Pr(&gt;F)    
 (Intercept)     66996846      1    30942     29 62792.4662 &lt; 2.2e-16 ***
-Factor1             6430      1    23794     29     7.8372  0.009009 ** 
+Factor1             6430      1    23794     29     7.8372  0.009009 **
 Factor2            26561      2    40475     58    19.0310  4.42e-07 ***
 Factor1:Factor2   206266      2    45582     58   131.2293 &lt; 2.2e-16 ***
 ---
@@ -595,7 +597,6 @@ Factor1:Factor2 1.073774 2.965002e-22
 <p>Again, the anova table isn’t too pretty.</p>
 
 <p>This obviously isn’t the most exciting post in the world, but its a nice bit of code to have in your back pocket if you’re doing experimental analyses in python.</p>
-
 ]]></content>
   </entry>
   
