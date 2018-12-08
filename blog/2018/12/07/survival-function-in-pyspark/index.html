@@ -135,7 +135,9 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
 <span class="line-number">8</span>
 <span class="line-number">9</span>
 <span class="line-number">10</span>
+<span class="line-number">11</span>
 </pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
 </span><span class="line">
 </span><span class="line"><span class="n">user_table</span> <span class="o">=</span> <span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;2018-11-01&#39;</span><span class="p">,</span> <span class="s">&#39;2018-11-03&#39;</span><span class="p">],</span>
 </span><span class="line">                              <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;2018-01-01&#39;</span><span class="p">,</span> <span class="s">&#39;2018-08-17&#39;</span><span class="p">],</span>

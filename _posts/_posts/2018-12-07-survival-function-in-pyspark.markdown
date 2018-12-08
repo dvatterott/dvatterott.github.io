@@ -23,6 +23,7 @@ Next, I load fake data into a Spark Dataframe. This is the data we will use in t
 
 {% codeblock lang:python %}
 from pyspark.sql import functions as F
+from pyspark.sql import types as T
 
 user_table = (sc.parallelize([[1, '2018-11-01', '2018-11-03'],
                               [2, '2018-01-01', '2018-08-17'],
