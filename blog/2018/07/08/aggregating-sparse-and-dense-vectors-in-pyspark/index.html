@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Aggregating Sparse and Dense Vectors in Pyspark - Dan Vatterott</title>
+  <title>Aggregating Sparse and Dense Vectors in PySpark - Dan Vatterott</title>
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the vector assembler &hellip;">
+  <meta name="description" content="Many (if not all of) PySpark’s machine learning algorithms require the input data is concatenated into a single column (using the vector assembler &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -91,7 +91,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   
   <header>
     
-      <h1 class="entry-title">Aggregating Sparse and Dense Vectors in Pyspark</h1>
+      <h1 class="entry-title">Aggregating Sparse and Dense Vectors in PySpark</h1>
     
     
       <p class="meta">
@@ -107,7 +107,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   </header>
 
 
-<div class="entry-content"><p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+<div class="entry-content"><p>Many (if not all of) PySpark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
 
 <p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!</p>
 
@@ -201,7 +201,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
  </tr>
 </table>
 
-<p>Now that the data is in a pyspark array, we can apply the desired pyspark aggregation to each item in the array.</p>
+<p>Now that the data is in a PySpark array, we can apply the desired PySpark aggregation to each item in the array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -255,7 +255,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
  </tr>
 </table>
 
-<p>Next, we create another pyspark udf which changes the dense vector into a pyspark array.</p>
+<p>Next, we create another PySpark udf which changes the dense vector into a PySpark array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -298,7 +298,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
  </tr>
 </table>
 
-<p>Finally, we can use our standard pyspark aggregators to each item in the pyspark array.</p>
+<p>Finally, we can use our standard PySpark aggregators to each item in the PySpark array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -406,11 +406,15 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a>
+        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in PySpark</a>
       </li>
     
       <li class="post">
@@ -418,11 +422,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
       </li>
     
       <li class="post">
-        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
+        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in PySpark</a>
       </li>
     
   </ul>

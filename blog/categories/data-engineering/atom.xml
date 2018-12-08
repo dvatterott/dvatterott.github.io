@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Engineering | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-engineering/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-11-03T11:47:59-05:00</updated>
+  <updated>2018-12-08T09:35:09-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -14,13 +14,13 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Python Aggregate UDFs in Pyspark]]></title>
+    <title type="html"><![CDATA[Python Aggregate UDFs in PySpark]]></title>
     <link href="https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark/"/>
     <updated>2018-09-06T16:04:43-05:00</updated>
     <id>https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark</id>
-    <content type="html"><![CDATA[<p>Pyspark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
+    <content type="html"><![CDATA[<p>PySpark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
 
-<p>Pyspark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
+<p>PySpark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
 
 <p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
 
@@ -332,11 +332,11 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in Pyspark]]></title>
+    <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in PySpark]]></title>
     <link href="https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/"/>
     <updated>2018-07-08T19:24:04-05:00</updated>
     <id>https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark</id>
-    <content type="html"><![CDATA[<p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+    <content type="html"><![CDATA[<p>Many (if not all of) PySpark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
 
 <p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!</p>
 
@@ -430,7 +430,7 @@
  </tr>
 </table>
 
-<p>Now that the data is in a pyspark array, we can apply the desired pyspark aggregation to each item in the array.</p>
+<p>Now that the data is in a PySpark array, we can apply the desired PySpark aggregation to each item in the array.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -484,7 +484,7 @@
  </tr>
 </table>
 
-<p>Next, we create another pyspark udf which changes the dense vector into a pyspark array.</p>
+<p>Next, we create another PySpark udf which changes the dense vector into a PySpark array.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -527,7 +527,7 @@
  </tr>
 </table>
 
-<p>Finally, we can use our standard pyspark aggregators to each item in the pyspark array.</p>
+<p>Finally, we can use our standard PySpark aggregators to each item in the PySpark array.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -576,11 +576,11 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA['Is Not in' With Pyspark]]></title>
+    <title type="html"><![CDATA['Is Not in' With PySpark]]></title>
     <link href="https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark/"/>
     <updated>2018-02-06T21:10:32-06:00</updated>
     <id>https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark</id>
-    <content type="html"><![CDATA[<p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
+    <content type="html"><![CDATA[<p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in PySpark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
 
 <p><strong>EDIT</strong><br />
 Check the note at the bottom regarding “anti joins”. Using an anti join is much cleaner than the code described here.</p>
@@ -733,7 +733,7 @@ Check the note at the bottom regarding “anti joins”. Using an anti join is m
 </table>
 
 <p><strong>EDIT</strong><br />
-I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">pyspark documentation</a> a more thorough reading and realized that pyspark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
+I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">PySpark documentation</a> a more thorough reading and realized that PySpark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
 
 <p>For example, the following code will produce rows in b where the id value is not present in a.</p>
 

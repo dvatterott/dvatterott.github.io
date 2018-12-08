@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="All basketball teams have a camera system called SportVU installed in their arenas. These camera systems track players and the ball throughout a &hellip;">
+  <meta name="description" content="Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,427 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/">Revisting NBA Career Predictions From Rookie Performance...again</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-07-31T20:59:41-05:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>8:59 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future performance using <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">regression</a> <a href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/">models</a>. In this post I am again trying to predict rookies’ future performance, but now using using a <a href="https://en.wikipedia.org/wiki/Statistical_classification">classification approach</a>. When using a classification approach, I predict whether player X will be a “great,” “average,” or “poor” player rather than predicting exactly how productive player X will be.</p>
+
+<p>Much of this post re-uses code from the previous posts, so I skim over some of the repeated code.</p>
+
+<p>As usual, I will post all code as a jupyter notebook on my <a href="https://github.com/dvatterott/jupyter_notebooks">github</a>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+</span><span class="line">
+</span><span class="line"><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+</span><span class="line">
+</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s">&#39;ggplot&#39;</span><span class="p">)</span> <span class="c">#im addicted to ggplot. so pretty.</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Load the data. Reminder - this data is available on my <a href="https://github.com/dvatterott/nba_project">github</a>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Apr_16.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the rookie year data</span>
+</span><span class="line">
+</span><span class="line"><span class="n">rook_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Career Games&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span> <span class="c">#only attempting to predict players that have played at least 50 games</span>
+</span><span class="line"><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span> <span class="c">#only attempting to predict players from after 1980</span>
+</span><span class="line">
+</span><span class="line"><span class="c">#remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair</span>
+</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
+</span><span class="line"><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Load more data, and normalize the data for the <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">PCA transformation</a>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
+</span><span class="line">
+</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Apr_15.pkl&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;G&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span><span class="p">]</span>
+</span><span class="line"><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
+</span><span class="line"><span class="n">ScaleModel</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#make sure each feature has 0 mean and unit variance. </span>
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>In the past I used <a href="https://en.wikipedia.org/wiki/K-means_clustering">k-means</a> to group players according to their performance (see my post on <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">grouping players</a> for more info). Here, I use a <a href="https://en.wikipedia.org/wiki/Mixture_model">gaussian mixture model</a> (GMM) to group the players. I use the GMM model because it assigns each player a “soft” label rather than a “hard” label. By soft label I mean that a player simultaneously belongs to several groups. For instance, Russell Westbrook belongs to both my “point guard” group and my “scorers” group. K-means uses hard labels where each player can only belong to one group. I think the GMM model provides a more accurate representation of players, so I’ve decided to use it in this post. Maybe in a future post I will spend more time describing it.</p>
+
+<p>For anyone wondering, the GMM groupings looked pretty similar to the k-means groupings.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.mixture</span> <span class="kn">import</span> <span class="n">GMM</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
+</span><span class="line">
+</span><span class="line"><span class="n">reduced_model</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">whiten</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</span><span class="line"><span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data into the 5 PCA components space</span>
+</span><span class="line">
+</span><span class="line"><span class="n">g</span> <span class="o">=</span> <span class="n">GMM</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#6 clusters. like the k-means model</span>
+</span><span class="line"><span class="n">new_labels</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">predictions</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#generate values describing &quot;how much&quot; each player belongs to each group </span>
+</span><span class="line"><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
+</span><span class="line">    <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
+</span><span class="line">    <span class="n">df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[:,</span><span class="n">x</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>In this past I have attempted to predict win shares per 48 minutes. I am using win shares as a dependent variable again, but I want to categorize players.</p>
+
+<p>Below I create a histogram of players’ win shares per 48.</p>
+
+<p>I split players into 4 groups which I will refer to as “bad,” “below average,” “above average,” and “great”: Poor players are the bottom 10% in win shares per 48, Below average are the 10-50th percentiles, Above average and 50-90th percentiles, Great are the top 10%. This assignment scheme is relatively arbitrary; the model performs similarly with different assignment schemes.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]);</span>
+</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">10</span><span class="p">),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c">#category 1 players are bottom 10%</span>
+</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">50</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">10</span><span class="p">)),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">90</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">50</span><span class="p">)),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">90</span><span class="p">),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span> <span class="c">#category 4 players are top 10%</span>
+</span><span class="line"><span class="n">perc_in_cat</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])];</span>
+</span><span class="line"><span class="n">perc_in_cat</span> <span class="c">#print % of palyers in each category as a sanity check</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>[0.096314496314496317,
+ 0.40196560196560199,
+ 0.39950859950859952,
+ 0.10221130221130222]
+</code></pre>
+
+<p><img src="/images/classificationNBA/histogram.png" /></p>
+
+<p>My goal is to use rookie year performance to classify players into these 4 categories. I have a big matrix with lots of data about rookie year performance, but the reason that I grouped player using the GMM is because I suspect that players in the different groups have different “paths” to success. I am including the groupings in my classification model and computing interaction terms. The interaction terms will allow rookie performance to produce different predictions for the different groups.</p>
+
+<p>By including interaction terms, I include quite a few predictor features. I’ve printed the number of predictor features and the number of predicted players below.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+</span><span class="line">
+</span><span class="line"><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">]</span>
+</span><span class="line"><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
+</span><span class="line">    <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
+</span><span class="line">    <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_drop</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="c">#give rookies the groupings produced by the GMM model</span>
+</span><span class="line">
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe   </span>
+</span><span class="line">
+</span><span class="line"><span class="n">poly</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">PolynomialFeatures</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">interaction_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c">#create interaction terms.</span>
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Career_data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">]</span>
+</span><span class="line"><span class="n">Y</span> <span class="o">=</span> <span class="n">Career_data</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="c">#get predictor data</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>(1703, 1432)
+(1703,)
+</code></pre>
+
+<p>Now that I have all the features, it’s time to try and predict which players will be poor, below average, above average, and great. To create these predictions, I will use a <a href="https://en.wikipedia.org/wiki/Logistic_regression">logistic regression model</a>.</p>
+
+<p>Because I have so many predictors, correlation between predicting features and over-fitting the data are major concerns. I use <a href="http://stats.stackexchange.com/questions/4272/when-to-use-regularization-methods-for-regression">regularization</a> and <a href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)">cross-validation</a> to combat these issues.</p>
+
+<p>Specifically, I am using <a href="https://en.wikipedia.org/wiki/Tikhonov_regularization">l2 regularization</a> and k-fold 5 cross-validation. Within the cross-validation, I am trying to estimate how much regularization is appropriate.</p>
+
+<p>Some important notes - I am using “balanced” weights which tells the model that worse to incorrectly predict the poor and great players than the below average and above average players. I do this because I don’t want the model to completely ignore the less frequent classifications. Second, I use the multi_class multinomial because it limits the number of models I have to fit.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
+</span><span class="line">
+</span><span class="line"><span class="n">logreg</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegressionCV</span><span class="p">(</span><span class="n">Cs</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0008</span><span class="p">],</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="s">&#39;l2&#39;</span><span class="p">,</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="s">&#39;balanced&#39;</span><span class="p">,</span>
+</span><span class="line">                                           <span class="n">max_iter</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span> <span class="n">multi_class</span><span class="o">=</span><span class="s">&#39;multinomial&#39;</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">est</span> <span class="o">=</span> <span class="n">logreg</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+</span><span class="line"><span class="n">score</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="c">#calculate the % correct </span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>0.738109219025
+</code></pre>
+
+<p>Okay, the model did pretty well, but lets look at where the errors are coming from. To visualize the models accuracy, I am using a <a href="https://en.wikipedia.org/wiki/Confusion_matrix">confusion matrix</a>. In a confusion matrix, every item on the diagnonal is a correctly classified item. Every item off the diagonal is incorrectly classified. The color bar’s axis is the percent correct. So the dark blue squares represent cells with more items.</p>
+
+<p>It seems the model is best at predicting poor players and great players. It makes more errors when trying to predict the more average players.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+</span><span class="line"><span class="n">cm</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+</span><span class="line">
+</span><span class="line"><span class="k">def</span> <span class="nf">plot_confusion_matrix</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Confusion matrix&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">):</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+</span><span class="line">    <span class="n">tick_marks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])))</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">tick_marks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]))</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">tick_marks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]))</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;True label&#39;</span><span class="p">)</span>
+</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Predicted label&#39;</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">cm_normalized</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="n">cm</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+</span><span class="line"><span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">cm_normalized</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Normalized confusion matrix&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><img src="/images/classificationNBA/confusion_mat.png" /></p>
+
+<p>Lets look at what the model predicts for this year’s rookies. Below I modified two functions that I wrote for a previous post. The first function finds a particular year’s draft picks. The second function produces predictions for each draft pick.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">gather_draftData</span><span class="p">(</span><span class="n">Year</span><span class="p">):</span>
+</span><span class="line">
+</span><span class="line">    <span class="kn">import</span> <span class="nn">urllib2</span>
+</span><span class="line">    <span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+</span><span class="line">    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+</span><span class="line">    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">draft_len</span> <span class="o">=</span> <span class="mi">30</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">def</span> <span class="nf">convert_float</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+</span><span class="line">        <span class="k">try</span><span class="p">:</span>
+</span><span class="line">            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+</span><span class="line">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+</span><span class="line">            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://www.basketball-reference.com/draft/NBA_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">Year</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;.html&#39;</span>
+</span><span class="line">    <span class="n">html</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span class="line">    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span><span class="s">&quot;lxml&quot;</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">draft_num</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
+</span><span class="line">    <span class="n">draft_nam</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">draft_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">draft_num</span><span class="p">,</span><span class="n">draft_nam</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+</span><span class="line">    <span class="n">draft_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Number&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">]</span>
+</span><span class="line">    <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">draft_df</span>
+</span><span class="line">
+</span><span class="line"><span class="k">def</span> <span class="nf">player_prediction__regressionModel</span><span class="p">(</span><span class="n">PlayerName</span><span class="p">):</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Apr_15.pkl&#39;</span><span class="p">)</span>
+</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="p">[</span><span class="n">clust_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
+</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span><span class="line">    <span class="n">new_vect</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">clust_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</span><span class="line">    <span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_vect</span><span class="p">)</span>
+</span><span class="line">    <span class="n">predictions</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span>
+</span><span class="line">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
+</span><span class="line">        <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
+</span><span class="line">        <span class="n">clust_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[:,</span><span class="n">x</span><span class="p">]</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Apr_16.pkl&#39;</span><span class="p">)</span>
+</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="p">[</span><span class="n">Predrookie_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
+</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+</span><span class="line">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
+</span><span class="line">        <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
+</span><span class="line">        <span class="n">Predrookie_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">clust_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="c">#give rookies the groupings produced by the GMM model</span>
+</span><span class="line">    <span class="n">predX</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
+</span><span class="line">    <span class="n">predX</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">predX</span><span class="p">)</span>
+</span><span class="line">    <span class="n">predictions2</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">predX</span><span class="p">)</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;Name&#39;</span><span class="p">:</span><span class="n">PlayerName</span><span class="p">,</span><span class="s">&#39;Group&#39;</span><span class="p">:</span><span class="n">predictions</span><span class="p">,</span><span class="s">&#39;Prediction&#39;</span><span class="p">:</span><span class="n">predictions2</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Below I create a plot depicting the model’s predictions. On the y-axis are the four classifications. On the x-axis are the players from the 2015 draft. Each cell in the plot is the probability of a player belonging to one of the classifications. Again, dark blue means a cell or more likely. Good news for us T-Wolves fans! The model loves KAT.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">gather_draftData</span><span class="p">(</span><span class="mi">2015</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">][</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span>  <span class="s">&#39;Kelly Oubre Jr.&#39;</span> <span class="c">#annoying name inconsistencies </span>
+</span><span class="line">
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span>
+</span><span class="line">
+</span><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">draft_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c">#spurs&#39; 1st round pick has not played yet</span>
+</span><span class="line">
+</span><span class="line"><span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class="line"><span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]:</span>
+</span><span class="line">    <span class="n">draft_num</span> <span class="o">=</span> <span class="n">draft_df</span><span class="p">[</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="s">&#39;Number&#39;</span><span class="p">]</span>
+</span><span class="line">    <span class="n">predict_dict</span> <span class="o">=</span> <span class="n">player_prediction__regressionModel</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span class="line">    <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Prediction&#39;</span><span class="p">])</span>
+</span><span class="line">
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Predicting Future Performance of 2015-16 Rookies&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">shrink</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+</span><span class="line"><span class="n">tick_marks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])))</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">29</span><span class="p">),</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;Poor&#39;</span><span class="p">,</span><span class="s">&#39;Below Average&#39;</span><span class="p">,</span><span class="s">&#39;Above Average&#39;</span><span class="p">,</span><span class="s">&#39;Great&#39;</span><span class="p">])</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Prediction&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Draft Position&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><img src="/images/classificationNBA/predictions.png" /></p>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -5359,730 +5780,9 @@ Name: Name, dtype: object
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/12/12/complete-amnesia-for-object-attributes/">Complete Amnesia for Object Attributes?</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-12-12T12:10:09-06:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>12</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>12:10 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h3 id="reanalysis-of-chen--wyble-2015">Reanalysis of Chen &amp; Wyble, 2015</h3>
-
-<p>Chen and Wyble published an interesting paper (2015) where they demonstrate that participants cannot report attributes of attended stimuli unless the participants are previously informed that this attribute is important. For instance, you wouldn’t remember the color of the apple if you had had just told someone the shape. I would have expected the opposite, so … cool!</p>
-
-<p>After reading the paper (you can check it out at http://wyblelab.com/publications), I became curious whether participants might unconsciously retain some information about these forgotten attributes. Chen and Wyble posted their data to databrary.com (https://nyu.databrary.org/volume/79), so I downloaded the data and did some quick analyses that you see here! I want to commend Chen and Wyble for sharing their data. This is something everyone should start doing (including me).</p>
-
-<p>Below, I will start by showing I can replicate Chen and Wyble’s analyses, then I will investigate whether there’s a trace of unconscious memory for the “forgotten” features.</p>
-
-<p>EDIT -12/22/15-
-Brad Wyble recently pointed out that I overstated the claim in their paper. They do not claim participants have complete amnesia for unqueried object attributes. Rather, Chen and Wyble focus on the dramatic performance change between the first and second trial following the initial query about an object attribute. This performance change demonstrates amnesia, but not necessarily complete amnesia.</p>
-
-<h5 id="references">References</h5>
-<p>Chen, H., &amp; Wyble, B. (2015). Amnesia for Object Attributes Failure to Report Attended Information That Had Just Reached Conscious Awareness. Psychological science, 26(2),203-210.</p>
-
-<p>Wyble, B. (2014). Amnesia for object attributes: Failure to report attended information that had just reached conscious awareness. Databrary. Retrieved November 22, 2015 from http://doi.org/10.17910/B7G010</p>
-
-<h4 id="load-relevant-libraries-and-write-analysis-functions">Load relevant libraries and write analysis functions</h4>
-
-<p>I’ll start by loading the python libraries that I’ll use throughout analyses.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">scipy.stats</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">os.path</span><span class="o">,</span> <span class="nn">csv</span> <span class="c">#loading useful libraries</span>
-</span><span class="line">
-</span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">pl</span>
-</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class="line"><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">mpl_style</span> <span class="o">=</span> <span class="s">&#39;default&#39;</span> <span class="c">#load matplotlib for plotting</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s">&#39;ggplot&#39;</span><span class="p">)</span> <span class="c">#im addicted to ggplot. so pretty.</span>
-</span><span class="line"><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;font.family&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Bitstream Vera Sans&#39;</span><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Here are some quick functions I wrote for running different statistical tests and plotting the data. I won’t explain this code, but encourage you to look through it later if you’re wondering how I did any of the analyses.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-<span class="line-number">54</span>
-<span class="line-number">55</span>
-<span class="line-number">56</span>
-<span class="line-number">57</span>
-<span class="line-number">58</span>
-<span class="line-number">59</span>
-<span class="line-number">60</span>
-<span class="line-number">61</span>
-<span class="line-number">62</span>
-<span class="line-number">63</span>
-<span class="line-number">64</span>
-<span class="line-number">65</span>
-<span class="line-number">66</span>
-<span class="line-number">67</span>
-<span class="line-number">68</span>
-<span class="line-number">69</span>
-<span class="line-number">70</span>
-<span class="line-number">71</span>
-<span class="line-number">72</span>
-<span class="line-number">73</span>
-<span class="line-number">74</span>
-<span class="line-number">75</span>
-<span class="line-number">76</span>
-<span class="line-number">77</span>
-<span class="line-number">78</span>
-<span class="line-number">79</span>
-<span class="line-number">80</span>
-<span class="line-number">81</span>
-<span class="line-number">82</span>
-<span class="line-number">83</span>
-<span class="line-number">84</span>
-<span class="line-number">85</span>
-<span class="line-number">86</span>
-<span class="line-number">87</span>
-<span class="line-number">88</span>
-<span class="line-number">89</span>
-<span class="line-number">90</span>
-<span class="line-number">91</span>
-<span class="line-number">92</span>
-<span class="line-number">93</span>
-<span class="line-number">94</span>
-<span class="line-number">95</span>
-<span class="line-number">96</span>
-<span class="line-number">97</span>
-<span class="line-number">98</span>
-<span class="line-number">99</span>
-<span class="line-number">100</span>
-<span class="line-number">101</span>
-<span class="line-number">102</span>
-<span class="line-number">103</span>
-<span class="line-number">104</span>
-<span class="line-number">105</span>
-<span class="line-number">106</span>
-<span class="line-number">107</span>
-<span class="line-number">108</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">print_tests</span><span class="p">(</span><span class="n">series1</span><span class="p">,</span> <span class="n">series2</span><span class="p">):</span> <span class="c">#this function just presents normality and t-tests.</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">scipy</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#the function does these tests with arcsin(sqrt(acc)) to help with normality</span>
-</span><span class="line">    <span class="n">normTest2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">shapiro</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series1</span><span class="p">))</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series2</span><span class="p">)))</span>
-</span><span class="line">    <span class="n">Test2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_rel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series2</span><span class="p">)))</span>
-</span><span class="line">    <span class="n">Test3</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">wilcoxon</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series1</span><span class="p">)),</span> <span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s"> normality test adj. Test value: </span><span class="si">%s</span><span class="s"> P-value: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">normTest2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)),</span>
-</span><span class="line">                                                                 <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">normTest2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">normTest2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">:</span> <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s"> T-test adj. Test value: </span><span class="si">%s</span><span class="s"> P-value: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)),</span>
-</span><span class="line">                                                                                <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">normTest2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">0.1</span><span class="p">:</span> <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s"> Wilcoxon. Test value: </span><span class="si">%s</span><span class="s"> P-value: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)),</span>
-</span><span class="line">                                                                               <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">print_tests_ChiSq</span><span class="p">(</span><span class="n">series</span><span class="p">):</span> <span class="c">#this function just presents normality and t-tests.</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">scipy</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#the function does these tests with arcsin(sqrt(acc)) to help with normality</span>
-</span><span class="line">    <span class="n">Test1</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">chisquare</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">f_exp</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">)</span>
-</span><span class="line">    <span class="n">Test2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">chisquare</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">f_exp</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">)</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s"> Surprise Test. Comparison to Chance: </span><span class="si">%s</span><span class="s"> P-value: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">4</span><span class="p">)),</span>
-</span><span class="line">                                                                      <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s"> After Surprise Test. Comparison to Chance: </span><span class="si">%s</span><span class="s"> P-value: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">4</span><span class="p">)),</span>
-</span><span class="line">                                                                            <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
-</span><span class="line">    <span class="n">x</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">chi2_contingency</span><span class="p">([[</span><span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">),</span><span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)],</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">),</span><span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)]],</span>
-</span><span class="line">                                     <span class="n">correction</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s"> Chi-Square Comparison: </span><span class="si">%s</span><span class="s"> P-value: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">4</span><span class="p">)),</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">Analysis_and_Plot</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">,</span> <span class="n">CIs</span><span class="p">):</span> <span class="c">#this function plots the data and writes the results, including stats tests</span>
-</span><span class="line">    <span class="n">PlotFrame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">tableRT2</span><span class="o">.</span><span class="n">mean</span><span class="p">()])</span>
-</span><span class="line">    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Presurprise&#39;</span><span class="p">,</span> <span class="s">&#39;Surprise&#39;</span><span class="p">,</span> <span class="s">&#39;Post surprise&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">PlotFrame2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">CIs</span><span class="p">])</span>
-</span><span class="line">    <span class="n">PlotFrame2</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Presurprise&#39;</span><span class="p">,</span> <span class="s">&#39;Surprise&#39;</span><span class="p">,</span> <span class="s">&#39;Post surprise&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="n">PlotFrame2</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s">&#39;bar&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;Trial Type&#39;</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Mean Presurprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Mean Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Mean Postsurprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Presurprise - Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Postsurprise - Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Postsurprise - Presurprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Presurprise vs Surprise&#39;</span>
-</span><span class="line">    <span class="n">print_tests</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Postsuprise vs Surprise&#39;</span>
-</span><span class="line">    <span class="n">print_tests</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Presurprise vs Postsurprise&#39;</span>
-</span><span class="line">    <span class="n">print_tests</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">Analysis_and_Plot_2</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">,</span> <span class="n">CIs</span><span class="p">):</span> <span class="c">#this function also plots the data and prints results.</span>
-</span><span class="line">    <span class="n">PlotFrame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">tableRT2</span><span class="o">.</span><span class="n">mean</span><span class="p">()])</span> <span class="c">#I could probably consolidate these functions, but whatever. This works.</span>
-</span><span class="line">    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Surprise&#39;</span><span class="p">,</span> <span class="s">&#39;Postsurprise&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s">&#39;bar&#39;</span><span class="p">)</span><span class="c">#yerr=PlotFrame2, kind=&#39;bar&#39;)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;Trial Type&#39;</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Mean Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Mean Postsurprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Postsurprise - Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Postsurprise vs Surprise&#39;</span>
-</span><span class="line">    <span class="n">print_tests_ChiSq</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">Analysis_and_Plot_3</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">,</span> <span class="n">CIs</span><span class="p">):</span> <span class="c">#another plotting function...i should really consolidate these.</span>
-</span><span class="line">    <span class="n">PlotFrame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">tableRT2</span><span class="o">.</span><span class="n">mean</span><span class="p">()])</span>
-</span><span class="line">    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Match&#39;</span><span class="p">,</span> <span class="s">&#39;Mismatch&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">PlotFrame2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-</span><span class="line">    <span class="n">PlotFrame2</span><span class="p">[</span><span class="s">&#39;Match&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">CIs</span><span class="p">])</span>
-</span><span class="line">    <span class="n">PlotFrame2</span><span class="p">[</span><span class="s">&#39;Mismatch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">CIs</span><span class="p">])</span>
-</span><span class="line">    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="n">PlotFrame2</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s">&#39;bar&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;Trial Type&#39;</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="c">#disp_tab = np.round(tableRT2,2)</span>
-</span><span class="line">    <span class="c">#disp_tab[&#39;Match-Mismatch&#39;] = disp_tab[1] - disp_tab[2]</span>
-</span><span class="line">    <span class="c">#print disp_tab</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Mean match: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">4</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Mean mismatch: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="mi">4</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Match - Mismatch: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="mi">4</span><span class="p">)))</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
-</span><span class="line">    <span class="k">print</span> <span class="s">&#39;Match vs Mismatch&#39;</span>
-</span><span class="line">    <span class="n">print_tests</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">OneWayConfInterval</span><span class="p">(</span><span class="n">table</span><span class="p">):</span> <span class="c">#Calculates confidence intervals for a one way anova, this is Cousineau, Morey ect</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">scipy.stats</span><span class="o">,</span> <span class="nn">numpy</span>
-</span><span class="line">    <span class="n">ParticipantsMeans</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line">    <span class="n">STEs</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line">    <span class="n">CIs</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">participant</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
-</span><span class="line">        <span class="n">mean</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line">        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">table</span><span class="p">)[</span><span class="mi">1</span><span class="p">]):</span> <span class="c">#there&#39;s definitely a better way to do this, but this works...</span>
-</span><span class="line">            <span class="n">mean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">==</span><span class="n">participant</span><span class="p">][</span><span class="n">condition</span><span class="p">]))</span>
-</span><span class="line">        <span class="n">ParticipantsMeans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">mean</span><span class="p">))</span>
-</span><span class="line">    <span class="n">ConfMeans</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">counter</span><span class="p">,</span> <span class="n">participant</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
-</span><span class="line">        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">table</span><span class="p">)[</span><span class="mi">1</span><span class="p">]):</span>
-</span><span class="line">            <span class="n">ConfMeans</span><span class="p">[</span><span class="n">counter</span><span class="p">][</span><span class="n">condition</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">==</span><span class="n">participant</span><span class="p">][</span><span class="n">condition</span><span class="p">]</span><span class="o">-</span>\
-</span><span class="line">            <span class="n">ParticipantsMeans</span><span class="p">[</span><span class="n">counter</span><span class="p">]</span><span class="o">+</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ParticipantsMeans</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">counter</span><span class="p">,</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ConfMeans</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
-</span><span class="line">        <span class="n">STEs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)))</span>
-</span><span class="line">        <span class="n">CIs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">STEs</span><span class="p">[</span><span class="n">counter</span><span class="p">]</span><span class="o">*</span><span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="mf">0.025</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ConfMeans</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">CIs</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">SimpleComparisonCI</span><span class="p">(</span><span class="n">table</span><span class="p">):</span> <span class="c">#confidence interval for pairwise comparisons - masson &amp; loftus, Baguley (2012)</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">scipy.stats</span><span class="o">,</span> <span class="nn">math</span>
-</span><span class="line">    <span class="n">ttest</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_rel</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-</span><span class="line">    <span class="n">MeanDiff_byT</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">table</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">-</span><span class="n">table</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="o">/</span><span class="n">ttest</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span><span class="line">    <span class="n">CI</span> <span class="o">=</span> <span class="n">MeanDiff_byT</span><span class="o">*</span><span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="mf">0.025</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.05</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">CI</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h4 id="experiment-1">Experiment 1</h4>
-
-<p>Next, load Experiment 1 data</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">filename</span> <span class="o">=</span> <span class="s">&#39;Exp1.csv&#39;</span> <span class="c">#looking at Exp1 data first.</span>
-</span><span class="line">
-</span><span class="line"><span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;linux2&#39;</span><span class="p">:</span> <span class="c">#is this my linux laptop</span>
-</span><span class="line">    <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;/home/dan-laptop/Documents/Databrary/Wyble_PsychSci&#39;</span>
-</span><span class="line"><span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;darwin&#39;</span><span class="p">:</span> <span class="c">#is this my mac work comp    </span>
-</span><span class="line">    <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;/Users/danvatterott/Dropbox Encore/Dropbox/Databrary/Wyble_PsychSci&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span> <span class="s">&#39;Block&#39;</span><span class="p">,</span> <span class="s">&#39;Trial#&#39;</span><span class="p">,</span> <span class="s">&#39;TarCol&#39;</span><span class="p">,</span> <span class="s">&#39;Tar_Iden&#39;</span><span class="p">,</span><span class="s">&#39;Tar_Loc&#39;</span><span class="p">,</span> <span class="s">&#39;Col_Resp&#39;</span><span class="p">,</span> <span class="s">&#39;Iden_Resp&#39;</span><span class="p">,</span> <span class="s">&#39;Loc_Resp&#39;</span><span class="p">,</span>
-</span><span class="line">             <span class="s">&#39;Col_Acc&#39;</span><span class="p">,</span> <span class="s">&#39;Iden_Acc&#39;</span><span class="p">,</span> <span class="s">&#39;Loc_Acc&#39;</span><span class="p">]</span> <span class="c">#naming the columns of the data file.</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>The data is loaded, lets just take a quick look at the data after loading it in.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>Sub#</th>
-      <th>Block</th>
-      <th>Trial#</th>
-      <th>TarCol</th>
-      <th>Tar_Iden</th>
-      <th>Tar_Loc</th>
-      <th>Col_Resp</th>
-      <th>Iden_Resp</th>
-      <th>Loc_Resp</th>
-      <th>Col_Acc</th>
-      <th>Iden_Acc</th>
-      <th>Loc_Acc</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>6</td>
-      <td>1</td>
-      <td>2</td>
-      <td>1</td>
-      <td>2</td>
-      <td>4</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>6</td>
-      <td>1</td>
-      <td>3</td>
-      <td>3</td>
-      <td>4</td>
-      <td>3</td>
-      <td>0</td>
-      <td>0</td>
-      <td>3</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>6</td>
-      <td>1</td>
-      <td>4</td>
-      <td>1</td>
-      <td>3</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>6</td>
-      <td>1</td>
-      <td>5</td>
-      <td>3</td>
-      <td>1</td>
-      <td>4</td>
-      <td>0</td>
-      <td>0</td>
-      <td>4</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>6</td>
-      <td>1</td>
-      <td>6</td>
-      <td>2</td>
-      <td>2</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>I want to create a new variable.</p>
-
-<p>Before explaining the new variable, I should explain a little about Chen and Wyble’s experiment. Half the participants were instructed to find the letter among numbers and the other half were instructed to find the number among letters. 4 items were briefly flashed on the screen (150 ms) then participants reported where the target item had been. Each of the 4 items was a different color.</p>
-
-<p>Participants reported target location for 155 trials. On the 156th trial, the participants reported the target location then (to their surprise) reported what specific letter/number the target was and what color it was. Even though participants knew where the target was, they had no idea what either the target’s letter/number or color were. They had “forgotten” what the target was (even though they must have known what the target was when they initially located it).</p>
-
-<p>The new variable will code whether the trial is a “pre-surprise” trial (trials 1-155), a surprise trial (trial 156) or the trial after the surprise (trial 157).</p>
-
-<p>I’ll call this variable “TrialType”</p>
-
-<p>TrialType: 0=Presurprise; 1=Surprise Trial; 2=Postsurprise trials.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">156</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">156</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">156</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">156</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">157</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h4 id="experiment-1-replicating-chen--wybles-2015-analyses">Experiment 1: Replicating Chen &amp; Wyble’s (2015) analyses</h4>
-
-<p>Lets just take a quick look at overall accuracy. Make sure everyone is doing ok on the task. Below I plot the mean accuracy of each participant…looks like participant 23 struggled a little. Chen and Wyble (2015) notes that no participants were excluded or replaced.</p>
-
-<p>I might have replaced participant 23 since his/her accuracy is easily 2.5 standard deviations below the mean accuracy (I print this value below)…seems like participant 23 was doing something different in this task.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">tableAcc</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="s">&#39;Loc_Acc&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span> <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
-</span><span class="line"><span class="c">#print tableAcc</span>
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;mean accuracy&#39;</span>
-</span><span class="line"><span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableAcc</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;standard deviation of accuracies&#39;</span>
-</span><span class="line"><span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">tableAcc</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;2.5 standard deviations below mean accuracy&#39;</span>
-</span><span class="line"><span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableAcc</span><span class="p">)</span><span class="o">-</span><span class="mf">2.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">tableAcc</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">tableAcc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s">&#39;bar&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>mean accuracy
-0.89
-standard deviation of accuracies
-0.07
-2.5 standard deviations below mean accuracy
-0.71
-</code></pre>
-
-<p><img src="/images/Wyble1.png" /></p>
-
-<p>Lets look at participants’ performance when asked to identify the target’s location. I will plot performance as mean accuracy in the presurprise,surprise, and postsurprose trials.</p>
-
-<p>I will also run some quick statistical tests. For these tests, I take the arcsine of the square root of the accuracies (Rao, 1960) to increase the accuracies’ normality (I use adj. to indiciate that the tested data is transformed). I test whether this worked with a Shapiro-Wilk test of normality. If the p-value of the Shapiro-Wilk test is greater than 0.1, I run a t test to see if the accuracy in the two conditions is significantly different. If the p-value of the Shapiro-Wilk test is less than or equal to 0.1, then I run a Wilcoxon signed rank test since this test does not care about normality.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Loc_Acc</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="s">&#39;Loc_Acc&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s">&#39;TrialType&#39;</span><span class="p">,</span> <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
-</span><span class="line"><span class="n">CIs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">OneWayConfInterval</span><span class="p">(</span><span class="n">Loc_Acc</span><span class="p">))</span>
-</span><span class="line"><span class="n">Analysis_and_Plot</span><span class="p">(</span><span class="n">Loc_Acc</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>---------------------------------
-Mean Presurprise: 0.89
-Mean Surprise: 0.8
-Mean Postsurprise: 0.79
-Presurprise - Surprise: 0.09
-Postsurprise - Surprise: -0.01
-Postsurprise - Presurprise: 0.09
----------------------------------
-Presurprise vs Surprise
-	 normality test adj. Test value: 0.64 P-value: 0.0
-	 Wilcoxon. Test value: 74.0 P-value: 0.25
-Postsuprise vs Surprise
-	 normality test adj. Test value: 0.8 P-value: 0.001
-	 Wilcoxon. Test value: 33.0 P-value: 0.63
-Presurprise vs Postsurprise
-	 normality test adj. Test value: 0.94 P-value: 0.2857
-	 T-test adj. Test value: 0.92 P-value: 0.3695
-</code></pre>
-
-<p><img src="/images/Wyble2.png" /></p>
-
-<p>The y-axis represents percent correct. All graphs in this post will have percent correct on the y-axis.</p>
-
-<p>Replicating Chen and Wyble, participants perform no worse in the surprise and post surprise trials, indicating that they succesfully found the target.</p>
-
-<p>Now lets look at participants’ ability to report the target’s color in the surprise trial and the trial immediately following the surprise test.</p>
-
-<p>Below I plot the percent of participants that correctly identified the target’s color in the surprise and post-surprise trials</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType2&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
-</span><span class="line"><span class="n">Col_Acc</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="s">&#39;Col_Acc&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s">&#39;TrialType2&#39;</span><span class="p">,</span> <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
-</span><span class="line"><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">Col_Acc</span><span class="p">)</span>
-</span><span class="line"><span class="n">Analysis_and_Plot_2</span><span class="p">(</span><span class="n">Col_Acc</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>---------------------------------
-Mean Surprise: 0.3
-Mean Postsurprise: 0.7
-Postsurprise - Surprise: 0.4
----------------------------------
-Postsurprise vs Surprise
-	 Surprise Test. Comparison to Chance: 17.0 P-value: 0.5899
-	 After Surprise Test. Comparison to Chance: 33.0 P-value: 0.024
-	 Chi-Square Comparison: 6.4 P-value: 0.0114
-</code></pre>
-
-<p><img src="/images/Wyble3.png" /></p>
-
-<p>We perfectly replicate Chen and Wyble; participants respond more accurarely in the post-surprise trial than in the surprise trial.</p>
-
-<p>The next cell examines participants’ ability to report the target’s identity on the surprise trial and the trial immediately following the surprise trial. Remember, the participants locate the target based on whether its a letter or number, so they know the broad category of the target. Nonetheless, they cannot report the target’s identity on the surprise trial</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType2&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
-</span><span class="line"><span class="n">Iden_Acc</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="s">&#39;Iden_Acc&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s">&#39;TrialType2&#39;</span><span class="p">,</span> <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
-</span><span class="line"><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">Iden_Acc</span><span class="p">)</span>
-</span><span class="line"><span class="n">Analysis_and_Plot_2</span><span class="p">(</span><span class="n">Iden_Acc</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>---------------------------------
-Mean Surprise: 0.25
-Mean Postsurprise: 0.75
-Postsurprise - Surprise: 0.5
----------------------------------
-Postsurprise vs Surprise
-	 Surprise Test. Comparison to Chance: 15.0 P-value: 0.7226
-	 After Surprise Test. Comparison to Chance: 35.0 P-value: 0.014
-	 Chi-Square Comparison: 10.0 P-value: 0.0016
-</code></pre>
-
-<p><img src="/images/Wyble4.png" /></p>
-
-<h4 id="experiment-1---intertrial-analyses">Experiment 1 - Intertrial analyses</h4>
-
-<p>So far, I’ve perfectly replicated Chen &amp; Wyble (which is good since this is their data).</p>
-
-<p>Now I want to see if the target’s color or identity on the previous trial influences the current trial’s performance in the location task. I am only examining presurprise trials, so this should be trials when the participants don’t “remember” the target’s color or identity.</p>
-
-<p>First I want to make some variables representing whether the target’s color and identity repeat across trials.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_TarCol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;TarCol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_TarCol_match&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_TarCol&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;TarCol&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Iden&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Tar_Iden&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Iden_match&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Iden&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Tar_Iden&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Col+Iden_match&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Iden_match&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_TarCol_match&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Lets see what happens when the target’s color and identity repeat.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
-</span><span class="line"><span class="n">ColandIden_Acc1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="s">&#39;Loc_Acc&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s">&#39;Prev_Col+Iden_match&#39;</span><span class="p">,</span>
-</span><span class="line">                                                <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
-</span><span class="line"><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">ColandIden_Acc1</span><span class="p">)</span>
-</span><span class="line"><span class="n">Analysis_and_Plot_3</span><span class="p">(</span><span class="n">ColandIden_Acc1</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>---------------------------------
-Mean match: 0.918
-Mean mismatch: 0.8925
-Match - Mismatch: 0.0255
----------------------------------
-Match vs Mismatch
-	 normality test adj. Test value: 0.92 P-value: 0.0821
-	 Wilcoxon. Test value: 51.0 P-value: 0.04
-</code></pre>
-
-<p><img src="/images/Wyble5.png" /></p>
-
-<p>Looks like a 2.5% increase in accuracy. Now, this wasn’t really a planned comparison, so please take this result with a grain of salt.</p>
-
-<p>As a sanity check, lets look at how repetitions in the target’s location (the reported feature) effect performance.</p>
-
-<p>We have to quickly create a new variable coding target location repetitions</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Loc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Tar_Loc&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Loc_match&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Loc&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Tar_Loc&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
-</span><span class="line"><span class="n">Loc_Acc1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="s">&#39;Loc_Acc&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s">&#39;Prev_Loc_match&#39;</span><span class="p">,</span> <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
-</span><span class="line"><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">Loc_Acc1</span><span class="p">)</span>
-</span><span class="line"><span class="n">Analysis_and_Plot_3</span><span class="p">(</span><span class="n">Loc_Acc1</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>---------------------------------
-Mean match: 0.9101
-Mean mismatch: 0.8883
-Match - Mismatch: 0.0218
----------------------------------
-Match vs Mismatch
-	 normality test adj. Test value: 0.93 P-value: 0.1812
-	 T-test adj. Test value: 2.62 P-value: 0.0168
-</code></pre>
-
-<p><img src="/images/Wyble6.png" /></p>
-
-<p>Target location repetitions lead to a 2% increase in performance. Again, this result is robust.</p>
-
-<p>It’s a good sign that this effect is about the same size as repetitions in the unreported features.</p>
-
-<h3 id="replicate-experiments-1-intertrial-analyses-with-experiment-1b">Replicate Experiments 1 Intertrial Analyses with Experiment 1b</h3>
-
-<p>Experiment 1 had some evidence that participants unconsciously knew the color and identity of the target, since they performed a little better when the color and identity repeated. The effect was small, so I am not 100% confident that it’s robust.</p>
-
-<p>The best way to demonstrate that this effect is real would be to show that it also exists in another similar Experiment. Chen and Wyble provide a replication of Experiment 1. In this experiment, the only difference is the target and distractors appear for longer and are not masked (making them easier to see).</p>
-
-<p>If participants response more accurately when the target color and identity repeat in Experiment 1b, then we can be a little more confident that participants are unconsciously aware of the target’s color and identity.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">filename</span> <span class="o">=</span> <span class="s">&#39;Exp1b.csv&#39;</span>
-</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span> <span class="s">&#39;Block&#39;</span><span class="p">,</span> <span class="s">&#39;Trial#&#39;</span><span class="p">,</span> <span class="s">&#39;TarCol&#39;</span><span class="p">,</span> <span class="s">&#39;Tar_Iden&#39;</span><span class="p">,</span><span class="s">&#39;Tar_Loc&#39;</span><span class="p">,</span> <span class="s">&#39;Col_Resp&#39;</span><span class="p">,</span> <span class="s">&#39;Iden_Resp&#39;</span><span class="p">,</span> <span class="s">&#39;Loc_Resp&#39;</span><span class="p">,</span>
-</span><span class="line">             <span class="s">&#39;Col_Acc&#39;</span><span class="p">,</span> <span class="s">&#39;Iden_Acc&#39;</span><span class="p">,</span> <span class="s">&#39;Loc_Acc&#39;</span><span class="p">]</span> <span class="c">#naming the columns of the data file.</span>
-</span><span class="line">
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">156</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">156</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">156</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">156</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Trial#&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">157</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
-</span><span class="line">
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_TarCol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;TarCol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_TarCol_match&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_TarCol&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;TarCol&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Iden&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;Tar_Iden&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Iden_match&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Iden&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Tar_Iden&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Col+Iden_match&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_Iden_match&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Prev_TarCol_match&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">&#39;TrialType&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="c">#only interested in pre-surprise trials</span>
-</span><span class="line"><span class="n">ColandIden_Acc</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="s">&#39;Loc_Acc&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s">&#39;Sub#&#39;</span><span class="p">,</span>
-</span><span class="line">                                               <span class="n">columns</span><span class="o">=</span><span class="s">&#39;Prev_Col+Iden_match&#39;</span><span class="p">,</span> <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">ColandIden_Acc</span><span class="p">)</span>
-</span><span class="line"><span class="n">Analysis_and_Plot_3</span><span class="p">(</span><span class="n">ColandIden_Acc</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>---------------------------------
-Mean match: 0.9716
-Mean mismatch: 0.9644
-Match - Mismatch: 0.0072
----------------------------------
-Match vs Mismatch
-	 normality test adj. Test value: 0.93 P-value: 0.1875
-	 T-test adj. Test value: 2.81 P-value: 0.0112
-</code></pre>
-
-<p><img src="/images/Wyble7.png" /></p>
-
-<p>Wow. Only a 1% change in accuracy, so again not big. Nonetheless, this result is signficant. So, Some evidence that participants perform a little better when the targets’ color and identity repeat.</p>
-
-<p>This suggests that participants retain some information about the targets’ color and identity even though they cannot explicitly report these attributes.</p>
-
-<p>Now, I would probably want to replicate this result again before trusting it, but I’m relatively confident that participants unconsciously retain some information about the target’s color and identity.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
+    
+      <a class="prev" href="/blog/posts/4">&larr; Older</a>
     
     <a href="/blog/archives">Blog Archives</a>
     
@@ -6127,11 +5827,15 @@ Match vs Mismatch
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a>
+        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in PySpark</a>
       </li>
     
       <li class="post">
@@ -6139,11 +5843,7 @@ Match vs Mismatch
       </li>
     
       <li class="post">
-        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
+        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in PySpark</a>
       </li>
     
   </ul>

@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://danvatterott.com/blog/2018/12/07/survival-function-in-pyspark/</loc>
+    <lastmod>2018-12-07T21:13:48-06:00</lastmod>
+  </url>
+  <url>
     <loc>https://danvatterott.com/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/</loc>
     <lastmod>2018-11-03T08:27:07-05:00</lastmod>
   </url>

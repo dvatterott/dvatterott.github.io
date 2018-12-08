@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="https://danvatterott.com/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-11-03T11:47:59-05:00</updated>
+  <updated>2018-12-08T09:35:09-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,516 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Creating a Survival Function in PySpark]]></title>
+    <link href="https://danvatterott.com/blog/2018/12/07/survival-function-in-pyspark/"/>
+    <updated>2018-12-07T21:13:48-06:00</updated>
+    <id>https://danvatterott.com/blog/2018/12/07/survival-function-in-pyspark</id>
+    <content type="html"><![CDATA[<p>Traditionally, <a href="https://en.wikipedia.org/wiki/Survival_function">survival functions</a> have been used in medical research to visualize the proportion of people who remain alive following a treatment. I often use them to understand the length of time between users creating and cancelling their subscription accounts.</p>
+
+<p>Here, I describe how to create a survival function using PySpark. This is not a post about creating a <a href="https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator">Kaplan-Meier estimator</a> or fitting mathematical functions to survival functions. Instead, I demonstrate how to acquire the data necessary for plotting a survival function.</p>
+
+<p>I begin by creating a SparkContext.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class="line"><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="s">&quot;local&quot;</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Next, I load fake data into a Spark Dataframe. This is the data we will use in this example. Each row is a different user and the Dataframe has columns describing start and end dates for each user. <code>start_date</code> represents when a user created their account and <code>end_date</code> represents when a user canceled their account.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line">
+</span><span class="line"><span class="n">user_table</span> <span class="o">=</span> <span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;2018-11-01&#39;</span><span class="p">,</span> <span class="s">&#39;2018-11-03&#39;</span><span class="p">],</span>
+</span><span class="line">                              <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;2018-01-01&#39;</span><span class="p">,</span> <span class="s">&#39;2018-08-17&#39;</span><span class="p">],</span>
+</span><span class="line">                              <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;2017-12-31&#39;</span><span class="p">,</span> <span class="s">&#39;2018-01-06&#39;</span><span class="p">],</span>
+</span><span class="line">                              <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;2018-11-15&#39;</span><span class="p">,</span> <span class="s">&#39;2018-11-16&#39;</span><span class="p">],</span>
+</span><span class="line">                              <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;2018-04-02&#39;</span><span class="p">,</span> <span class="s">&#39;2018-04-12&#39;</span><span class="p">]])</span>
+</span><span class="line">              <span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;start_date&#39;</span><span class="p">,</span> <span class="s">&#39;end_date&#39;</span><span class="p">])</span>
+</span><span class="line">             <span class="p">)</span>
+</span><span class="line"><span class="n">user_table</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>2018-01-01</td>
+   <td>2018-08-17</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>2017-12-31</td>
+   <td>2018-01-06</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>2018-11-15</td>
+   <td>2018-11-16</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>2018-04-02</td>
+   <td>2018-04-12</td>
+ </tr>
+</table>
+
+<p>I use <code>start_date</code> and <code>end_date</code> to determine how many days each user was active following their <code>start_date</code>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">days_till_cancel</span> <span class="o">=</span> <span class="p">(</span><span class="n">user_table</span>
+</span><span class="line">                    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;days_till_cancel&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">datediff</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;end_date&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;start_date&#39;</span><span class="p">)))</span>
+</span><span class="line">                   <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">days_till_cancel</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>2018-01-01</td>
+   <td>2018-08-17</td>
+   <td>228</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>2017-12-31</td>
+   <td>2018-01-06</td>
+   <td>6</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>2018-11-15</td>
+   <td>2018-11-16</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>2018-04-02</td>
+   <td>2018-04-12</td>
+   <td>10</td>
+ </tr>
+</table>
+
+<p>I use a <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.udf">Python UDF</a> to create a vector of the numbers 0 through 13 representing our <em>period of interest</em>. The start date of our <em>period of interest</em> is a user’s <code>start_date</code>. The end date of our <em>period of interest</em> is 13 days following a user’s <code>start_date</code>. I chose 13 days as the <em>period of interest</em> for no particular reason.</p>
+
+<p>I use <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.explode">explode</a> to expand the numbers in each vector (i.e., 0-&gt;13) into different rows. Each user now has a row for each day in the <em>period of interest</em>.</p>
+
+<p>I describe one user’s data below.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">create_day_list</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">14</span><span class="p">)],</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">()))</span>
+</span><span class="line">
+</span><span class="line"><span class="n">relevant_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">days_till_cancel</span>
+</span><span class="line">                 <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;day_list&#39;</span><span class="p">,</span> <span class="n">create_day_list</span><span class="p">())</span>
+</span><span class="line">                 <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;day&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;day_list&#39;</span><span class="p">)))</span>
+</span><span class="line">                 <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s">&#39;day_list&#39;</span><span class="p">)</span>
+</span><span class="line">                <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">relevant_days</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+   <th>day</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>2</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>3</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>4</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>5</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>6</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>7</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>8</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>9</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>10</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>11</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>12</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>13</td>
+ </tr>
+</table>
+
+<p>We want the proportion of users who are active <em>X</em> days after <code>start_date</code>. I create a column <code>active</code> which represents whether users are active or not. I initially assign each user a 1 in each row (1 represents active). I then overwrite 1s with 0s after a user is no longer active. I determine that a user is no longer active by comparing the values in <code>day</code> and <code>days_till_cancel</code>. When <code>day</code> is greater than <code>days_till_cancel</code>, the user is no longer active.</p>
+
+<p>I describe one user’s data below.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">days_active</span> <span class="o">=</span> <span class="p">(</span><span class="n">relevant_days</span>
+</span><span class="line">               <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;active&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span><span class="line">               <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;active&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;day&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;days_till_cancel&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;active&#39;</span><span class="p">)))</span>
+</span><span class="line">              <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">days_active</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+   <th>day</th>
+   <th>active</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>0</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>3</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>4</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>5</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>6</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>7</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>8</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>9</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>10</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>11</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>12</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>13</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>Finally, to acquire the survival function data, I group by <code>day</code> (days following <code>start_date</code>) and average the value in <code>active</code>. This provides us with the proportion of users who are active <em>X</em> days after <code>start_date</code>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">survival_curve</span> <span class="o">=</span> <span class="p">(</span><span class="n">days_active</span>
+</span><span class="line">                  <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">&#39;day&#39;</span><span class="p">)</span>
+</span><span class="line">                  <span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+</span><span class="line">                      <span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;user_count&#39;</span><span class="p">),</span>
+</span><span class="line">                      <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="s">&#39;active&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;percent_active&#39;</span><span class="p">),</span>
+</span><span class="line">                  <span class="p">)</span>
+</span><span class="line">                  <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s">&#39;day&#39;</span><span class="p">)</span>
+</span><span class="line">                 <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">survival_curve</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>day</th>
+   <th>user_count</th>
+   <th>percent_active</th>
+ </tr>
+ <tr>
+   <td>0</td>
+   <td>5</td>
+   <td>1.0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>5</td>
+   <td>0.8</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>6</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>7</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>8</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>9</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>10</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>11</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>12</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>13</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+</table>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Looking Towards the Future of Automated Machine-learning]]></title>
@@ -55,13 +565,13 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Python Aggregate UDFs in Pyspark]]></title>
+    <title type="html"><![CDATA[Python Aggregate UDFs in PySpark]]></title>
     <link href="https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark/"/>
     <updated>2018-09-06T16:04:43-05:00</updated>
     <id>https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark</id>
-    <content type="html"><![CDATA[<p>Pyspark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
+    <content type="html"><![CDATA[<p>PySpark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
 
-<p>Pyspark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
+<p>PySpark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
 
 <p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
 
@@ -360,11 +870,11 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in Pyspark]]></title>
+    <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in PySpark]]></title>
     <link href="https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/"/>
     <updated>2018-07-08T19:24:04-05:00</updated>
     <id>https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark</id>
-    <content type="html"><![CDATA[<p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+    <content type="html"><![CDATA[<p>Many (if not all of) PySpark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
 
 <p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!</p>
 
@@ -458,7 +968,7 @@
  </tr>
 </table>
 
-<p>Now that the data is in a pyspark array, we can apply the desired pyspark aggregation to each item in the array.</p>
+<p>Now that the data is in a PySpark array, we can apply the desired PySpark aggregation to each item in the array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -512,7 +1022,7 @@
  </tr>
 </table>
 
-<p>Next, we create another pyspark udf which changes the dense vector into a pyspark array.</p>
+<p>Next, we create another PySpark udf which changes the dense vector into a PySpark array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -555,7 +1065,7 @@
  </tr>
 </table>
 
-<p>Finally, we can use our standard pyspark aggregators to each item in the pyspark array.</p>
+<p>Finally, we can use our standard PySpark aggregators to each item in the PySpark array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -1192,11 +1702,11 @@ interpreter: 64bit
   </entry>
   
   <entry>
-    <title type="html"><![CDATA['Is Not in' With Pyspark]]></title>
+    <title type="html"><![CDATA['Is Not in' With PySpark]]></title>
     <link href="https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark/"/>
     <updated>2018-02-06T21:10:32-06:00</updated>
     <id>https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark</id>
-    <content type="html"><![CDATA[<p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
+    <content type="html"><![CDATA[<p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in PySpark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
 
 <p><strong>EDIT</strong><br />
 Check the note at the bottom regarding “anti joins”. Using an anti join is much cleaner than the code described here.</p>
@@ -1349,7 +1859,7 @@ Check the note at the bottom regarding “anti joins”. Using an anti join is m
 </table>
 
 <p><strong>EDIT</strong><br />
-I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">pyspark documentation</a> a more thorough reading and realized that pyspark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
+I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">PySpark documentation</a> a more thorough reading and realized that PySpark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
 
 <p>For example, the following code will produce rows in b where the id value is not present in a.</p>
 
@@ -2396,407 +2906,6 @@ Probability of difference arising from chance: 0.57546
 <p>The figure above depicts model performance on noisy images. The models are the as before, but this time the model with attention is far superior to the comparison model. Good news for attention researchers! This work suggests that visual attentional mechanisms similar to those in the brain may be beneficial in convolutional neural networks, and this effect is particularly strong with the images are noisy.</p>
 
 <p>This work bears superficial similarity to recent <a href="http://arxiv.org/pdf/1603.01417.pdf">language translation and question answering models</a>. Models like the cited one report using a biologically inspired version of attention, and I agree they do, but they do not use attention in the same way that I am here. I believe this difference demonstrates a problem with what we call “attention.” Attention is not a single cognitive process. Instead, its a family of cognitive processes that we’ve simply given the same name. Thats not to say these forms of attention are completely distinct, but they likely involve different information transformations and probably even different brain regions.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Revisting NBA Career Predictions From Rookie Performance...again]]></title>
-    <link href="https://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again/"/>
-    <updated>2016-07-31T20:59:41-05:00</updated>
-    <id>https://danvatterott.com/blog/2016/07/31/revisting-nba-career-predictions-from-rookie-performance-dot-dot-dot-again</id>
-    <content type="html"><![CDATA[<p>Now that the NBA season is done, we have complete data from this year’s NBA rookies. In the past I have tried to predict NBA rookies’ future performance using <a href="http://www.danvatterott.com/blog/2016/03/20/predicting-career-performance-from-rookie-performance/">regression</a> <a href="http://www.danvatterott.com/blog/2016/04/08/revisiting-nba-career-predictions-from-rookie-performance/">models</a>. In this post I am again trying to predict rookies’ future performance, but now using using a <a href="https://en.wikipedia.org/wiki/Statistical_classification">classification approach</a>. When using a classification approach, I predict whether player X will be a “great,” “average,” or “poor” player rather than predicting exactly how productive player X will be.</p>
-
-<p>Much of this post re-uses code from the previous posts, so I skim over some of the repeated code.</p>
-
-<p>As usual, I will post all code as a jupyter notebook on my <a href="https://github.com/dvatterott/jupyter_notebooks">github</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
-</span><span class="line">
-</span><span class="line"><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-</span><span class="line">
-</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s">&#39;ggplot&#39;</span><span class="p">)</span> <span class="c">#im addicted to ggplot. so pretty.</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Load the data. Reminder - this data is available on my <a href="https://github.com/dvatterott/nba_project">github</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">rookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Apr_16.pkl&#39;</span><span class="p">)</span> <span class="c">#here&#39;s the rookie year data</span>
-</span><span class="line">
-</span><span class="line"><span class="n">rook_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Career Games&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span> <span class="c">#only attempting to predict players that have played at least 50 games</span>
-</span><span class="line"><span class="n">rook_year</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span> <span class="c">#only attempting to predict players from after 1980</span>
-</span><span class="line">
-</span><span class="line"><span class="c">#remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair</span>
-</span><span class="line"><span class="n">rookie_df_games</span> <span class="o">=</span> <span class="n">rookie_df</span><span class="p">[</span><span class="n">rook_games</span> <span class="o">&amp;</span> <span class="n">rook_year</span><span class="p">]</span> <span class="c">#only players with more than 50 games. </span>
-</span><span class="line"><span class="n">rookie_df_drop</span> <span class="o">=</span> <span class="n">rookie_df_games</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Load more data, and normalize the data for the <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">PCA transformation</a>.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
-</span><span class="line">
-</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Apr_15.pkl&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;G&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">50</span><span class="p">]</span>
-</span><span class="line"><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class="line"><span class="n">ScaleModel</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#make sure each feature has 0 mean and unit variance. </span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>In the past I used <a href="https://en.wikipedia.org/wiki/K-means_clustering">k-means</a> to group players according to their performance (see my post on <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">grouping players</a> for more info). Here, I use a <a href="https://en.wikipedia.org/wiki/Mixture_model">gaussian mixture model</a> (GMM) to group the players. I use the GMM model because it assigns each player a “soft” label rather than a “hard” label. By soft label I mean that a player simultaneously belongs to several groups. For instance, Russell Westbrook belongs to both my “point guard” group and my “scorers” group. K-means uses hard labels where each player can only belong to one group. I think the GMM model provides a more accurate representation of players, so I’ve decided to use it in this post. Maybe in a future post I will spend more time describing it.</p>
-
-<p>For anyone wondering, the GMM groupings looked pretty similar to the k-means groupings.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.mixture</span> <span class="kn">import</span> <span class="n">GMM</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
-</span><span class="line">
-</span><span class="line"><span class="n">reduced_model</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">whiten</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span><span class="line"><span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c">#transform data into the 5 PCA components space</span>
-</span><span class="line">
-</span><span class="line"><span class="n">g</span> <span class="o">=</span> <span class="n">GMM</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#6 clusters. like the k-means model</span>
-</span><span class="line"><span class="n">new_labels</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">predictions</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span> <span class="c">#generate values describing &quot;how much&quot; each player belongs to each group </span>
-</span><span class="line"><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
-</span><span class="line">    <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
-</span><span class="line">    <span class="n">df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[:,</span><span class="n">x</span><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>In this past I have attempted to predict win shares per 48 minutes. I am using win shares as a dependent variable again, but I want to categorize players.</p>
-
-<p>Below I create a histogram of players’ win shares per 48.</p>
-
-<p>I split players into 4 groups which I will refer to as “bad,” “below average,” “above average,” and “great”: Poor players are the bottom 10% in win shares per 48, Below average are the 10-50th percentiles, Above average and 50-90th percentiles, Great are the top 10%. This assignment scheme is relatively arbitrary; the model performs similarly with different assignment schemes.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]);</span>
-</span><span class="line"><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">10</span><span class="p">),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c">#category 1 players are bottom 10%</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">50</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">10</span><span class="p">)),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">90</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">50</span><span class="p">)),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
-</span><span class="line"><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;WS/48&#39;</span><span class="p">],</span><span class="mi">90</span><span class="p">),</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span> <span class="c">#category 4 players are top 10%</span>
-</span><span class="line"><span class="n">perc_in_cat</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])];</span>
-</span><span class="line"><span class="n">perc_in_cat</span> <span class="c">#print % of palyers in each category as a sanity check</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>[0.096314496314496317,
- 0.40196560196560199,
- 0.39950859950859952,
- 0.10221130221130222]
-</code></pre>
-
-<p><img src="https://danvatterott.com/images/classificationNBA/histogram.png" /></p>
-
-<p>My goal is to use rookie year performance to classify players into these 4 categories. I have a big matrix with lots of data about rookie year performance, but the reason that I grouped player using the GMM is because I suspect that players in the different groups have different “paths” to success. I am including the groupings in my classification model and computing interaction terms. The interaction terms will allow rookie performance to produce different predictions for the different groups.</p>
-
-<p>By including interaction terms, I include quite a few predictor features. I’ve printed the number of predictor features and the number of predicted players below.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">preprocessing</span>
-</span><span class="line">
-</span><span class="line"><span class="n">df_drop</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">]</span>
-</span><span class="line"><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
-</span><span class="line">    <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
-</span><span class="line">    <span class="n">rookie_df_drop</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_drop</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="c">#give rookies the groupings produced by the GMM model</span>
-</span><span class="line">
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">rookie_df_drop</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe   </span>
-</span><span class="line">
-</span><span class="line"><span class="n">poly</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">PolynomialFeatures</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">interaction_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c">#create interaction terms.</span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">Career_data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;Year&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">1980</span><span class="p">]</span>
-</span><span class="line"><span class="n">Y</span> <span class="o">=</span> <span class="n">Career_data</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]</span> <span class="c">#get predictor data</span>
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>(1703, 1432)
-(1703,)
-</code></pre>
-
-<p>Now that I have all the features, it’s time to try and predict which players will be poor, below average, above average, and great. To create these predictions, I will use a <a href="https://en.wikipedia.org/wiki/Logistic_regression">logistic regression model</a>.</p>
-
-<p>Because I have so many predictors, correlation between predicting features and over-fitting the data are major concerns. I use <a href="http://stats.stackexchange.com/questions/4272/when-to-use-regularization-methods-for-regression">regularization</a> and <a href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)">cross-validation</a> to combat these issues.</p>
-
-<p>Specifically, I am using <a href="https://en.wikipedia.org/wiki/Tikhonov_regularization">l2 regularization</a> and k-fold 5 cross-validation. Within the cross-validation, I am trying to estimate how much regularization is appropriate.</p>
-
-<p>Some important notes - I am using “balanced” weights which tells the model that worse to incorrectly predict the poor and great players than the below average and above average players. I do this because I don’t want the model to completely ignore the less frequent classifications. Second, I use the multi_class multinomial because it limits the number of models I have to fit.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
-</span><span class="line">
-</span><span class="line"><span class="n">logreg</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegressionCV</span><span class="p">(</span><span class="n">Cs</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0008</span><span class="p">],</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="s">&#39;l2&#39;</span><span class="p">,</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="s">&#39;balanced&#39;</span><span class="p">,</span>
-</span><span class="line">                                           <span class="n">max_iter</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span> <span class="n">multi_class</span><span class="o">=</span><span class="s">&#39;multinomial&#39;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">est</span> <span class="o">=</span> <span class="n">logreg</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
-</span><span class="line"><span class="n">score</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="c">#calculate the % correct </span>
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>0.738109219025
-</code></pre>
-
-<p>Okay, the model did pretty well, but lets look at where the errors are coming from. To visualize the models accuracy, I am using a <a href="https://en.wikipedia.org/wiki/Confusion_matrix">confusion matrix</a>. In a confusion matrix, every item on the diagnonal is a correctly classified item. Every item off the diagonal is incorrectly classified. The color bar’s axis is the percent correct. So the dark blue squares represent cells with more items.</p>
-
-<p>It seems the model is best at predicting poor players and great players. It makes more errors when trying to predict the more average players.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
-</span><span class="line"><span class="n">cm</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">plot_confusion_matrix</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Confusion matrix&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">):</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
-</span><span class="line">    <span class="n">tick_marks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])))</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">tick_marks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]))</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">tick_marks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">]))</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;True label&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Predicted label&#39;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">cm_normalized</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="n">cm</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
-</span><span class="line"><span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">cm_normalized</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Normalized confusion matrix&#39;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="https://danvatterott.com/images/classificationNBA/confusion_mat.png" /></p>
-
-<p>Lets look at what the model predicts for this year’s rookies. Below I modified two functions that I wrote for a previous post. The first function finds a particular year’s draft picks. The second function produces predictions for each draft pick.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">gather_draftData</span><span class="p">(</span><span class="n">Year</span><span class="p">):</span>
-</span><span class="line">
-</span><span class="line">    <span class="kn">import</span> <span class="nn">urllib2</span>
-</span><span class="line">    <span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-</span><span class="line">    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">draft_len</span> <span class="o">=</span> <span class="mi">30</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">def</span> <span class="nf">convert_float</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
-</span><span class="line">        <span class="k">try</span><span class="p">:</span>
-</span><span class="line">            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-</span><span class="line">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-</span><span class="line">            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;http://www.basketball-reference.com/draft/NBA_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">Year</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;.html&#39;</span>
-</span><span class="line">    <span class="n">html</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span class="line">    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span><span class="s">&quot;lxml&quot;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">draft_num</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
-</span><span class="line">    <span class="n">draft_nam</span> <span class="o">=</span> <span class="p">[</span><span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;tr&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;td&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draft_len</span><span class="p">)]</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">draft_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">draft_num</span><span class="p">,</span><span class="n">draft_nam</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
-</span><span class="line">    <span class="n">draft_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Number&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">draft_df</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">player_prediction__regressionModel</span><span class="p">(</span><span class="n">PlayerName</span><span class="p">):</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_career_stats_2016_Apr_15.pkl&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="p">[</span><span class="n">clust_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
-</span><span class="line">    <span class="n">clust_df</span> <span class="o">=</span> <span class="n">clust_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">,</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="s">&#39;GS&#39;</span><span class="p">,</span><span class="s">&#39;MP&#39;</span><span class="p">,</span><span class="s">&#39;FG&#39;</span><span class="p">,</span><span class="s">&#39;FGA&#39;</span><span class="p">,</span><span class="s">&#39;FG%&#39;</span><span class="p">,</span><span class="s">&#39;3P&#39;</span><span class="p">,</span><span class="s">&#39;2P&#39;</span><span class="p">,</span><span class="s">&#39;FT&#39;</span><span class="p">,</span><span class="s">&#39;TRB&#39;</span><span class="p">,</span><span class="s">&#39;PTS&#39;</span><span class="p">,</span><span class="s">&#39;ORtg&#39;</span><span class="p">,</span><span class="s">&#39;DRtg&#39;</span><span class="p">,</span><span class="s">&#39;PER&#39;</span><span class="p">,</span><span class="s">&#39;TS%&#39;</span><span class="p">,</span><span class="s">&#39;3PAr&#39;</span><span class="p">,</span><span class="s">&#39;FTr&#39;</span><span class="p">,</span><span class="s">&#39;ORB%&#39;</span><span class="p">,</span><span class="s">&#39;DRB%&#39;</span><span class="p">,</span><span class="s">&#39;TRB%&#39;</span><span class="p">,</span><span class="s">&#39;AST%&#39;</span><span class="p">,</span><span class="s">&#39;STL%&#39;</span><span class="p">,</span><span class="s">&#39;BLK%&#39;</span><span class="p">,</span><span class="s">&#39;TOV%&#39;</span><span class="p">,</span><span class="s">&#39;USG%&#39;</span><span class="p">,</span><span class="s">&#39;OWS&#39;</span><span class="p">,</span><span class="s">&#39;DWS&#39;</span><span class="p">,</span><span class="s">&#39;WS&#39;</span><span class="p">,</span><span class="s">&#39;WS/48&#39;</span><span class="p">,</span><span class="s">&#39;OBPM&#39;</span><span class="p">,</span><span class="s">&#39;DBPM&#39;</span><span class="p">,</span><span class="s">&#39;BPM&#39;</span><span class="p">,</span><span class="s">&#39;VORP&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">    <span class="n">new_vect</span> <span class="o">=</span> <span class="n">ScaleModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">clust_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-</span><span class="line">    <span class="n">reduced_data</span> <span class="o">=</span> <span class="n">reduced_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_vect</span><span class="p">)</span>
-</span><span class="line">    <span class="n">predictions</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
-</span><span class="line">        <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
-</span><span class="line">        <span class="n">clust_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[:,</span><span class="n">x</span><span class="p">]</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s">&#39;nba_bballref_rookie_stats_2016_Apr_16.pkl&#39;</span><span class="p">)</span>
-</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="p">[</span><span class="n">Predrookie_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">PlayerName</span><span class="p">]</span>
-</span><span class="line">    <span class="n">Predrookie_df</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="s">&#39;Career Games&#39;</span><span class="p">,</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">new_labels</span><span class="p">):</span>
-</span><span class="line">        <span class="n">Label</span> <span class="o">=</span> <span class="s">&#39;Category</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span>
-</span><span class="line">        <span class="n">Predrookie_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">clust_df</span><span class="p">[</span><span class="n">Label</span><span class="p">]</span> <span class="c">#give rookies the groupings produced by the GMM model</span>
-</span><span class="line">    <span class="n">predX</span> <span class="o">=</span> <span class="n">Predrookie_df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="c">#take data out of dataframe</span>
-</span><span class="line">    <span class="n">predX</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">predX</span><span class="p">)</span>
-</span><span class="line">    <span class="n">predictions2</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">predX</span><span class="p">)</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;Name&#39;</span><span class="p">:</span><span class="n">PlayerName</span><span class="p">,</span><span class="s">&#39;Group&#39;</span><span class="p">:</span><span class="n">predictions</span><span class="p">,</span><span class="s">&#39;Prediction&#39;</span><span class="p">:</span><span class="n">predictions2</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Below I create a plot depicting the model’s predictions. On the y-axis are the four classifications. On the x-axis are the players from the 2015 draft. Each cell in the plot is the probability of a player belonging to one of the classifications. Again, dark blue means a cell or more likely. Good news for us T-Wolves fans! The model loves KAT.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">gather_draftData</span><span class="p">(</span><span class="mi">2015</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">][</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span>  <span class="s">&#39;Kelly Oubre Jr.&#39;</span> <span class="c">#annoying name inconsistencies </span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">6</span><span class="p">));</span>
-</span><span class="line">
-</span><span class="line"><span class="n">draft_df</span> <span class="o">=</span> <span class="n">draft_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c">#spurs&#39; 1st round pick has not played yet</span>
-</span><span class="line">
-</span><span class="line"><span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class="line"><span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]:</span>
-</span><span class="line">    <span class="n">draft_num</span> <span class="o">=</span> <span class="n">draft_df</span><span class="p">[</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="s">&#39;Number&#39;</span><span class="p">]</span>
-</span><span class="line">    <span class="n">predict_dict</span> <span class="o">=</span> <span class="n">player_prediction__regressionModel</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span class="line">    <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predict_dict</span><span class="p">[</span><span class="s">&#39;Prediction&#39;</span><span class="p">])</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Predicting Future Performance of 2015-16 Rookies&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">shrink</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
-</span><span class="line"><span class="n">tick_marks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">&#39;perf_cat&#39;</span><span class="p">])))</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">29</span><span class="p">),</span><span class="n">draft_df</span><span class="p">[</span><span class="s">&#39;Name&#39;</span><span class="p">],</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;Poor&#39;</span><span class="p">,</span><span class="s">&#39;Below Average&#39;</span><span class="p">,</span><span class="s">&#39;Above Average&#39;</span><span class="p">,</span><span class="s">&#39;Great&#39;</span><span class="p">])</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Prediction&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Draft Position&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="https://danvatterott.com/images/classificationNBA/predictions.png" /></p>
-
 ]]></content>
   </entry>
   

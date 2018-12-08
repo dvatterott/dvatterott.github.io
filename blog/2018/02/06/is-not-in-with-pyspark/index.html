@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>'Is Not in' With Pyspark - Dan Vatterott</title>
+  <title>'Is Not in' With PySpark - Dan Vatterott</title>
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. &hellip;">
+  <meta name="description" content="In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in PySpark. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -91,7 +91,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   
   <header>
     
-      <h1 class="entry-title">'Is Not in' With Pyspark</h1>
+      <h1 class="entry-title">'Is Not in' With PySpark</h1>
     
     
       <p class="meta">
@@ -107,7 +107,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   </header>
 
 
-<div class="entry-content"><p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
+<div class="entry-content"><p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in PySpark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
 
 <p><strong>EDIT</strong><br />
 Check the note at the bottom regarding “anti joins”. Using an anti join is much cleaner than the code described here.</p>
@@ -260,7 +260,7 @@ Check the note at the bottom regarding “anti joins”. Using an anti join is m
 </table>
 
 <p><strong>EDIT</strong><br />
-I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">pyspark documentation</a> a more thorough reading and realized that pyspark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
+I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">PySpark documentation</a> a more thorough reading and realized that PySpark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
 
 <p>For example, the following code will produce rows in b where the id value is not present in a.</p>
 
@@ -357,11 +357,15 @@ I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pysp
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a>
+        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in PySpark</a>
       </li>
     
       <li class="post">
@@ -369,11 +373,7 @@ I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pysp
       </li>
     
       <li class="post">
-        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
+        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in PySpark</a>
       </li>
     
   </ul>

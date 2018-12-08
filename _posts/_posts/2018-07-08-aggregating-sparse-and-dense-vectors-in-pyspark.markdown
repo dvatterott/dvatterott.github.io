@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "Aggregating Sparse and Dense Vectors in Pyspark"
+title: "Aggregating Sparse and Dense Vectors in PySpark"
 date: 2018-07-08 19:24:04 -0500
 comments: true
 categories: [python, spark, pyspark, data science, data engineering]
 ---
 
-Many (if not all of) pyspark's machine learning algorithms require the input data is concatenated into a single column (using the [vector assembler](https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler) command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.
+Many (if not all of) PySpark's machine learning algorithms require the input data is concatenated into a single column (using the [vector assembler](https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler) command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.
 
 I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!
 
@@ -81,7 +81,7 @@ df.show()
  </tr>
 </table>
 
-Now that the data is in a pyspark array, we can apply the desired pyspark aggregation to each item in the array.
+Now that the data is in a PySpark array, we can apply the desired PySpark aggregation to each item in the array.
 
 {% codeblock lang:python %}
 df_agg = df.agg(F.array(*[F.avg(F.col('features_array')[i]) for i in range(10)]).alias("averages"))
@@ -128,7 +128,7 @@ df.show()
  </tr>
 </table>
 
-Next, we create another pyspark udf which changes the dense vector into a pyspark array.
+Next, we create another PySpark udf which changes the dense vector into a PySpark array.
 
 {% codeblock lang:python %}
 def dense_to_array(v):
@@ -164,7 +164,7 @@ df.show()
  </tr>
 </table>
 
-Finally, we can use our standard pyspark aggregators to each item in the pyspark array.
+Finally, we can use our standard PySpark aggregators to each item in the PySpark array.
 
 {% codeblock lang:python %}
 df_agg = df.agg(F.array(*[F.avg(F.col('features_array')[i]) for i in range(10)]).alias("averages"))

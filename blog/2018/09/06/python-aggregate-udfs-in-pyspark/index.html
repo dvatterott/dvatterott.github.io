@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Python Aggregate UDFs in Pyspark - Dan Vatterott</title>
+  <title>Python Aggregate UDFs in PySpark - Dan Vatterott</title>
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="Pyspark has a great set of aggregate functions (e.g., count, countDistinct, min, max, avg, sum), but these are not enough for all cases (particularly &hellip;">
+  <meta name="description" content="PySpark has a great set of aggregate functions (e.g., count, countDistinct, min, max, avg, sum), but these are not enough for all cases (particularly &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -91,7 +91,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   
   <header>
     
-      <h1 class="entry-title">Python Aggregate UDFs in Pyspark</h1>
+      <h1 class="entry-title">Python Aggregate UDFs in PySpark</h1>
     
     
       <p class="meta">
@@ -107,9 +107,9 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   </header>
 
 
-<div class="entry-content"><p>Pyspark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
+<div class="entry-content"><p>PySpark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
 
-<p>Pyspark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
+<p>PySpark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
 
 <p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
 
@@ -385,11 +385,15 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a>
+        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in PySpark</a>
       </li>
     
       <li class="post">
@@ -397,11 +401,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
       </li>
     
       <li class="post">
-        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
+        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in PySpark</a>
       </li>
     
   </ul>

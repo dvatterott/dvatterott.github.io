@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "'Is Not In' with Pyspark"
+title: "'Is Not In' with PySpark"
 date: 2018-02-06 21:10:32 -0600
 comments: true
 categories: [python, spark, pyspark, data science, data engineering]
 ---
 
-In SQL it's easy to find people in one list who are not in a second list (i.e., the "not in" command), but there is no similar command in pyspark. Well, at least not [a command](https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin) that doesn't involve collecting the second list onto the master instance.
+In SQL it's easy to find people in one list who are not in a second list (i.e., the "not in" command), but there is no similar command in PySpark. Well, at least not [a command](https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin) that doesn't involve collecting the second list onto the master instance.
 
 **EDIT**<br>
 Check the note at the bottom regarding "anti joins". Using an anti join is much cleaner than the code described here.
@@ -154,7 +154,7 @@ c.show()
 </table>
 
 **EDIT**<br>
-I recently gave the [pyspark documentation](https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join) a more thorough reading and realized that pyspark's join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).
+I recently gave the [PySpark documentation](https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join) a more thorough reading and realized that PySpark's join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).
 
 For example, the following code will produce rows in b where the id value is not present in a.
 

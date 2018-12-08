@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="I recently gave a presentation at Venture Cafe describing how I see automation changing python, machine-learning workflows in the near future. In &hellip;">
+  <meta name="description" content="Traditionally, survival functions have been used in medical research to visualize the proportion of people who remain alive following a treatment. I &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -94,6 +94,536 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2018-12-07T21:13:48-06:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>9:13 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Traditionally, <a href="https://en.wikipedia.org/wiki/Survival_function">survival functions</a> have been used in medical research to visualize the proportion of people who remain alive following a treatment. I often use them to understand the length of time between users creating and cancelling their subscription accounts.</p>
+
+<p>Here, I describe how to create a survival function using PySpark. This is not a post about creating a <a href="https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator">Kaplan-Meier estimator</a> or fitting mathematical functions to survival functions. Instead, I demonstrate how to acquire the data necessary for plotting a survival function.</p>
+
+<p>I begin by creating a SparkContext.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class="line"><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="s">&quot;local&quot;</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Next, I load fake data into a Spark Dataframe. This is the data we will use in this example. Each row is a different user and the Dataframe has columns describing start and end dates for each user. <code>start_date</code> represents when a user created their account and <code>end_date</code> represents when a user canceled their account.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line">
+</span><span class="line"><span class="n">user_table</span> <span class="o">=</span> <span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;2018-11-01&#39;</span><span class="p">,</span> <span class="s">&#39;2018-11-03&#39;</span><span class="p">],</span>
+</span><span class="line">                              <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;2018-01-01&#39;</span><span class="p">,</span> <span class="s">&#39;2018-08-17&#39;</span><span class="p">],</span>
+</span><span class="line">                              <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;2017-12-31&#39;</span><span class="p">,</span> <span class="s">&#39;2018-01-06&#39;</span><span class="p">],</span>
+</span><span class="line">                              <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;2018-11-15&#39;</span><span class="p">,</span> <span class="s">&#39;2018-11-16&#39;</span><span class="p">],</span>
+</span><span class="line">                              <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;2018-04-02&#39;</span><span class="p">,</span> <span class="s">&#39;2018-04-12&#39;</span><span class="p">]])</span>
+</span><span class="line">              <span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;start_date&#39;</span><span class="p">,</span> <span class="s">&#39;end_date&#39;</span><span class="p">])</span>
+</span><span class="line">             <span class="p">)</span>
+</span><span class="line"><span class="n">user_table</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>2018-01-01</td>
+   <td>2018-08-17</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>2017-12-31</td>
+   <td>2018-01-06</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>2018-11-15</td>
+   <td>2018-11-16</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>2018-04-02</td>
+   <td>2018-04-12</td>
+ </tr>
+</table>
+
+<p>I use <code>start_date</code> and <code>end_date</code> to determine how many days each user was active following their <code>start_date</code>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">days_till_cancel</span> <span class="o">=</span> <span class="p">(</span><span class="n">user_table</span>
+</span><span class="line">                    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;days_till_cancel&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">datediff</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;end_date&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;start_date&#39;</span><span class="p">)))</span>
+</span><span class="line">                   <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">days_till_cancel</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>2018-01-01</td>
+   <td>2018-08-17</td>
+   <td>228</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>2017-12-31</td>
+   <td>2018-01-06</td>
+   <td>6</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>2018-11-15</td>
+   <td>2018-11-16</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>2018-04-02</td>
+   <td>2018-04-12</td>
+   <td>10</td>
+ </tr>
+</table>
+
+<p>I use a <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.udf">Python UDF</a> to create a vector of the numbers 0 through 13 representing our <em>period of interest</em>. The start date of our <em>period of interest</em> is a user’s <code>start_date</code>. The end date of our <em>period of interest</em> is 13 days following a user’s <code>start_date</code>. I chose 13 days as the <em>period of interest</em> for no particular reason.</p>
+
+<p>I use <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.explode">explode</a> to expand the numbers in each vector (i.e., 0-&gt;13) into different rows. Each user now has a row for each day in the <em>period of interest</em>.</p>
+
+<p>I describe one user’s data below.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">create_day_list</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">14</span><span class="p">)],</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">()))</span>
+</span><span class="line">
+</span><span class="line"><span class="n">relevant_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">days_till_cancel</span>
+</span><span class="line">                 <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;day_list&#39;</span><span class="p">,</span> <span class="n">create_day_list</span><span class="p">())</span>
+</span><span class="line">                 <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;day&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;day_list&#39;</span><span class="p">)))</span>
+</span><span class="line">                 <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s">&#39;day_list&#39;</span><span class="p">)</span>
+</span><span class="line">                <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">relevant_days</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+   <th>day</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>2</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>3</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>4</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>5</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>6</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>7</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>8</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>9</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>10</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>11</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>12</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>13</td>
+ </tr>
+</table>
+
+<p>We want the proportion of users who are active <em>X</em> days after <code>start_date</code>. I create a column <code>active</code> which represents whether users are active or not. I initially assign each user a 1 in each row (1 represents active). I then overwrite 1s with 0s after a user is no longer active. I determine that a user is no longer active by comparing the values in <code>day</code> and <code>days_till_cancel</code>. When <code>day</code> is greater than <code>days_till_cancel</code>, the user is no longer active.</p>
+
+<p>I describe one user’s data below.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">days_active</span> <span class="o">=</span> <span class="p">(</span><span class="n">relevant_days</span>
+</span><span class="line">               <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;active&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span><span class="line">               <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;active&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;day&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;days_till_cancel&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;active&#39;</span><span class="p">)))</span>
+</span><span class="line">              <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">days_active</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+   <th>day</th>
+   <th>active</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>0</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>3</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>4</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>5</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>6</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>7</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>8</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>9</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>10</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>11</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>12</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>13</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>Finally, to acquire the survival function data, I group by <code>day</code> (days following <code>start_date</code>) and average the value in <code>active</code>. This provides us with the proportion of users who are active <em>X</em> days after <code>start_date</code>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">survival_curve</span> <span class="o">=</span> <span class="p">(</span><span class="n">days_active</span>
+</span><span class="line">                  <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">&#39;day&#39;</span><span class="p">)</span>
+</span><span class="line">                  <span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+</span><span class="line">                      <span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;user_count&#39;</span><span class="p">),</span>
+</span><span class="line">                      <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="s">&#39;active&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;percent_active&#39;</span><span class="p">),</span>
+</span><span class="line">                  <span class="p">)</span>
+</span><span class="line">                  <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s">&#39;day&#39;</span><span class="p">)</span>
+</span><span class="line">                 <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">survival_curve</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>day</th>
+   <th>user_count</th>
+   <th>percent_active</th>
+ </tr>
+ <tr>
+   <td>0</td>
+   <td>5</td>
+   <td>1.0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>5</td>
+   <td>0.8</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>6</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>7</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>8</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>9</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>10</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>11</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>12</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>13</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+</table>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a></h1>
     
     
@@ -155,7 +685,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a></h1>
+      <h1 class="entry-title"><a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in PySpark</a></h1>
     
     
       <p class="meta">
@@ -171,9 +701,9 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   </header>
 
 
-  <div class="entry-content"><p>Pyspark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
+  <div class="entry-content"><p>PySpark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
 
-<p>Pyspark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
+<p>PySpark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
 
 <p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
 
@@ -500,7 +1030,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a></h1>
+      <h1 class="entry-title"><a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in PySpark</a></h1>
     
     
       <p class="meta">
@@ -516,7 +1046,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
   </header>
 
 
-  <div class="entry-content"><p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+  <div class="entry-content"><p>Many (if not all of) PySpark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
 
 <p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!</p>
 
@@ -610,7 +1140,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
  </tr>
 </table>
 
-<p>Now that the data is in a pyspark array, we can apply the desired pyspark aggregation to each item in the array.</p>
+<p>Now that the data is in a PySpark array, we can apply the desired PySpark aggregation to each item in the array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -664,7 +1194,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
  </tr>
 </table>
 
-<p>Next, we create another pyspark udf which changes the dense vector into a pyspark array.</p>
+<p>Next, we create another PySpark udf which changes the dense vector into a PySpark array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -707,7 +1237,7 @@ src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js">
  </tr>
 </table>
 
-<p>Finally, we can use our standard pyspark aggregators to each item in the pyspark array.</p>
+<p>Finally, we can use our standard PySpark aggregators to each item in the PySpark array.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -1432,7 +1962,7 @@ interpreter: 64bit
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2018/02/06/is-not-in-with-pyspark/">'Is Not in' With Pyspark</a></h1>
+      <h1 class="entry-title"><a href="/blog/2018/02/06/is-not-in-with-pyspark/">'Is Not in' With PySpark</a></h1>
     
     
       <p class="meta">
@@ -1448,7 +1978,7 @@ interpreter: 64bit
   </header>
 
 
-  <div class="entry-content"><p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in pyspark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
+  <div class="entry-content"><p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in PySpark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
 
 <p><strong>EDIT</strong><br />
 Check the note at the bottom regarding “anti joins”. Using an anti join is much cleaner than the code described here.</p>
@@ -1601,81 +2131,13 @@ Check the note at the bottom regarding “anti joins”. Using an anti join is m
 </table>
 
 <p><strong>EDIT</strong><br />
-I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">pyspark documentation</a> a more thorough reading and realized that pyspark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
+I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">PySpark documentation</a> a more thorough reading and realized that PySpark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
 
 <p>For example, the following code will produce rows in b where the id value is not present in a.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 </pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;left_anti&#39;</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/01/16/psychology-to-data-science-part-2/">Psychology to Data Science: Part 2</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-01-16T20:18:34-06:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>16</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>8:18 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This is the second post in a series of posts about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. The <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">first post</a> answers many of the best and most common questions I’ve heard about my transition. This post focuses on the technical skills that are often necessary for landing a data science job.</p>
-
-<p>Each header in this post represents a different technical area. Following the header I describe what I would know before walking into an interview.</p>
-
-<h3 id="sql">SQL</h3>
-<p>SQL is not often used in academia, but it’s probably the most important skill in data science (how do you think you’ll get your data??). It’s used every day by data scientists at every company, and while it’s 100% necessary to know, it’s stupidly boring to learn. But, once you get the hang of it, it’s a fun language because it requires a lot of creativity. To learn SQL, I would start by doing the <a href="https://community.modeanalytics.com/sql/tutorial/introduction-to-sql/">mode analytics tutorials</a>, then the <a href="http://sqlzoo.net/">sql zoo</a> problems. <a href="https://www.fullstackpython.com/blog/postgresql-python-3-psycopg2-ubuntu-1604.html">Installing postgres on your personal computer</a> and fetching data in Python with psycopg2 or sql-alchemy is a good idea. After, completing all this, move onto query optimization (where the creativity comes into play) - check out the <a href="https://www.postgresql.org/docs/9.3/static/sql-explain.html">explain function</a> and <a href="https://stackoverflow.com/questions/2617661/whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement">order of execution</a>. Shameless self promotion: I made a <a href="https://danvatterott.com/presentations/sql_presentation/index.html#_blank">SQL presentation</a> on what SQL problems to know for job interviews.</p>
-
-<h3 id="pythonr">Python/R</h3>
-<p>Some places use R. Some places use Python. It sucks, but these languages are not interchangeable (an R team will not hire someone who only knows Python). Whatever language you choose, you should know it well because this is a tool you will use every day. I use Python, so what follows is specific to Python.</p>
-
-<p>I learned Python with <a href="https://www.codecademy.com/">codeacademy</a> and liked it. If you’re already familiar with Python I would practice “white board” style questions. Feeling comfortable with the beginner questions on a site like <a href="https://leetcode.com/">leetcode</a> or <a href="https://www.hackerrank.com/">hackerrank</a> would be a good idea. Writing answers while thinking about code optimization is a plus.</p>
-
-<p><a href="https://jeffknupp.com/">Jeff Knupp’s blog</a> has great tid-bits about developing in python; it’s pure gold.</p>
-
-<p>Another good way to learn is to work on your digital profile. If you haven’t already, I would start a blog (I talk more about this is <a href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/">Post 1</a>).</p>
-
-<h3 id="statisticsml">Statistics/ML</h3>
-<p>When starting here, the Andrew Ng <a href="https://www.coursera.org/learn/machine-learning">coursera course</a> is a great intro. While it’s impossible to learn all of it, I love to use <a href="https://web.stanford.edu/~hastie/ElemStatLearn/">elements of statistical learning</a> and it’s sibling book <a href="http://www-bcf.usc.edu/~gareth/ISL/">introduction to statistical learning</a> as a reference. I’ve heard good things about <a href="https://www.amazon.com/Python-Machine-Learning-Sebastian-Raschka/dp/1783555130">Python Machine Learning</a> but haven’t checked it out myself.</p>
-
-<p>As a psychology major, I felt relatively well prepared in this regard. Experience with linear-mixed effects, hypothesis-testing, regression, etc. serves Psychology PhDs well. This doesn’t mean you can forget Stats 101 though. Once, I found myself uncomfortably surprised by a very basic probability question.</p>
-
-<p>Here’s a quick list of Statistics/ML algorithms I often use: GLMs and their regularization methods are a must (L1 and L2 regularization probably come up in 75% of phone screens). Hyper-parameter search. Cross-validation! Tree-based models (e.g., random forests, boosted decision trees). I often use XGBoost and have found its <a href="http://xgboost.readthedocs.io/en/latest/model.html">intro post</a> helpful.</p>
-
-<p>I think you’re better off deeply (pun not intended) learning the basics (e.g., linear and logistic regression) than learning a smattering of newer, fancier methods (e.g., deep learning). This means thinking about linear regression from first principles (what are the assumptions and given these assumptions can you derive the best-fit parameters of a linear regression?). I can’t tell you how many hours I’ve spent studying Andrew Ng’s <a href="http://cs229.stanford.edu/notes/cs229-notes1.pdf">first supervised learning lecture</a> for this. It’s good to freshen up on linear algebra and there isn’t a better way to do this than the <a href="https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab">3Blue1Brown</a> videos; they’re amazing. This might seem too introductory/theoretical, but it’s necessary and often comes up in interviews.</p>
-
-<p>Be prepared to talk about the bias-variance tradeoff. Everything in ML comes back to the bias-variance tradeoff so it’s a great interview question. I know some people like to ask candidates about feature selection. I think this question is basically a rephrasing of the bias-variance tradeoff.</p>
-
-<h3 id="gitcode-etiquette">Git/Code Etiquette</h3>
-<p>Make a github account if you haven’t already. Get used to commits, pushing, and branching. This won’t take long to get the hang of, but, again, it’s something you will use every day.</p>
-
-<p>As much as possible I would watch code etiquette. I know this seems anal, but it matters to some people (myself included), and having pep8 quality code can’t hurt. There’s a number of <a href="https://pylint.readthedocs.io/en/latest/">python modules</a> that will help here. Jeff Knupp also has a <a href="https://jeffknupp.com/blog/2016/12/09/how-python-linters-will-save-your-large-python-project/">great post</a> about linting/automating code etiquette.</p>
-
-<p>Unit-tests are a good thing to practice/be familiar with. Like usual, Jeff Knupp has a great <a href="https://jeffknupp.com/blog/2013/12/09/improve-your-python-understanding-unit-testing/">post</a> on the topic.</p>
-
-<p>I want to mention that getting a data science job is a little like getting a grant. Each time you apply, there is a low chance of getting the job/grant (luckily, there are many more jobs than grants). When creating your application/grant, it’s important to find ways to get people excited about your application/grant (e.g., showing off your statistical chops). This is where code etiquette comes into play. The last thing you want is to diminish someone’s excitement about you because you didn’t include a doc string. Is code etiquette going to remove you from contention for a job? Probably not. But it could diminish someone’s excitement.</p>
-
-<h3 id="final-thoughts">Final Thoughts</h3>
-<p>One set of skills that I haven’t touched on is cluster computing (e.g., Hadoop, Spark). Unfortunately, I don’t think there is much you can do here. I’ve heard good things about the book <a href="http://shop.oreilly.com/product/0636920028512.do">Learning Spark</a>, but books can only get you so far. If you apply for a job that wants Spark, I would install Spark on your local computer and play around, but it’s hard to learn cluster computing when you’re not on a cluster. Spark is more or less fancy SQL (aside from the ML aspects), so learning SQL is a good way to prepare for a Spark mindset. I didn’t include cluster computing above, because many teams seem okay with employees learning this on the job.</p>
-
-<p>Not that there’s a lack of content here, but <a href="https://blog.insightdatascience.com/preparing-for-insight-ca7cc6087f91">here</a>’s a good list of must know topics that I used when transitioning from academia to data science.</p>
 </div>
   
   
@@ -1728,11 +2190,15 @@ I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pysp
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in Pyspark</a>
+        <a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in PySpark</a>
       </li>
     
       <li class="post">
@@ -1740,11 +2206,7 @@ I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pysp
       </li>
     
       <li class="post">
-        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in Pyspark</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a>
+        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in PySpark</a>
       </li>
     
   </ul>

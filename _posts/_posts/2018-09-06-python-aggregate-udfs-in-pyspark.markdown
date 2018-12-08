@@ -1,14 +1,14 @@
 ---
 layout: post
-title: "Python Aggregate UDFs in Pyspark"
+title: "Python Aggregate UDFs in PySpark"
 date: 2018-09-06 16:04:43 -0500
 comments: true
 categories: [python, spark, pyspark, data science, data engineering]
 ---
 
-Pyspark has a great set of [aggregate](http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg) functions (e.g., [count, countDistinct, min, max, avg, sum](http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData)), but these are not enough for all cases (particularly if you're trying to avoid costly Shuffle operations).
+PySpark has a great set of [aggregate](http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg) functions (e.g., [count, countDistinct, min, max, avg, sum](http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData)), but these are not enough for all cases (particularly if you're trying to avoid costly Shuffle operations).
 
-Pyspark currently has [pandas_udfs](http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf), which can create custom aggregators, but you can only "apply" one pandas_udf at a time. If you want to use more than one, you'll have to preform multiple groupBys...and there goes avoiding those shuffles.
+PySpark currently has [pandas_udfs](http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf), which can create custom aggregators, but you can only "apply" one pandas_udf at a time. If you want to use more than one, you'll have to preform multiple groupBys...and there goes avoiding those shuffles.
 
 In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).
 

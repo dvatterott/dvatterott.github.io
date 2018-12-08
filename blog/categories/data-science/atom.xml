@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Science | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-science/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2018-11-03T11:47:59-05:00</updated>
+  <updated>2018-12-08T09:35:09-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,516 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Creating a Survival Function in PySpark]]></title>
+    <link href="https://danvatterott.com/blog/2018/12/07/survival-function-in-pyspark/"/>
+    <updated>2018-12-07T21:13:48-06:00</updated>
+    <id>https://danvatterott.com/blog/2018/12/07/survival-function-in-pyspark</id>
+    <content type="html"><![CDATA[<p>Traditionally, <a href="https://en.wikipedia.org/wiki/Survival_function">survival functions</a> have been used in medical research to visualize the proportion of people who remain alive following a treatment. I often use them to understand the length of time between users creating and cancelling their subscription accounts.</p>
+
+<p>Here, I describe how to create a survival function using PySpark. This is not a post about creating a <a href="https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator">Kaplan-Meier estimator</a> or fitting mathematical functions to survival functions. Instead, I demonstrate how to acquire the data necessary for plotting a survival function.</p>
+
+<p>I begin by creating a SparkContext.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class='line'><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="err">“</span><span class="n">local</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">Example</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Next, I load fake data into a Spark Dataframe. This is the data we will use in this example. Each row is a different user and the Dataframe has columns describing start and end dates for each user. <code>start_date</code> represents when a user created their account and <code>end_date</code> represents when a user canceled their account.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">user_table</span> <span class="o">=</span> <span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mo">01</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mo">03</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                              <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mo">01</span><span class="o">-</span><span class="mo">01</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                              <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2017</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">31</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mo">01</span><span class="o">-</span><span class="mo">06</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                              <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">15</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">16</span><span class="err">’</span><span class="p">],</span>
+</span><span class='line'>                              <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mo">04</span><span class="o">-</span><span class="mo">02</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="mi">2018</span><span class="o">-</span><span class="mo">04</span><span class="o">-</span><span class="mi">12</span><span class="err">’</span><span class="p">]])</span>
+</span><span class='line'>              <span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">start_date</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">end_date</span><span class="err">’</span><span class="p">])</span>
+</span><span class='line'>             <span class="p">)</span>
+</span><span class='line'><span class="n">user_table</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>2018-01-01</td>
+   <td>2018-08-17</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>2017-12-31</td>
+   <td>2018-01-06</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>2018-11-15</td>
+   <td>2018-11-16</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>2018-04-02</td>
+   <td>2018-04-12</td>
+ </tr>
+</table>
+
+<p>I use <code>start_date</code> and <code>end_date</code> to determine how many days each user was active following their <code>start_date</code>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">days_till_cancel</span> <span class="o">=</span> <span class="p">(</span><span class="n">user_table</span>
+</span><span class='line'>                    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">days_till_cancel</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">datediff</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">end_date</span><span class="err">’</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">start_date</span><span class="err">’</span><span class="p">)))</span>
+</span><span class='line'>                   <span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">days_till_cancel</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>2018-01-01</td>
+   <td>2018-08-17</td>
+   <td>228</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>2017-12-31</td>
+   <td>2018-01-06</td>
+   <td>6</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>2018-11-15</td>
+   <td>2018-11-16</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>2018-04-02</td>
+   <td>2018-04-12</td>
+   <td>10</td>
+ </tr>
+</table>
+
+<p>I use a <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.udf">Python UDF</a> to create a vector of the numbers 0 through 13 representing our <em>period of interest</em>. The start date of our <em>period of interest</em> is a user’s <code>start_date</code>. The end date of our <em>period of interest</em> is 13 days following a user’s <code>start_date</code>. I chose 13 days as the <em>period of interest</em> for no particular reason.</p>
+
+<p>I use <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.explode">explode</a> to expand the numbers in each vector (i.e., 0-&gt;13) into different rows. Each user now has a row for each day in the <em>period of interest</em>.</p>
+
+<p>I describe one user’s data below.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">create_day_list</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">14</span><span class="p">)],</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">()))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">relevant_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">days_till_cancel</span>
+</span><span class='line'>                 <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">day_list</span><span class="err">’</span><span class="p">,</span> <span class="n">create_day_list</span><span class="p">())</span>
+</span><span class='line'>                 <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">day</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">day_list</span><span class="err">’</span><span class="p">)))</span>
+</span><span class='line'>                 <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="err">‘</span><span class="n">day_list</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'>                <span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">relevant_days</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+   <th>day</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>2</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>3</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>4</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>5</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>6</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>7</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>8</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>9</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>10</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>11</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>12</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>13</td>
+ </tr>
+</table>
+
+<p>We want the proportion of users who are active <em>X</em> days after <code>start_date</code>. I create a column <code>active</code> which represents whether users are active or not. I initially assign each user a 1 in each row (1 represents active). I then overwrite 1s with 0s after a user is no longer active. I determine that a user is no longer active by comparing the values in <code>day</code> and <code>days_till_cancel</code>. When <code>day</code> is greater than <code>days_till_cancel</code>, the user is no longer active.</p>
+
+<p>I describe one user’s data below.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">days_active</span> <span class="o">=</span> <span class="p">(</span><span class="n">relevant_days</span>
+</span><span class='line'>               <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">active</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span><span class='line'>               <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">active</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">day</span><span class="err">’</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">days_till_cancel</span><span class="err">’</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">active</span><span class="err">’</span><span class="p">)))</span>
+</span><span class='line'>              <span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">days_active</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>start_date</th>
+   <th>end_date</th>
+   <th>days_till_cancel</th>
+   <th>day</th>
+   <th>active</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>0</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>3</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>4</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>5</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>6</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>7</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>8</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>9</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>10</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>11</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>12</td>
+   <td>0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2018-11-01</td>
+   <td>2018-11-03</td>
+   <td>2</td>
+   <td>13</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>Finally, to acquire the survival function data, I group by <code>day</code> (days following <code>start_date</code>) and average the value in <code>active</code>. This provides us with the proportion of users who are active <em>X</em> days after <code>start_date</code>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">survival_curve</span> <span class="o">=</span> <span class="p">(</span><span class="n">days_active</span>
+</span><span class='line'>                  <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="err">‘</span><span class="n">day</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'>                  <span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+</span><span class='line'>                      <span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="err">‘</span><span class="o">*</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">user_count</span><span class="err">’</span><span class="p">),</span>
+</span><span class='line'>                      <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="err">‘</span><span class="n">active</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">percent_active</span><span class="err">’</span><span class="p">),</span>
+</span><span class='line'>                  <span class="p">)</span>
+</span><span class='line'>                  <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="err">‘</span><span class="n">day</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'>                 <span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">survival_curve</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>day</th>
+   <th>user_count</th>
+   <th>percent_active</th>
+ </tr>
+ <tr>
+   <td>0</td>
+   <td>5</td>
+   <td>1.0</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>5</td>
+   <td>0.8</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>5</td>
+   <td>0.6</td>
+ </tr>
+ <tr>
+   <td>6</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>7</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>8</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>9</td>
+   <td>5</td>
+   <td>0.4</td>
+ </tr>
+ <tr>
+   <td>10</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>11</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>12</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+ <tr>
+   <td>13</td>
+   <td>5</td>
+   <td>0.2</td>
+ </tr>
+</table>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Looking Towards the Future of Automated Machine-learning]]></title>
@@ -55,13 +565,13 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Python Aggregate UDFs in Pyspark]]></title>
+    <title type="html"><![CDATA[Python Aggregate UDFs in PySpark]]></title>
     <link href="https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark/"/>
     <updated>2018-09-06T16:04:43-05:00</updated>
     <id>https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark</id>
-    <content type="html"><![CDATA[<p>Pyspark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
+    <content type="html"><![CDATA[<p>PySpark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
 
-<p>Pyspark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
+<p>PySpark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
 
 <p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
 
@@ -373,11 +883,11 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in Pyspark]]></title>
+    <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in PySpark]]></title>
     <link href="https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/"/>
     <updated>2018-07-08T19:24:04-05:00</updated>
     <id>https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark</id>
-    <content type="html"><![CDATA[<p>Many (if not all of) pyspark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+    <content type="html"><![CDATA[<p>Many (if not all of) PySpark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
 
 <p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!</p>
 
@@ -471,7 +981,7 @@
  </tr>
 </table>
 
-<p>Now that the data is in a pyspark array, we can apply the desired pyspark aggregation to each item in the array.</p>
+<p>Now that the data is in a PySpark array, we can apply the desired PySpark aggregation to each item in the array.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -525,7 +1035,7 @@
  </tr>
 </table>
 
-<p>Next, we create another pyspark udf which changes the dense vector into a pyspark array.</p>
+<p>Next, we create another PySpark udf which changes the dense vector into a PySpark array.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -568,7 +1078,7 @@
  </tr>
 </table>
 
-<p>Finally, we can use our standard pyspark aggregators to each item in the pyspark array.</p>
+<p>Finally, we can use our standard PySpark aggregators to each item in the PySpark array.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -586,33 +1096,6 @@
 </table>
 
 <p>There we go! Hope you find this info helpful!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Integrating Apache Airflow and Databricks]]></title>
-    <link href="https://danvatterott.com/blog/2018/06/13/integrating-apache-airflow-and-databricks/"/>
-    <updated>2018-06-13T18:05:52-05:00</updated>
-    <id>https://danvatterott.com/blog/2018/06/13/integrating-apache-airflow-and-databricks</id>
-    <content type="html"><![CDATA[<p>Cron is great for automation, but when tasks begin to rely on each other (task C can only run after both tasks A and B finish) cron does not do the trick.</p>
-
-<p><a href="https://airflow.apache.org/">Apache Airflow</a> is open source software (from airbnb) designed to handle the relationship between tasks. I recently setup an airflow server which coordinates automated jobs on <a href="https://databricks.com/">databricks</a> (great software for coordinating spark clusters). Connecting databricks and airflow ended up being a little trickier than it should have been, so I am writing this blog post as a resource to anyone else who attempts to do the same in the future.</p>
-
-<p>For the most part I followed <a href="https://medium.com/a-r-g-o/installing-apache-airflow-on-ubuntu-aws-6ebac15db211">this tutorial from A-R-G-O</a> when setting up airflow. Databricks also has a decent <a href="https://docs.databricks.com/user-guide/dev-tools/data-pipelines.html">tutorial</a> on setting up airflow. The difficulty here is that the airflow software for talking to databricks clusters (DatabricksSubmitRunOperator) was not introduced into airflow until version 1.9 and the A-R-G-O tutorial uses airflow 1.8.</p>
-
-<p>Airflow 1.9 uses Celery version &gt;= 4.0 (I ended up using Celery version 4.1.1). Airflow 1.8 requires Celery &lt; 4.0. In fact, the A-R-G-O tutorial notes that using Celery &gt;= 4.0 will result in the error:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>airflow worker: Received and deleted unknown message. Wrong destination?!?</span></code></pre></td></tr></table></div></figure></p>
-
-<p>I can attest that this is true! If you use airflow 1.9 with Celery &lt; 4.0, everything might appear to work, but airflow will randomly stop scheduling jobs after awhile (check the airflow-scheduler logs if you run into this). You need to use Celery &gt;= 4.0! Preventing the Wrong destination error is easy, but the fix is hard to find (hence why I wrote this post).</p>
-
-<p>After much ado, here’s the fix! If you follow the A-R-G-O tutorial, install airflow 1.9, celery &gt;=4.0 AND set broker_url in airflow.cfg as follows:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>broker_url = pyamqp://guest:guest@localhost:5672//</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Note that compared to the A-R-G-O tutorial, I am just adding “py” in front of amqp. Easy!</p>
 ]]></content>
   </entry>
   
