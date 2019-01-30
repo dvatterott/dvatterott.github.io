@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Machine-learning | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/machine-learning/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-01-05T12:06:06-06:00</updated>
+  <updated>2019-01-29T18:57:13-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,35 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Introducing Predeval]]></title>
+    <link href="https://danvatterott.com/blog/2019/01/29/introducing-predeval/"/>
+    <updated>2019-01-29T20:27:57-06:00</updated>
+    <id>https://danvatterott.com/blog/2019/01/29/introducing-predeval</id>
+    <content type="html"><![CDATA[<p><a href="https://predeval.readthedocs.io/en/latest/">Predeval</a> is software designed to help you identify changes in a model’s output.</p>
+
+<p>For instance, you might be tasked with building a model to predict churn. When you deploy this model in production, you have to wait to learn which users churned in order to know how your model performed. While Predeval will not free you from this wait, it can provide initial signals as to whether the model is producing reasonable (i.e., expected) predictions. Unexpected predictions <em>might</em> reflect a poor performing model. They also <em>might</em> reflect a change in your input data. Either way, something has changed and you will want to investigate further.</p>
+
+<p>Using predeval, you can detect changes in model output ASAP. You can then use python’s libraries to build a surrounding alerting system that will signal a need to investigate. This system should give you additional confidence that your model is performing reasonably. Here’s a <a href="https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/">post</a> where I configure an alerting system using python, mailutils, and postfix (although the alerting system is not built around predeval).</p>
+
+<p>Predeval operates by forming expectations about what your model’s outputs will look like. For example, you might give predeval the model’s output from a validation dataset. Predeval will then compare new outputs to the outputs produced by the validation dataset, and will report whether it detects a difference.</p>
+
+<p>Predeval works with models producing both categorical and continuous outputs.</p>
+
+<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#categoricalevaluator">example</a> of predeval with a model producing categorical outputs. Predeval will (by default) check whether all expected output categories are present, and whether the output categories occur at their expected frequencies (using a <a href="https://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.stats.chi2_contingency.html">Chi-square test of independence of variables in a contingency table</a>).</p>
+
+<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#continuousevaluator">example</a> of predeval with a model producing continuous outputs. Predeval will (by default) check whether the new output have a minimum lower than expected, a maximum greater than expected, a different mean, a different standard deviation, and whether the new output are distributed as expected (using a <a href="https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.stats.ks_2samp.html#scipy.stats.ks_2samp">Kolmogorov-Smirnov test</a>)</p>
+
+<p>I’ve tried to come up with reasonable defaults for determining whether data are different, but you can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#updating-test-parameters">set these thresholds yourself</a>. You can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#changing-evaluation-tests">choose what comparison tests to run</a> (e.g., checking the minimum, maximum etc.).</p>
+
+<p>You will likely need to save your predeval objects so that you can apply them to future data. Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#saving-and-loading-your-evaluator">example</a> of saving the objects.</p>
+
+<p>Documentation about how to install predeval can be found <a href="https://predeval.readthedocs.io/en/latest/installation.html#installation">here</a>.</p>
+
+<p>If you have comments about improvements or would like to <a href="https://predeval.readthedocs.io/en/latest/contributing.html">contribute</a>, please reach out!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Looking Towards the Future of Automated Machine-learning]]></title>

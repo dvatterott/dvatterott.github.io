@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Random Weekly Reminders - Dan Vatterott</title>
+  <title>Introducing Predeval - Dan Vatterott</title>
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="I constantly use google calendar to schedule reminder emails, but I want some of my reminders to be stochastic! Google calendar wants all their &hellip;">
+  <meta name="description" content="Predeval is software designed to help you identify changes in a model’s output. For instance, you might be tasked with building a model to predict &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/">
+  <link rel="canonical" href="https://danvatterott.com/blog/2019/01/29/introducing-predeval/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Dan Vatterott" type="application/atom+xml">
@@ -91,7 +91,7 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
   
   <header>
     
-      <h1 class="entry-title">Random Weekly Reminders</h1>
+      <h1 class="entry-title">Introducing Predeval</h1>
     
     
       <p class="meta">
@@ -100,26 +100,34 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
 
 
 
-<time class='entry-date' datetime='2018-06-02T17:58:52-05:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2018</span></span> <span class='time'>5:58 pm</span></time>
+<time class='entry-date' datetime='2019-01-29T20:27:57-06:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>8:27 pm</span></time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>I constantly use google calendar to schedule reminder emails, but I want some of my reminders to be stochastic!</p>
+<div class="entry-content"><p><a href="https://predeval.readthedocs.io/en/latest/">Predeval</a> is software designed to help you identify changes in a model’s output.</p>
 
-<p>Google calendar wants all their events to occur on a regular basis (e.g., every Sunday), but I might want a weekly reminder email which occurs on a random day each the week.</p>
+<p>For instance, you might be tasked with building a model to predict churn. When you deploy this model in production, you have to wait to learn which users churned in order to know how your model performed. While Predeval will not free you from this wait, it can provide initial signals as to whether the model is producing reasonable (i.e., expected) predictions. Unexpected predictions <em>might</em> reflect a poor performing model. They also <em>might</em> reflect a change in your input data. Either way, something has changed and you will want to investigate further.</p>
 
-<p>I wrote a quick set of <a href="https://github.com/dvatterott/reminder_email">python scripts</a> which handle this situation.</p>
+<p>Using predeval, you can detect changes in model output ASAP. You can then use python’s libraries to build a surrounding alerting system that will signal a need to investigate. This system should give you additional confidence that your model is performing reasonably. Here’s a <a href="https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/">post</a> where I configure an alerting system using python, mailutils, and postfix (although the alerting system is not built around predeval).</p>
 
-<p>The script <a href="https://github.com/dvatterott/reminder_email/blob/master/find_days.py">find_days.py</a> chooses a random day each week (over a month) on which a reminder email should be sent. These dates are piped to a text file (dates.txt). The script <a href="https://github.com/dvatterott/reminder_email/blob/master/send_email.py">send_email.py</a> reads this text file and sends a reminder email to me if the current date matches one of the dates in dates.txt.</p>
+<p>Predeval operates by forming expectations about what your model’s outputs will look like. For example, you might give predeval the model’s output from a validation dataset. Predeval will then compare new outputs to the outputs produced by the validation dataset, and will report whether it detects a difference.</p>
 
-<p>I use <a href="https://help.ubuntu.com/community/CronHowto">cron</a> to automatically run these scripts on a regular basis. Cron runs find_days.py on the first of each month and runs send_email.py every day. I copied my cron script as <a href="https://github.com/dvatterott/reminder_email/blob/master/cron_job.txt">cron_job.txt</a>.</p>
+<p>Predeval works with models producing both categorical and continuous outputs.</p>
 
-<p>I use mailutils and postfix to send the reminder emails from the machine. Check out <a href="https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-postfix-as-a-send-only-smtp-server-on-ubuntu-14-04">this tutorial</a> for how to set up a send only mail server. The trickiest part of this process was repeatedly telling gmail that my emails were not spam.</p>
+<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#categoricalevaluator">example</a> of predeval with a model producing categorical outputs. Predeval will (by default) check whether all expected output categories are present, and whether the output categories occur at their expected frequencies (using a <a href="https://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.stats.chi2_contingency.html">Chi-square test of independence of variables in a contingency table</a>).</p>
 
-<p>Now I receive my weekly reminder on an unknown date so I can <em>act</em> spontaneous!</p>
+<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#continuousevaluator">example</a> of predeval with a model producing continuous outputs. Predeval will (by default) check whether the new output have a minimum lower than expected, a maximum greater than expected, a different mean, a different standard deviation, and whether the new output are distributed as expected (using a <a href="https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.stats.ks_2samp.html#scipy.stats.ks_2samp">Kolmogorov-Smirnov test</a>)</p>
+
+<p>I’ve tried to come up with reasonable defaults for determining whether data are different, but you can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#updating-test-parameters">set these thresholds yourself</a>. You can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#changing-evaluation-tests">choose what comparison tests to run</a> (e.g., checking the minimum, maximum etc.).</p>
+
+<p>You will likely need to save your predeval objects so that you can apply them to future data. Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#saving-and-loading-your-evaluator">example</a> of saving the objects.</p>
+
+<p>Documentation about how to install predeval can be found <a href="https://predeval.readthedocs.io/en/latest/installation.html#installation">here</a>.</p>
+
+<p>If you have comments about improvements or would like to <a href="https://predeval.readthedocs.io/en/latest/contributing.html">contribute</a>, please reach out!</p>
 </div>
 
 
@@ -135,12 +143,12 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
 
 
 
-<time class='entry-date' datetime='2018-06-02T17:58:52-05:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2018</span></span> <span class='time'>5:58 pm</span></time>
+<time class='entry-date' datetime='2019-01-29T20:27:57-06:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>8:27 pm</span></time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/automation/'>automation</a>, <a class='category' href='/blog/categories/python/'>python</a>
+    <a class='category' href='/blog/categories/data-science/'>data science</a>, <a class='category' href='/blog/categories/machine-learning/'>machine-learning</a>, <a class='category' href='/blog/categories/open-source/'>open source</a>, <a class='category' href='/blog/categories/python/'>python</a>
   
 </span>
 
@@ -156,10 +164,8 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2018/05/03/regression-of-a-proportion-in-python/" title="Previous Post: Regression of a Proportion in Python">&laquo; Regression of a Proportion in Python</a>
+        <a class="basic-alignment left" href="/blog/2018/12/07/survival-function-in-pyspark/" title="Previous Post: Creating a Survival Function in PySpark">&laquo; Creating a Survival Function in PySpark</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/" title="Next Post: Integrating Apache Airflow and Databricks">Integrating Apache Airflow and Databricks &raquo;</a>
       
     </p>
   </footer>
@@ -251,8 +257,8 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/';
-        var disqus_url = 'https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/';
+        var disqus_identifier = 'https://danvatterott.com/blog/2019/01/29/introducing-predeval/';
+        var disqus_url = 'https://danvatterott.com/blog/2019/01/29/introducing-predeval/';
         var disqus_script = 'embed.js';
       
     (function () {

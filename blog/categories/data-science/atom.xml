@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Science | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-science/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-01-05T12:06:06-06:00</updated>
+  <updated>2019-01-29T18:57:13-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,35 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Introducing Predeval]]></title>
+    <link href="https://danvatterott.com/blog/2019/01/29/introducing-predeval/"/>
+    <updated>2019-01-29T20:27:57-06:00</updated>
+    <id>https://danvatterott.com/blog/2019/01/29/introducing-predeval</id>
+    <content type="html"><![CDATA[<p><a href="https://predeval.readthedocs.io/en/latest/">Predeval</a> is software designed to help you identify changes in a model’s output.</p>
+
+<p>For instance, you might be tasked with building a model to predict churn. When you deploy this model in production, you have to wait to learn which users churned in order to know how your model performed. While Predeval will not free you from this wait, it can provide initial signals as to whether the model is producing reasonable (i.e., expected) predictions. Unexpected predictions <em>might</em> reflect a poor performing model. They also <em>might</em> reflect a change in your input data. Either way, something has changed and you will want to investigate further.</p>
+
+<p>Using predeval, you can detect changes in model output ASAP. You can then use python’s libraries to build a surrounding alerting system that will signal a need to investigate. This system should give you additional confidence that your model is performing reasonably. Here’s a <a href="https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/">post</a> where I configure an alerting system using python, mailutils, and postfix (although the alerting system is not built around predeval).</p>
+
+<p>Predeval operates by forming expectations about what your model’s outputs will look like. For example, you might give predeval the model’s output from a validation dataset. Predeval will then compare new outputs to the outputs produced by the validation dataset, and will report whether it detects a difference.</p>
+
+<p>Predeval works with models producing both categorical and continuous outputs.</p>
+
+<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#categoricalevaluator">example</a> of predeval with a model producing categorical outputs. Predeval will (by default) check whether all expected output categories are present, and whether the output categories occur at their expected frequencies (using a <a href="https://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.stats.chi2_contingency.html">Chi-square test of independence of variables in a contingency table</a>).</p>
+
+<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#continuousevaluator">example</a> of predeval with a model producing continuous outputs. Predeval will (by default) check whether the new output have a minimum lower than expected, a maximum greater than expected, a different mean, a different standard deviation, and whether the new output are distributed as expected (using a <a href="https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.stats.ks_2samp.html#scipy.stats.ks_2samp">Kolmogorov-Smirnov test</a>)</p>
+
+<p>I’ve tried to come up with reasonable defaults for determining whether data are different, but you can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#updating-test-parameters">set these thresholds yourself</a>. You can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#changing-evaluation-tests">choose what comparison tests to run</a> (e.g., checking the minimum, maximum etc.).</p>
+
+<p>You will likely need to save your predeval objects so that you can apply them to future data. Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#saving-and-loading-your-evaluator">example</a> of saving the objects.</p>
+
+<p>Documentation about how to install predeval can be found <a href="https://predeval.readthedocs.io/en/latest/installation.html#installation">here</a>.</p>
+
+<p>If you have comments about improvements or would like to <a href="https://predeval.readthedocs.io/en/latest/contributing.html">contribute</a>, please reach out!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Creating a Survival Function in PySpark]]></title>
@@ -881,223 +910,6 @@
 <p>Note where set <code>on_failure_callback</code> equal to <code>notify_email</code> in the <code>PythonOperator</code>.</p>
 
 <p>Hope you find this helpful! Don’t hesitate to reach out if you have a question.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Aggregating Sparse and Dense Vectors in PySpark]]></title>
-    <link href="https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/"/>
-    <updated>2018-07-08T19:24:04-05:00</updated>
-    <id>https://danvatterott.com/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark</id>
-    <content type="html"><![CDATA[<p>Many (if not all of) PySpark’s machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
-
-<p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.linalg</span> <span class="kn">import</span> <span class="n">SparseVector</span><span class="p">,</span> <span class="n">DenseVector</span>
-</span><span class='line'><span class="c"># note that using Sparse and Dense Vectors from ml.linalg. There are other Sparse/Dense vectors in spark.&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([</span>
-</span><span class='line'>  <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">})),</span>
-</span><span class='line'>  <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">9</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">})),</span>
-</span><span class='line'>  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})),</span>
-</span><span class='line'><span class="p">])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">“</span><span class="n">row_num</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">features</span><span class="err">”</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>row_num</th>
-   <th>features</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>(10,[1,2,3,4,5],[1.0, 1.0, 2.0, 1.0, 3.0])</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>(10,[9],[100.0])</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>(10,[1],[1.0])</td>
- </tr>
-</table>
-
-<p>Next, I write a <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.udf">udf</a>, which changes the sparse vector into a dense vector and then changes the dense vector into a python list. The python list is then turned into a spark array when it comes out of the udf.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">sparse_to_array</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-</span><span class='line'>  <span class="n">v</span> <span class="o">=</span> <span class="n">DenseVector</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">new_array</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">])</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">new_array</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sparse_to_array_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">sparse_to_array</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">FloatType</span><span class="p">()))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">features_array</span><span class="err">’</span><span class="p">,</span> <span class="n">sparse_to_array_udf</span><span class="p">(</span><span class="err">‘</span><span class="n">features</span><span class="err">’</span><span class="p">))</span>
-</span><span class='line'><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>row_num</th>
-   <th>features</th>
-   <th>features_array</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>(10,[1,2,3,4,5],[1.0, 1.0, 2.0, 1.0, 3.0])</td>
-   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>(10,[9],[100.0])</td>
-   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>(10,[1],[1.0])</td>
-   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
- </tr>
-</table>
-
-<p>Now that the data is in a PySpark array, we can apply the desired PySpark aggregation to each item in the array.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df_agg</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">features_array</span><span class="err">’</span><span class="p">)[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">averages</span><span class="err">”</span><span class="p">))</span>
-</span><span class='line'><span class="n">df_agg</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>averages</th>
- </tr>
- <tr>
-   <td>[0.0, 0.66667, 0.33333, 0.66667, 0.33333, 1.0, 0.0, 0.0, 0.0, 33.33333]</td>
- </tr>
-</table>
-
-<p>Now, let’s run through the same exercise with dense vectors. We start by creating a spark dataframe with a column of dense vectors.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([</span>
-</span><span class='line'>  <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])),</span>
-</span><span class='line'>  <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])),</span>
-</span><span class='line'>  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">DenseVector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])),</span>
-</span><span class='line'><span class="p">])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">“</span><span class="n">row_num</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">features</span><span class="err">”</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>row_num</th>
-   <th>features</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
- </tr>
-</table>
-
-<p>Next, we create another PySpark udf which changes the dense vector into a PySpark array.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">dense_to_array</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-</span><span class='line'>  <span class="n">new_array</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">])</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">new_array</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">dense_to_array_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">dense_to_array</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">FloatType</span><span class="p">()))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">features_array</span><span class="err">’</span><span class="p">,</span> <span class="n">dense_to_array_udf</span><span class="p">(</span><span class="err">‘</span><span class="n">features</span><span class="err">’</span><span class="p">))</span>
-</span><span class='line'><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>row_num</th>
-   <th>features</th>
-   <th>features_array</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
-   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
-   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
-   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
- </tr>
-</table>
-
-<p>Finally, we can use our standard PySpark aggregators to each item in the PySpark array.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df_agg</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">features_array</span><span class="err">’</span><span class="p">)[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">averages</span><span class="err">”</span><span class="p">))</span>
-</span><span class='line'><span class="n">df_agg</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>averages</th>
- </tr>
- <tr>
-   <td>[0.0, 0.66667, 0.33333, 0.66667, 0.33333, 1.0, 0.0, 0.0, 0.0, 33.33333]</td>
- </tr>
-</table>
-
-<p>There we go! Hope you find this info helpful!</p>
 ]]></content>
   </entry>
   

@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="Traditionally, survival functions have been used in medical research to visualize the proportion of people who remain alive following a treatment. I &hellip;">
+  <meta name="description" content="Predeval is software designed to help you identify changes in a model’s output. For instance, you might be tasked with building a model to predict &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,55 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/01/29/introducing-predeval/">Introducing Predeval</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-01-29T20:27:57-06:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>8:27 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="https://predeval.readthedocs.io/en/latest/">Predeval</a> is software designed to help you identify changes in a model’s output.</p>
+
+<p>For instance, you might be tasked with building a model to predict churn. When you deploy this model in production, you have to wait to learn which users churned in order to know how your model performed. While Predeval will not free you from this wait, it can provide initial signals as to whether the model is producing reasonable (i.e., expected) predictions. Unexpected predictions <em>might</em> reflect a poor performing model. They also <em>might</em> reflect a change in your input data. Either way, something has changed and you will want to investigate further.</p>
+
+<p>Using predeval, you can detect changes in model output ASAP. You can then use python’s libraries to build a surrounding alerting system that will signal a need to investigate. This system should give you additional confidence that your model is performing reasonably. Here’s a <a href="https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/">post</a> where I configure an alerting system using python, mailutils, and postfix (although the alerting system is not built around predeval).</p>
+
+<p>Predeval operates by forming expectations about what your model’s outputs will look like. For example, you might give predeval the model’s output from a validation dataset. Predeval will then compare new outputs to the outputs produced by the validation dataset, and will report whether it detects a difference.</p>
+
+<p>Predeval works with models producing both categorical and continuous outputs.</p>
+
+<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#categoricalevaluator">example</a> of predeval with a model producing categorical outputs. Predeval will (by default) check whether all expected output categories are present, and whether the output categories occur at their expected frequencies (using a <a href="https://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.stats.chi2_contingency.html">Chi-square test of independence of variables in a contingency table</a>).</p>
+
+<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#continuousevaluator">example</a> of predeval with a model producing continuous outputs. Predeval will (by default) check whether the new output have a minimum lower than expected, a maximum greater than expected, a different mean, a different standard deviation, and whether the new output are distributed as expected (using a <a href="https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.stats.ks_2samp.html#scipy.stats.ks_2samp">Kolmogorov-Smirnov test</a>)</p>
+
+<p>I’ve tried to come up with reasonable defaults for determining whether data are different, but you can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#updating-test-parameters">set these thresholds yourself</a>. You can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#changing-evaluation-tests">choose what comparison tests to run</a> (e.g., checking the minimum, maximum etc.).</p>
+
+<p>You will likely need to save your predeval objects so that you can apply them to future data. Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#saving-and-loading-your-evaluator">example</a> of saving the objects.</p>
+
+<p>Documentation about how to install predeval can be found <a href="https://predeval.readthedocs.io/en/latest/installation.html#installation">here</a>.</p>
+
+<p>If you have comments about improvements or would like to <a href="https://predeval.readthedocs.io/en/latest/contributing.html">contribute</a>, please reach out!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1959,194 +2008,6 @@ interpreter: 64bit
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/02/06/is-not-in-with-pyspark/">'Is Not in' With PySpark</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-02-06T21:10:32-06:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>9:10 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in PySpark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
-
-<p><strong>EDIT</strong><br />
-Check the note at the bottom regarding “anti joins”. Using an anti join is much cleaner than the code described here.</p>
-
-<p>Here is a tidbit of code which replicates SQL’s “not in” command, while keeping your data with the workers (it will require a shuffle).</p>
-
-<p>I start by creating some small dataframes.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">pyspark</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class="line"><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;valueA&#39;</span><span class="p">])</span>
-</span><span class="line"><span class="n">b</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;e&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;valueB&#39;</span><span class="p">])</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Take a quick look at dataframe <em>a</em>.</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>b</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>c</td>
- </tr>
-</table>
-
-<p>And dataframe <em>b</em>.</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">b</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
- </tr>
-</table>
-
-<p>I create a new column in <em>a</em> that is all ones. I could have used an existing column, but this way I know the column is never null.</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;inA&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>b</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>c</td>
-   <td>1</td>
- </tr>
-</table>
-
-<p>I join <em>a</em> and <em>b</em> with a left join. This way all values in <em>b</em> which are not in <em>a</em> have null values in the column “inA”.</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;left&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>valueB</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
-   <td>a</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
-</table>
-
-<p>By filtering out rows in the new dataframe <em>c</em>, which are not null, I remove all values of <em>b</em>, which were also in <em>a</em>.</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;left&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;inA&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">isNull</span><span class="p">())</span>
-</span><span class="line"><span class="n">c</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>valueB</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
-</table>
-
-<p><strong>EDIT</strong><br />
-I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">PySpark documentation</a> a more thorough reading and realized that PySpark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
-
-<p>For example, the following code will produce rows in b where the id value is not present in a.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;left_anti&#39;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -2192,6 +2053,10 @@ I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pysp
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/01/29/introducing-predeval/">Introducing Predeval</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a>
       </li>
     
@@ -2205,10 +2070,6 @@ I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pysp
     
       <li class="post">
         <a href="/blog/2018/08/29/custom-email-alerts-in-airflow/">Custom Email Alerts in Airflow</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/07/08/aggregating-sparse-and-dense-vectors-in-pyspark/">Aggregating Sparse and Dense Vectors in PySpark</a>
       </li>
     
   </ul>
