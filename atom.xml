@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="https://danvatterott.com/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-01-29T18:57:13-06:00</updated>
+  <updated>2019-02-05T12:31:55-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,191 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Complex Aggregations in PySpark]]></title>
+    <link href="https://danvatterott.com/blog/2019/02/05/complex-aggregations-in-pyspark/"/>
+    <updated>2019-02-05T19:09:32-06:00</updated>
+    <id>https://danvatterott.com/blog/2019/02/05/complex-aggregations-in-pyspark</id>
+    <content type="html"><![CDATA[<p>I’ve touched on this in <a href="https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">past posts</a>, but wanted to write a post specifically describing the power of what I call complex aggregations in PySpark.</p>
+
+<p>The idea is that you have have a data request which initially seems to require multiple different queries, but using ‘complex aggregations’ you can create the requested data using a single query (and a single shuffle).</p>
+
+<p>Let’s say you have a dataset like the following. You have one column (id) which is a unique key for each user, another column (group) which expresses the group that each user belongs to, and finally (value) which expresses the value of each customer. I apologize for the contrived example.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class="line">
+</span><span class="line"><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="s">&quot;local&quot;</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="mf">5.1</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="mf">2.6</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="mf">3.4</span><span class="p">],</span>
+</span><span class="line">                    <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="mf">1.7</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;group&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">])</span>
+</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>group</th>
+   <th>value</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'a'</td>
+   <td>5.1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>'b'</td>
+   <td>2.6</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>'b'</td>
+   <td>3.4</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>'c'</td>
+   <td>1.7</td>
+ </tr>
+</table>
+
+<p>Let’s say someone wants the average value of group a, b, and c, <em>AND</em> the average value of users in group a <em>OR</em> b, the average value of users in group b <em>OR</em> c AND the value of users in group a <em>OR</em> c. Adds a wrinkle, right? The ‘or’ clauses prevent us from using a simple groupby, and we don’t want to have to write 4 different queries.</p>
+
+<p>Using complex aggregations, we can access all these different conditions in a single query.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">final_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span>
+</span><span class="line">              <span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+</span><span class="line">                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;group_a_avg&#39;</span><span class="p">),</span>
+</span><span class="line">                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;group_b_avg&#39;</span><span class="p">),</span>
+</span><span class="line">                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;group_c_avg&#39;</span><span class="p">),</span>
+</span><span class="line">                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">((</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span>
+</span><span class="line">                        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span>
+</span><span class="line">                        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+</span><span class="line">                      <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;group_ab_avg&#39;</span><span class="p">),</span>
+</span><span class="line">                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">((</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span>
+</span><span class="line">                        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span>
+</span><span class="line">                        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+</span><span class="line">                      <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;group_bc_avg&#39;</span><span class="p">),</span>
+</span><span class="line">                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">((</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span>
+</span><span class="line">                        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span>
+</span><span class="line">                        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+</span><span class="line">                      <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;group_ac_avg&#39;</span><span class="p">),</span>
+</span><span class="line">                <span class="p">)</span>
+</span><span class="line">              <span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">final_data</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>group_a_avg</th>
+   <th>group_b_avg</th>
+   <th>group_c_avg</th>
+   <th>group_ab_avg</th>
+   <th>group_ac_avg</th>
+   <th>group_bc_avg</th>
+ </tr>
+ <tr>
+   <td>5.1</td>
+   <td>3.0</td>
+   <td>1.7</td>
+   <td>3.7</td>
+   <td>3.4</td>
+   <td>2.6</td>
+ </tr>
+</table>
+
+<p>They key here is using  <code>when</code> to filter different data in and out of different aggregations.</p>
+
+<p>This approach can be quite concise when used with python list comprehensions. I’ll rewrite the query above, but using a list comprehension.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+</span><span class="line">
+</span><span class="line"><span class="n">groups</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]</span>
+</span><span class="line"><span class="n">combos</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span>  <span class="mi">2</span><span class="p">)]</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">combos</span><span class="p">)</span>
+</span><span class="line"><span class="c">#[(&#39;a&#39;, &#39;b&#39;), (&#39;a&#39;, &#39;c&#39;), (&#39;b&#39;, &#39;c&#39;)]</span>
+</span><span class="line">
+</span><span class="line"><span class="n">single_group</span> <span class="o">=</span> <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;group_</span><span class="si">%s</span><span class="s">_avg&#39;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
+</span><span class="line"><span class="n">double_group</span> <span class="o">=</span> <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span><span class="o">==</span><span class="n">y</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;group_</span><span class="si">%s%s</span><span class="s">_avg&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">combos</span><span class="p">]</span>
+</span><span class="line"><span class="n">final_data</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="o">*</span><span class="n">single_group</span> <span class="o">+</span> <span class="n">double_group</span><span class="p">)</span>
+</span><span class="line"><span class="n">final_data</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>group_a_avg</th>
+   <th>group_b_avg</th>
+   <th>group_c_avg</th>
+   <th>group_ab_avg</th>
+   <th>group_ac_avg</th>
+   <th>group_bc_avg</th>
+ </tr>
+ <tr>
+   <td>5.1</td>
+   <td>3.0</td>
+   <td>1.7</td>
+   <td>3.7</td>
+   <td>3.4</td>
+   <td>2.6</td>
+ </tr>
+</table>
+
+<p>Voila! Hope you find this little trick helpful! Let me know if you have any questions or comments.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Introducing Predeval]]></title>
@@ -2727,165 +2912,6 @@ Probability of difference arising from chance: 0.57546
 <p>In this poster we used a free viewing task to examine whether an animal would exhibit a novelty preference when it was not associated with any possible rewards. We found the animal looked at (payed attention to) novel items more often than he looked at familiar items, but this preference for paying attention to novel items fluctuated over time. Sometimes the animal had a large preference for looking at the novel items and sometimes he had no preference for novels items.</p>
 
 <p>Neurons that we recorded in the dlPFC and area 7a encoded whether the animal was currently in a state where he prefered looking at novel items or not and this encoding persisted across the entire trial period. Importantly, while neurons in these areas also encoded whether the animal was currently looking at a novel item or not, this encoding was distinct from the encoding of the current preference state. These results demonstrate that the animal had simultaneous neural codes representing whether he was acutely attending to novel items and his general preference for attending to novel items or not. Importantly, these neural codes existed even though there were no explicit reward associations.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[PCA Tutorial]]></title>
-    <link href="https://danvatterott.com/blog/2016/11/06/pca-tutorial/"/>
-    <updated>2016-11-06T12:33:50-06:00</updated>
-    <id>https://danvatterott.com/blog/2016/11/06/pca-tutorial</id>
-    <content type="html"><![CDATA[<p><a href="http://setosa.io/ev/principal-component-analysis/">Principal Component Analysis</a> (PCA) is an important method for dimensionality reduction and data cleaning. I have used PCA in the past on this blog for estimating the latent variables that underlie player statistics. For example, I might have two features: average number of offensive rebounds and average number of defensive rebounds. The two features are highly correlated because a latent variable, the player’s <em>rebounding ability</em>, explains common variance in the two features. PCA is a method for extracting these latent variables that explain common variance across features.</p>
-
-<p>In this tutorial I generate fake data in order to help gain insight into the mechanics underlying PCA.</p>
-
-<p>Below I create my first feature by sampling from a normal distribution. I create a second feature by adding a noisy normal distribution to the first feature multiplied by two. Because I generated the data here, I know it’s composed to two latent variables, and PCA should be able to identify these latent variables.</p>
-
-<p>I generate the data and plot it below.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-</span><span class="line"><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s">&#39;ggplot&#39;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c">#make sure we&#39;re all working with the same numbers</span>
-</span><span class="line">
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">2.0</span><span class="p">,[</span><span class="mi">100</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="n">X</span><span class="p">,</span><span class="n">X</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">8.0</span><span class="p">,[</span><span class="mi">100</span><span class="p">,</span><span class="mi">1</span><span class="p">])]</span>
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;o&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Feature 1&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Feature 2&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Raw Data&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span><span class="mi">30</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="https://danvatterott.com/images/PCA/original_data.png" /></p>
-
-<p>The first step before doing PCA is to normalize the data. This centers each feature (each feature will have a mean of 0) and divides data by its standard deviation (changing the standard deviation to 1). Normalizing the data puts all features on the same scale. Having features on the same scale is important because features might be more or less variable because of measurement rather than the latent variables producing the feature. For example, in basketball, points are often accumulated in sets of 2s and 3s, while rebounds are accumulated one at a time. The nature of basketball puts points and rebounds on a different scales, but this doesn’t mean that the latent variables <em>scoring ability</em> and <em>rebounding ability</em> are more or less variable.</p>
-
-<p>Below I normalize and plot the data.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">stats</span>
-</span><span class="line">
-</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">mstats</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;o&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Feature 1&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Feature 2&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Standardized Data&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="https://danvatterott.com/images/PCA/stand_data.png" /></p>
-
-<p>After standardizing the data, I need to find the <a href="http://setosa.io/ev/eigenvectors-and-eigenvalues/">eigenvectors and eigenvalues</a>. The eigenvectors point in the direction of a component and eigenvalues represent the amount of variance explained by the component. Below, I plot the standardized data with the eigenvectors ploted with their eigenvalues as the vectors distance from the origin.</p>
-
-<p>As you can see, the blue eigenvector is longer and points in the direction with the most variability. The purple eigenvector is shorter and points in the direction with less variability.</p>
-
-<p>As expected, one component explains far more variability than the other component (becaus both my features share variance from a single latent gaussian distribution).</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">X</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-</span><span class="line"><span class="p">[</span><span class="n">V</span><span class="p">,</span><span class="n">PC</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;o&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">]],[</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span><span class="s">&#39;o-&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">V</span><span class="p">[</span><span class="mi">1</span><span class="p">]],[</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">V</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span><span class="s">&#39;o-&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Feature 1&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Feature 2&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Standardized Data with Eigenvectors&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="https://danvatterott.com/images/PCA/eigen_data.png" /></p>
-
-<p>Next I order the eigenvectors according to the magnitude of their eigenvalues. This orders the components so that the components that explain more variability occur first. I then transform the data so that they’re axis aligned. This means the first component explain variability on the x-axis and the second component explains variance on the y-axis.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">V</span><span class="p">)</span>
-</span><span class="line"><span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
-</span><span class="line"><span class="n">PC</span> <span class="o">=</span> <span class="n">PC</span><span class="p">[</span><span class="n">indices</span><span class="p">,:]</span>
-</span><span class="line">
-</span><span class="line"><span class="n">X_rotated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">PC</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_rotated</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">X_rotated</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;o&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">]],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="s">&#39;o-&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="n">PC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">V</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span><span class="s">&#39;o-&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Feature 1&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Feature 2&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Data Projected into PC space&#39;</span><span class="p">)</span>
-</span><span class="line"><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><img src="https://danvatterott.com/images/PCA/trans_data.png" /></p>
-
-<p>Finally, just to make sure the PCA was done correctly, I will call PCA from the sklearn library, run it, and make sure it produces the same results as my analysis.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
-</span><span class="line">
-</span><span class="line"><span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">()</span> <span class="c">#create PCA object</span>
-</span><span class="line"><span class="n">test</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="c">#pull out principle components</span>
-</span><span class="line">
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">X_rotated</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">test</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">X_rotated</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">test</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<pre><code>(-1.0, 0.0)
-(-1.0, 0.0)
-</code></pre>
 ]]></content>
   </entry>
   
