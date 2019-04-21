@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="https://danvatterott.com/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-04-07T14:52:44-05:00</updated>
+  <updated>2019-04-20T18:59:58-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,376 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Are Some Mlb Players More Likely to Hit Into Errors Than Others?]]></title>
+    <link href="https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-than-others/"/>
+    <updated>2019-04-19T11:02:56-05:00</updated>
+    <id>https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-than-others</id>
+    <content type="html"><![CDATA[<p>I recently found myself wondering if some baseball players are more likely to hit into errors than others. In theory, the answer should be “no” since fielders produce errors regardless of who is hitting. Nonetheless, it’s also possible that some hitters “force” errors by hitting the ball harder or running to first base faster.</p>
+
+<p>In order to evaluate this possibility, I found play-by-play data on <a href="https://www.retrosheet.org/">retrosheet.org</a>. This data contains row by row data describing each event (e.g., a hit, stolen base etc) in a baseball game. I’ve posted this analysis on <a href="https://github.com/dvatterott/mlb_errors">github</a> and will walk through it here.</p>
+
+<p>The user is expected to input what year’s data they want. I write the code’s output for the year 2018 as comments. The code starts by downloading and unzipping the data.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">YEAR</span><span class="o">=</span><span class="nv">$1</span>
+</span><span class="line"><span class="nv">FILE_LOC</span><span class="o">=</span>https://www.retrosheet.org/events/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>eve.zip
+</span><span class="line">
+</span><span class="line"><span class="nb">echo</span> <span class="s2">&quot;---------DOWNLOAD----------&quot;</span>
+</span><span class="line">wget <span class="nv">$FILE_LOC</span> -O ./raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>.zip
+</span><span class="line">
+</span><span class="line"><span class="nb">echo</span> <span class="s2">&quot;---------UNPACK----------&quot;</span>
+</span><span class="line">mkdir raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/
+</span><span class="line">unzip -o raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>.zip -d raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>The unzipped data contain play-by-play data in files with the EVN or EVA extensions. Each team’s home stadium has its own file. I combine all the play-by play events (.EVN and .EVA files) into a single file. I then remove all non batting events (e.g., balk, stolen base etc).</p>
+
+<p>I also combine all the roster files (.ROS) into a single file.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="c"># export playbyplay to single file</span>
+</span><span class="line">mkdir processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/
+</span><span class="line">find raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/ -regex <span class="s1">&#39;.*EV[A|N]&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	xargs grep play &gt; <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/playbyplay.out
+</span><span class="line">
+</span><span class="line"><span class="c"># get all plate appearances from data (and hitter). remove all non plate appearance rows</span>
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/playbyplay.out <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk -F<span class="s1">&#39;,&#39;</span> <span class="s1">&#39;{print $4&quot;,&quot;$7}&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	grep -Ev <span class="s1">&#39;,(NP|BK|CS|DI|OA|PB|WP|PO|POCS|SB)&#39;</span> &gt; <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/batters.out
+</span><span class="line">
+</span><span class="line"><span class="c"># one giant roster file</span>
+</span><span class="line">find raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/ -name <span class="s1">&#39;*ROS&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	xargs awk -F<span class="s1">&#39;,&#39;</span> <span class="s1">&#39;{print $1&quot; &quot;$2&quot; &quot;$3}&#39;</span> &gt; <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/players.out
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>In this next few code blocks I print some data just to see what I am working with. For instance, I print out players with the most plate appearances. I was able to confirm these numbers with <a href="https://baseball-reference.com">baseball-reference</a>. This operation requires me to groupby player and count the rows. I join this file with the roster file to get player’s full names.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">echo</span> <span class="s2">&quot;---------PLAYERS WITH MOST PLATE APPEARANCES----------&quot;</span>
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/batters.out <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk -F, <span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	sort -k2 -nr <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	head &gt; <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/most_pa.out
+</span><span class="line">join &lt;<span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/players.out<span class="o">)</span> &lt;<span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/most_pa.out<span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	uniq <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	sort -k <span class="m">4</span> -nr <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	head <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk <span class="s1">&#39;{print $3&quot;, &quot;$2&quot;, &quot;$4}&#39;</span>
+</span><span class="line">
+</span><span class="line"><span class="c">#---------PLAYERS WITH MOST PLATE APPEARANCES----------</span>
+</span><span class="line"><span class="c">#Francisco, Lindor, 745</span>
+</span><span class="line"><span class="c">#Trea, Turner, 740</span>
+</span><span class="line"><span class="c">#Manny, Machado, 709</span>
+</span><span class="line"><span class="c">#Cesar, Hernandez, 708</span>
+</span><span class="line"><span class="c">#Whit, Merrifield, 707</span>
+</span><span class="line"><span class="c">#Freddie, Freeman, 707</span>
+</span><span class="line"><span class="c">#Giancarlo, Stanton, 706</span>
+</span><span class="line"><span class="c">#Nick, Markakis, 705</span>
+</span><span class="line"><span class="c">#Alex, Bregman, 705</span>
+</span><span class="line"><span class="c">#Marcus, Semien, 703</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Here’s the players with the most hits. Notice that I filter out all non-hits in the grep, then group by player.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">echo</span> <span class="s2">&quot;---------PLAYERS WITH MOST HITS----------&quot;</span>
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/batters.out <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	grep -E <span class="s1">&#39;,(S|D|T|HR)&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk -F, <span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	sort -k2 -nr <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	head
+</span><span class="line">
+</span><span class="line"><span class="c">#---------PLAYERS WITH MOST HITS----------</span>
+</span><span class="line"><span class="c">#merrw001 192</span>
+</span><span class="line"><span class="c">#freef001 191</span>
+</span><span class="line"><span class="c">#martj006 188</span>
+</span><span class="line"><span class="c">#machm001 188</span>
+</span><span class="line"><span class="c">#yelic001 187</span>
+</span><span class="line"><span class="c">#markn001 185</span>
+</span><span class="line"><span class="c">#castn001 185</span>
+</span><span class="line"><span class="c">#lindf001 183</span>
+</span><span class="line"><span class="c">#peraj003 182</span>
+</span><span class="line"><span class="c">#blacc001 182</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Here’s the players with the most at-bats.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">echo</span> <span class="s2">&quot;---------PLAYERS WITH MOST AT BATS----------&quot;</span>
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/batters.out <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	grep -Ev <span class="s1">&#39;SF|SH&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	grep -E <span class="s1">&#39;,(S|D|T|HR|K|[0-9]|E|DGR|FC)&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk -F, <span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span> &gt; <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/abs.out
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/abs.out <span class="p">|</span> sort -k2 -nr <span class="p">|</span> head
+</span><span class="line">
+</span><span class="line"><span class="c">#---------PLAYERS WITH MOST AT BATS----------</span>
+</span><span class="line"><span class="c">#turnt001 664</span>
+</span><span class="line"><span class="c">#lindf001 661</span>
+</span><span class="line"><span class="c">#albio001 639</span>
+</span><span class="line"><span class="c">#semim001 632</span>
+</span><span class="line"><span class="c">#peraj003 632</span>
+</span><span class="line"><span class="c">#merrw001 632</span>
+</span><span class="line"><span class="c">#machm001 632</span>
+</span><span class="line"><span class="c">#blacc001 626</span>
+</span><span class="line"><span class="c">#markn001 623</span>
+</span><span class="line"><span class="c">#castn001 620</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>And, finally, here’s the players who hit into the most errors.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">echo</span> <span class="s2">&quot;---------PLAYERS WHO HIT INTO THE MOST ERRORS----------&quot;</span>
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/batters.out <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	grep <span class="s1">&#39;,E[0-9]&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk -F, <span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span> &gt; <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out <span class="p">|</span> sort -k2 -nr <span class="p">|</span> head
+</span><span class="line">
+</span><span class="line"><span class="c">#---------PLAYERS WHO HIT INTO THE MOST ERRORS----------</span>
+</span><span class="line"><span class="c">#gurry001 13</span>
+</span><span class="line"><span class="c">#casts001 13</span>
+</span><span class="line"><span class="c">#baezj001 12</span>
+</span><span class="line"><span class="c">#goldp001 11</span>
+</span><span class="line"><span class="c">#desmi001 11</span>
+</span><span class="line"><span class="c">#castn001 10</span>
+</span><span class="line"><span class="c">#bogax001 10</span>
+</span><span class="line"><span class="c">#andum001 10</span>
+</span><span class="line"><span class="c">#turnt001 9</span>
+</span><span class="line"><span class="c">#rojam002 9</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Because players with more at-bats hit into more errors, I need to take the number of at-bats into account. I also filter out all players with less than 250 at bats. I figure we only want players with lots of opportunities to create errors.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">echo</span> <span class="s2">&quot;---------PLAYERS WITH MOST ERRORS PER AT BAT----------&quot;</span>
+</span><span class="line">join &lt;<span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/abs.out<span class="o">)</span> &lt;<span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out<span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	uniq <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk -v <span class="nv">OFS</span><span class="o">=</span><span class="s1">&#39;, &#39;</span> <span class="s1">&#39;$2 &gt; 250 {print $1, $3, $2, $3/$2}&#39;</span> &gt;  <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors_abs.out
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors_abs.out <span class="p">|</span> sort -k <span class="m">4</span> -nr <span class="p">|</span> head
+</span><span class="line">
+</span><span class="line"><span class="c">#---------PLAYERS WITH MOST ERRORS PER AT BAT----------</span>
+</span><span class="line"><span class="c">#pereh001, 8, 316, 0.0253165</span>
+</span><span class="line"><span class="c">#gurry001, 13, 537, 0.0242086</span>
+</span><span class="line"><span class="c">#andre001, 9, 395, 0.0227848</span>
+</span><span class="line"><span class="c">#casts001, 13, 593, 0.0219224</span>
+</span><span class="line"><span class="c">#desmi001, 11, 555, 0.0198198</span>
+</span><span class="line"><span class="c">#baezj001, 12, 606, 0.019802</span>
+</span><span class="line"><span class="c">#garca003, 7, 356, 0.0196629</span>
+</span><span class="line"><span class="c">#bogax001, 10, 512, 0.0195312</span>
+</span><span class="line"><span class="c">#goldp001, 11, 593, 0.0185497</span>
+</span><span class="line"><span class="c">#iglej001, 8, 432, 0.0185185</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">echo</span> <span class="s2">&quot;---------PLAYERS WITH MOST ERRORS PER BALL IN PLAY----------&quot;</span>
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/batters.out <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	grep -Ev <span class="s1">&#39;SF|SH&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	grep -E <span class="s1">&#39;,(S|D|T|HR|[0-9]|E|DGR|FC)&#39;</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk -F, <span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span> &gt; <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/bip.out
+</span><span class="line">join &lt;<span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/bip.out<span class="o">)</span> &lt;<span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out<span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	uniq <span class="p">|</span> <span class="se">\</span>
+</span><span class="line">	awk -v <span class="nv">OFS</span><span class="o">=</span><span class="s1">&#39;, &#39;</span> <span class="s1">&#39;$2 &gt; 250 {print $1, $3, $2, $3/$2}&#39;</span> &gt; <span class="se">\</span>
+</span><span class="line">	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors_bip.out
+</span><span class="line">cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors_bip.out <span class="p">|</span> sort -k <span class="m">4</span> -nr <span class="p">|</span> head
+</span><span class="line">
+</span><span class="line"><span class="c">#---------PLAYERS WITH MOST ERRORS PER BALL IN PLAY----------</span>
+</span><span class="line"><span class="c">#casts001, 13, 469, 0.0277186</span>
+</span><span class="line"><span class="c">#garca003, 7, 254, 0.0275591</span>
+</span><span class="line"><span class="c">#gurry001, 13, 474, 0.0274262</span>
+</span><span class="line"><span class="c">#andre001, 9, 329, 0.0273556</span>
+</span><span class="line"><span class="c">#baezj001, 12, 439, 0.0273349</span>
+</span><span class="line"><span class="c">#desmi001, 11, 409, 0.0268949</span>
+</span><span class="line"><span class="c">#goldp001, 11, 420, 0.0261905</span>
+</span><span class="line"><span class="c">#bogax001, 10, 411, 0.0243309</span>
+</span><span class="line"><span class="c">#arcio002, 6, 261, 0.0229885</span>
+</span><span class="line"><span class="c">#palkd001, 6, 264, 0.0227273</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Now that we’ve cleaned the data, I import it into a pandas dataframe (in python) and use a <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html">chi-square test</a> to evaluate whether some players are more (or less) likely to hit into errors than other players. The null hypothesis is that all players are equally likely to hit into an error (note this test will never tell me who is more (or less) likely to hit into an error).</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">sys</span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">chisquare</span>
+</span><span class="line">
+</span><span class="line"><span class="n">YEAR</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span class="line">
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">&#39;./processed_data/{}/errors_bip.out&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">YEAR</span><span class="p">),</span>
+</span><span class="line">		 <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+</span><span class="line">		 <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;player&#39;</span><span class="p">,</span> <span class="s">&#39;errors&#39;</span><span class="p">,</span> <span class="s">&#39;bip&#39;</span><span class="p">,</span> <span class="s">&#39;prop_error&#39;</span><span class="p">])</span>
+</span><span class="line">
+</span><span class="line"><span class="c"># use chi2 test to look at if all frequencies are &quot;equal&quot;</span>
+</span><span class="line"><span class="n">AVG_ERROR_RATE</span> <span class="o">=</span> <span class="n">DF</span><span class="p">[</span><span class="s">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">*</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">DF</span><span class="p">[</span><span class="s">&#39;bip&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">chisquare</span><span class="p">(</span><span class="n">DF</span><span class="p">[</span><span class="s">&#39;errors&#39;</span><span class="p">],</span> <span class="n">f_exp</span><span class="o">=</span><span class="p">(</span><span class="n">DF</span><span class="p">[</span><span class="s">&#39;bip&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">AVG_ERROR_RATE</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">round</span><span class="p">)))</span>
+</span><span class="line">
+</span><span class="line"><span class="c">#Power_divergenceResult(statistic=239.04047619047623, pvalue=0.19288665011608852)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>We failed to reject the null hypothesis. This means we have don’t have sufficient evidence to say that some players are more likely to hit into errors than others. Of course, we cannot accept the null hypothesis, but you can count this as a win for the score keepers.</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Complex Aggregations in PySpark]]></title>
@@ -2895,23 +3265,6 @@ Probability of difference arising from chance: 0.57546
 <p>So what is different about these two scenarios?</p>
 
 <p>In the first scenario, the contestant makes a choice before Monty Hall reveals which of the two unchosen options is incorrect. Here’s the intution I’ve gained by doing this - because Monty Hall cannot reveal what is behind the chosen door, when Monty Hall reveals what is behind one of the unchosen doors, this has no impact on how likely the car is to appear behind the chosen door. Yet, the probability that the car is behind the revealed door drops to 0 (because Monty Hall shows there’s a goat behind it), and the total probability must be conserved so the second unchosen door receives any belief that the car was behind the revealed door! Thus, the unchosen and unrevealed door becomes 66% likely to contain the car! I am still not 100% convinced of this new intuition, but it seems correct given these simulations!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[SFN 2016 Presentation]]></title>
-    <link href="https://danvatterott.com/blog/2016/11/15/sfn-2016-presentation/"/>
-    <updated>2016-11-15T12:43:53-06:00</updated>
-    <id>https://danvatterott.com/blog/2016/11/15/sfn-2016-presentation</id>
-    <content type="html"><![CDATA[<p><img src="https://danvatterott.com/images/sfn/sfn_2016_vatterott.png" /></p>
-
-<p>I recently presented at the annual meeting of the society for neuroscience, so I wanted to do a quick post describing my findings.</p>
-
-<p>The <a href="https://en.wikipedia.org/wiki/Reinforcement_learning">reinforcement learning</a> literature postulates that we go in and out of exploratory states in order to learn about our environments and maximize the reward we gain in these environments. For example, you might try different foods in order to find the food you most prefer. But, not all novelty seeking behavior results from reward maximization. For example, I often read new books. Maybe reading a new book triggers a reward circuit response, but it certainly doesn’t lead to immediate rewards.</p>
-
-<p>In this poster we used a free viewing task to examine whether an animal would exhibit a novelty preference when it was not associated with any possible rewards. We found the animal looked at (payed attention to) novel items more often than he looked at familiar items, but this preference for paying attention to novel items fluctuated over time. Sometimes the animal had a large preference for looking at the novel items and sometimes he had no preference for novels items.</p>
-
-<p>Neurons that we recorded in the dlPFC and area 7a encoded whether the animal was currently in a state where he prefered looking at novel items or not and this encoding persisted across the entire trial period. Importantly, while neurons in these areas also encoded whether the animal was currently looking at a novel item or not, this encoding was distinct from the encoding of the current preference state. These results demonstrate that the animal had simultaneous neural codes representing whether he was acutely attending to novel items and his general preference for attending to novel items or not. Importantly, these neural codes existed even though there were no explicit reward associations.</p>
 ]]></content>
   </entry>
   

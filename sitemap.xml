@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-than-others/</loc>
+    <lastmod>2019-04-19T11:02:56-05:00</lastmod>
+  </url>
+  <url>
     <loc>https://danvatterott.com/blog/2019/02/05/complex-aggregations-in-pyspark/</loc>
     <lastmod>2019-02-05T19:09:32-06:00</lastmod>
   </url>
@@ -272,6 +276,9 @@
   </url>
   <url>
     <loc>https://danvatterott.com/blog/categories/machine-learning/</loc>
+  </url>
+  <url>
+    <loc>https://danvatterott.com/blog/categories/bash/</loc>
   </url>
   <url>
     <loc>https://danvatterott.com/presentations/pyspark_tutorial/plugin/notes-server/notes.html</loc>
