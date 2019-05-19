@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="I recently found myself wondering if some baseball players are more likely to hit into errors than others. In theory, the answer should be “no” since &hellip;">
+  <meta name="description" content="You could summarize this post as “you will never regret good code practices” or “no project is too small for good code practices”. You might think &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,84 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/05/19/data-science-lessons-learned-the-hard-way-coding/">Data Science Lessons Learned the Hard Way: Coding</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-05-19T08:44:27-05:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>19</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>8:44 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>You could summarize this post as “you will never regret good code practices” or “no project is too small for good code practices”.</p>
+
+<p>You might think these recommendations are not worth the time when a project seems small, but projects often grow over time. If you use good practices from the start, you will reduce the <a href="https://en.wikipedia.org/wiki/Technical_debt">technical debt</a> your project accrues over time.</p>
+
+<p>Here’s my list of coding Data Science lessons learned the hard way.</p>
+
+<ol>
+  <li>
+    <p>You will never regret using git.</p>
+
+    <p>You might think, “this project/query is just 15 minutes of code and I will never think about it again”. While this might be true, it often is not. If your project/query is useful, people will ask for it again with slight tweaks. With each ask, the project grows a little. By using git, you persist the project at all change points, acknowledge that the project  will change over time, and prepare for multiple contributors.
+<br />
+Even if you never use these features, I’ve found that simply using git encourages other good practices.
+Also, remember <a href="https://ohshitgit.com/">git can rescue</a> you when things go wrong!</p>
+  </li>
+  <li>
+    <p>You will never regret good documentation.</p>
+
+    <p>Again, you might think, “this project is so tiny and simple, how could I ever forget how it works??”. You will forget. Or another contributor will appreciate documentation.<br />
+The <a href="https://docs.scipy.org/doc/numpy/docs/howto_document.html">numpy documentation framework</a> is great when working in python. Its <a href="https://numpydoc.readthedocs.io/en/latest/">integration</a> with <a href="http://www.sphinx-doc.org/en/stable/">sphinx </a> can save you a lot of time when creating non-code documentation.<br />
+I recently started documenting not only <em>what the code is doing</em>, but the business rule dictating <em>what the code should do</em>. Having both lets contributors know not only know the <em>how</em> of the code but also the <em>why</em>.</p>
+  </li>
+  <li>
+    <p>You will never regret building unit-tests.</p>
+
+    <p>Again, this might feel like over-kill in small projects, but even small projects have assumptions that should be tested. This is especially true when you add new features after stepping away from a project. By including unit-tests, you assure yourself that existing features did not break, making those pushes to production <a href="https://dev.to/quii/why-you-should-deploy-on-friday-afternoon-285h">less scary</a>.</p>
+  </li>
+  <li>
+    <p>Take the time to build infrastructure for gathering/generating sample/fake data.</p>
+
+    <p>I’ve found myself hesitant to build unit-tests because it’s hard to acquire/generate useful sample/fake data. Do not let this be a blocker to good code practices! Take the time to build infrastructure that makes good code practices easy.
+This could mean taking the time to write code for building fake data. This could mean taking the time to acquire useful sample data. Maybe it’s both! Take the time to do it. You will not regret making it easy to write tests.</p>
+  </li>
+  <li>
+    <p>You will always find a Makefile useful.</p>
+
+    <p>Once you’ve built infrastructure for acquiring fake or sample data, you will need a way to bring this data into your current project. I’ve found <a href="https://en.wikipedia.org/wiki/Makefile">Makefiles</a> useful for this sort of thing. You can define a command that will download some sample data from s3 (or wherever) and save it to your repo (but don’t track these files on git!).<br />
+This way all contributors will have common testing data, stored outside of git, and can acquire this data with a single, easy to remember, command.<br />
+MakeFiles are also great for installing or saving a project’s dependencies.</p>
+  </li>
+  <li>
+    <p>Know your project’s dependencies.</p>
+
+    <p>Code ecosystems change over time. When you revisit a project after a break, the last thing you want is to guess what code dependencies have broken.
+It doesn’t matter whether you save your project’s dependencies as a anaconda environment, a requirements file, virtualenv, a docker image, whatever. Just make sure to save it. Any future contributors (including yourself!!) will thank you.</p>
+  </li>
+</ol>
+
+<p>Most these individual points seem obvious. The overarching point is no project is too small for good code practices. Sure you might think, oh this is just a single query, but you will run that query again, or another member of your team will! While you shouldn’t build a repo for each query, building a <a href="https://caitlinhudon.com/2018/11/28/git-sql-together/">repo for different sets of queries is not a bad idea</a>.</p>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1955,47 +2033,6 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/06/02/random-weekly-reminders/">Random Weekly Reminders</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-06-02T17:58:52-05:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2018</span></span> <span class='time'>5:58 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I constantly use google calendar to schedule reminder emails, but I want some of my reminders to be stochastic!</p>
-
-<p>Google calendar wants all their events to occur on a regular basis (e.g., every Sunday), but I might want a weekly reminder email which occurs on a random day each the week.</p>
-
-<p>I wrote a quick set of <a href="https://github.com/dvatterott/reminder_email">python scripts</a> which handle this situation.</p>
-
-<p>The script <a href="https://github.com/dvatterott/reminder_email/blob/master/find_days.py">find_days.py</a> chooses a random day each week (over a month) on which a reminder email should be sent. These dates are piped to a text file (dates.txt). The script <a href="https://github.com/dvatterott/reminder_email/blob/master/send_email.py">send_email.py</a> reads this text file and sends a reminder email to me if the current date matches one of the dates in dates.txt.</p>
-
-<p>I use <a href="https://help.ubuntu.com/community/CronHowto">cron</a> to automatically run these scripts on a regular basis. Cron runs find_days.py on the first of each month and runs send_email.py every day. I copied my cron script as <a href="https://github.com/dvatterott/reminder_email/blob/master/cron_job.txt">cron_job.txt</a>.</p>
-
-<p>I use mailutils and postfix to send the reminder emails from the machine. Check out <a href="https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-postfix-as-a-send-only-smtp-server-on-ubuntu-14-04">this tutorial</a> for how to set up a send only mail server. The trickiest part of this process was repeatedly telling gmail that my emails were not spam.</p>
-
-<p>Now I receive my weekly reminder on an unknown date so I can <em>act</em> spontaneous!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -2041,6 +2078,10 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/05/19/data-science-lessons-learned-the-hard-way-coding/">Data Science Lessons Learned the Hard Way: Coding</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-than-others/">Are Some Mlb Players More Likely to Hit Into Errors Than Others?</a>
       </li>
     
@@ -2054,10 +2095,6 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
     
       <li class="post">
         <a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/11/03/looking-towards-the-future-of-automated-machine-learning/">Looking Towards the Future of Automated Machine-learning</a>
       </li>
     
   </ul>
