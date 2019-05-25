@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Science | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-science/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-05-19T10:43:32-05:00</updated>
+  <updated>2019-05-25T11:47:20-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -95,14 +95,14 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 </span><span class='line'><span class="nv">FILE_LOC</span><span class="o">=</span>https://www.retrosheet.org/events/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>eve.zip&lt;/p&gt;
 </span><span class='line'>
 </span><span class='line'>&lt;p&gt;echo “———DOWNLOAD———-“
-</span><span class='line'>wget <span class="nv">$FILE_LOC</span> -O ./raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>.zip&lt;/p&gt;
+</span><span class='line'>wget -nc <span class="nv">$FILE_LOC</span> -O ./raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>.zip&lt;/p&gt;
 </span><span class='line'>
 </span><span class='line'>&lt;p&gt;echo “———UNPACK———-“
 </span><span class='line'>mkdir raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/
 </span><span class='line'>unzip -o raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>.zip -d raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/
 </span></code></pre></td></tr></table></div></figure></p>
 
-<p>The unzipped data contain play-by-play data in files with the EVN or EVA extensions. Each team’s home stadium has its own file. I combine all the play-by play events (.EVN and .EVA files) into a single file. I then remove all non batting events (e.g., balk, stolen base etc).</p>
+<p>The unzipped data contain play-by-play data in files with the EVN or EVA extensions. Each team’s home stadium has its own file. I combine all the play-by play eveSSplants (.EVN and .EVA files) into a single file. I then remove all non batting events (e.g., balk, stolen base etc).</p>
 
 <p>I also combine all the roster files (.ROS) into a single file.</p>
 
@@ -122,6 +122,7 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
+<span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># export playbyplay to single file</span>
 </span><span class='line'>mkdir processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/
 </span><span class='line'>find raw_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/ -regex ‘.*EV<span class="o">[</span>A<span class="p">|</span>N<span class="o">]</span>’ <span class="p">|</span> <span class="se">\</span>
@@ -131,7 +132,8 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 </span><span class='line'>&lt;h1 <span class="nv">id</span><span class="o">=</span><span class="s2">&quot;get-all-plate-appearances-from-data-and-hitter-remove-all-non-plate-appearance-rows&quot;</span>&gt;get all plate appearances from data <span class="o">(</span>and hitter<span class="o">)</span>. remove all non plate appearance rows&lt;/h1&gt;
 </span><span class='line'>&lt;p&gt;cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/playbyplay.out <span class="p">|</span> <span class="se">\</span>
 </span><span class='line'>	awk -F’,’ ‘<span class="o">{</span>print <span class="nv">$4</span>”,”<span class="nv">$7</span><span class="o">}</span>’ <span class="p">|</span> <span class="se">\</span>
-</span><span class='line'>	grep -Ev ‘,<span class="o">(</span>NP<span class="p">|</span>BK<span class="p">|</span>CS<span class="p">|</span>DI<span class="p">|</span>OA<span class="p">|</span>PB<span class="p">|</span>WP<span class="p">|</span>PO<span class="p">|</span>POCS<span class="p">|</span>SB<span class="o">)</span>’ <span class="p">&amp;</span>gt<span class="p">;</span> <span class="se">\</span>
+</span><span class='line'>	grep -Ev ‘,<span class="o">[</span>A-Z<span class="o">]{</span>3<span class="o">}[</span>0-9<span class="o">]{</span>2<span class="o">}</span>’ <span class="p">|</span> <span class="se">\</span>
+</span><span class='line'>	grep -Ev ‘,<span class="o">(</span>NP<span class="p">|</span>BK<span class="p">|</span>CS<span class="p">|</span>DI<span class="p">|</span>OA<span class="p">|</span>PB<span class="p">|</span>WP<span class="p">|</span>PO<span class="p">|</span>POCS<span class="p">|</span>SB<span class="p">|</span>FLE<span class="o">)</span>’ <span class="p">&amp;</span>gt<span class="p">;</span> <span class="se">\</span>
 </span><span class='line'>	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/batters.out&lt;/p&gt;
 </span><span class='line'>
 </span><span class='line'>&lt;h1 <span class="nv">id</span><span class="o">=</span><span class="s2">&quot;one-giant-roster-file&quot;</span>&gt;one giant roster file&lt;/h1&gt;
@@ -292,8 +294,10 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
 <span class='line-number'>18</span>
+<span class='line-number'>19</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">echo</span> “———PLAYERS WHO HIT INTO THE MOST ERRORS———-“
 </span><span class='line'>cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/batters.out <span class="p">|</span> <span class="se">\</span>
+</span><span class='line'>    	grep -Ev ‘SF<span class="p">|</span>SH’ <span class="p">|</span> <span class="se">\</span>
 </span><span class='line'>	grep ‘,E<span class="o">[</span>0-9<span class="o">]</span>’ <span class="p">|</span> <span class="se">\</span>
 </span><span class='line'>	awk -F, ‘<span class="o">{</span>a<span class="o">[</span><span class="nv">$1</span><span class="o">]</span>++<span class="p">;</span><span class="o">}</span>END<span class="o">{</span><span class="k">for</span> <span class="o">(</span>i in a<span class="o">)</span>print i, a<span class="o">[</span>i<span class="o">]</span><span class="p">;</span><span class="o">}</span>’ <span class="p">&amp;</span>gt<span class="p">;</span> <span class="se">\</span>
 </span><span class='line'>	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out
@@ -333,7 +337,7 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 <span class='line-number'>17</span>
 <span class='line-number'>18</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">echo</span> “———PLAYERS WITH MOST ERRORS PER AT BAT———-“
-</span><span class='line'>join <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/abs.out<span class="o">)</span> <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out<span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class='line'>join -e”0” -a1 -a2 <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/abs.out<span class="o">)</span> -o <span class="m">0</span> 1.2 2.2 <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out<span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
 </span><span class='line'>	uniq <span class="p">|</span> <span class="se">\</span>
 </span><span class='line'>	awk -v <span class="nv">OFS</span><span class="o">=</span>’, ‘ ‘<span class="nv">$2</span> <span class="p">&amp;</span>gt<span class="p">;</span> <span class="m">250</span> <span class="o">{</span>print <span class="nv">$1</span>, <span class="nv">$3</span>, <span class="nv">$2</span>, <span class="nv">$3</span>/<span class="nv">$2</span><span class="o">}</span>’ <span class="p">&amp;</span>gt<span class="p">;</span>  <span class="se">\</span>
 </span><span class='line'>	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors_abs.out
@@ -383,23 +387,23 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 </span><span class='line'>	grep -E ‘,<span class="o">(</span>S<span class="p">|</span>D<span class="p">|</span>T<span class="p">|</span>HR<span class="p">|</span><span class="o">[</span>0-9<span class="o">]</span><span class="p">|</span>E<span class="p">|</span>DGR<span class="p">|</span>FC<span class="o">)</span>’ <span class="p">|</span> <span class="se">\</span>
 </span><span class='line'>	awk -F, ‘<span class="o">{</span>a<span class="o">[</span><span class="nv">$1</span><span class="o">]</span>++<span class="p">;</span><span class="o">}</span>END<span class="o">{</span><span class="k">for</span> <span class="o">(</span>i in a<span class="o">)</span>print i, a<span class="o">[</span>i<span class="o">]</span><span class="p">;</span><span class="o">}</span>’ <span class="p">&amp;</span>gt<span class="p">;</span> <span class="se">\</span>
 </span><span class='line'>	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/bip.out
-</span><span class='line'>join <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/bip.out<span class="o">)</span> <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out<span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
+</span><span class='line'>join -e”0” -a1 -a2 <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/bip.out<span class="o">)</span> -o <span class="m">0</span> 1.2 2.2 <span class="p">&amp;</span>lt<span class="p">;</span><span class="o">(</span>sort -k <span class="m">1</span> ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors.out<span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
 </span><span class='line'>	uniq <span class="p">|</span> <span class="se">\</span>
-</span><span class='line'>	awk -v <span class="nv">OFS</span><span class="o">=</span>’, ‘ ‘<span class="nv">$2</span> <span class="p">&amp;</span>gt<span class="p">;</span> <span class="m">250</span> <span class="o">{</span>print <span class="nv">$1</span>, <span class="nv">$3</span>, <span class="nv">$2</span>, <span class="nv">$3</span>/<span class="nv">$2</span><span class="o">}</span>’ <span class="p">&amp;</span>gt<span class="p">;</span> <span class="se">\</span>
+</span><span class='line'>	awk -v <span class="nv">OFS</span><span class="o">=</span>’, ‘ ‘<span class="nv">$2</span> <span class="p">&amp;</span>gt<span class="p">;</span> <span class="m">450</span> <span class="o">{</span>print <span class="nv">$1</span>, <span class="nv">$3</span>, <span class="nv">$2</span>, <span class="nv">$3</span>/<span class="nv">$2</span><span class="o">}</span>’ <span class="p">&amp;</span>gt<span class="p">;</span> <span class="se">\</span>
 </span><span class='line'>	./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors_bip.out
 </span><span class='line'>cat ./processed_data/<span class="k">${</span><span class="nv">YEAR</span><span class="k">}</span>/errors_bip.out <span class="p">|</span> sort -k <span class="m">4</span> -nr <span class="p">|</span> head&lt;/p&gt;
 </span><span class='line'>
 </span><span class='line'>&lt;h1 <span class="nv">id</span><span class="o">=</span><span class="s2">&quot;players-with-most-errors-per-ball-in-play----------&quot;</span>&gt;———PLAYERS WITH MOST ERRORS PER BALL IN PLAY———-&lt;/h1&gt;
 </span><span class='line'>&lt;p&gt;#casts001, 13, 469, 0.0277186
-</span><span class='line'><span class="c">#garca003, 7, 254, 0.0275591</span>
 </span><span class='line'><span class="c">#gurry001, 13, 474, 0.0274262</span>
-</span><span class='line'><span class="c">#andre001, 9, 329, 0.0273556</span>
-</span><span class='line'><span class="c">#baezj001, 12, 439, 0.0273349</span>
-</span><span class='line'><span class="c">#desmi001, 11, 409, 0.0268949</span>
-</span><span class='line'><span class="c">#goldp001, 11, 420, 0.0261905</span>
-</span><span class='line'><span class="c">#bogax001, 10, 411, 0.0243309</span>
-</span><span class='line'><span class="c">#arcio002, 6, 261, 0.0229885</span>
-</span><span class='line'><span class="c">#palkd001, 6, 264, 0.0227273</span>
+</span><span class='line'><span class="c">#castn001, 10, 469, 0.021322</span>
+</span><span class='line'><span class="c">#andum001, 10, 476, 0.0210084</span>
+</span><span class='line'><span class="c">#andeb006, 9, 461, 0.0195228</span>
+</span><span class='line'><span class="c">#turnt001, 9, 532, 0.0169173</span>
+</span><span class='line'><span class="c">#simma001, 8, 510, 0.0156863</span>
+</span><span class='line'><span class="c">#lemad001, 7, 451, 0.0155211</span>
+</span><span class='line'><span class="c">#sancc001, 7, 462, 0.0151515</span>
+</span><span class='line'><span class="c">#freef001, 7, 486, 0.0144033</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
 <p>Now that we’ve cleaned the data, I import it into a pandas dataframe (in python) and use a <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html">chi-square test</a> to evaluate whether some players are more (or less) likely to hit into errors than other players. The null hypothesis is that all players are equally likely to hit into an error (note this test will never tell me who is more (or less) likely to hit into an error).</p>
@@ -434,11 +438,11 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">AVG_ERROR_RATE</span> <span class="o">=</span> <span class="n">DF</span><span class="p">[</span><span class="err">‘</span><span class="n">errors</span><span class="err">’</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">*</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">DF</span><span class="p">[</span><span class="err">‘</span><span class="n">bip</span><span class="err">’</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 </span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">chisquare</span><span class="p">(</span><span class="n">DF</span><span class="p">[</span><span class="err">‘</span><span class="n">errors</span><span class="err">’</span><span class="p">],</span> <span class="n">f_exp</span><span class="o">=</span><span class="p">(</span><span class="n">DF</span><span class="p">[</span><span class="err">‘</span><span class="n">bip</span><span class="err">’</span><span class="p">]</span> <span class="o">*</span> <span class="n">AVG_ERROR_RATE</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">round</span><span class="p">)))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;powerdivergenceresultstatistic23904047619047623-pvalue019288665011608852&quot;</span><span class="o">&gt;</span><span class="n">Power_divergenceResult</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="mf">239.04047619047623</span><span class="p">,</span> <span class="n">pvalue</span><span class="o">=</span><span class="mf">0.19288665011608852</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;powerdivergenceresultstatistic5917-pvalue0009&quot;</span><span class="o">&gt;</span><span class="n">Power_divergenceResult</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="mf">59.17</span><span class="p">,</span> <span class="n">pvalue</span><span class="o">=</span><span class="mf">0.009</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
-<p>We failed to reject the null hypothesis. This means we have don’t have sufficient evidence to say that some players are more likely to hit into errors than others. Of course, we cannot accept the null hypothesis, but you can count this as a win for the score keepers.</p>
+<p>We do reject the null hypothesis.</p>
 
 ]]></content>
   </entry>
