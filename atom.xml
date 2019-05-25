@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="https://danvatterott.com/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-05-25T11:53:27-05:00</updated>
+  <updated>2019-05-25T12:57:55-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -356,7 +356,7 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 </span><span class="line"><span class="c">#iglej001, 8, 432, 0.0185185</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play. I remove all players with less than 450 balls hit into play which limits us to just 37 players but the players have enough reps to make the statistics more valid.</p>
+<p>At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play. I remove all players with less than 450 balls hit into play which limits us to just 37 players but the players have enough reps to make the estimates more reliable.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -406,42 +406,7 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 </span><span class="line"><span class="c">#freef001, 7, 486, 0.0144033</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>Now that we’ve cleaned the data, I import it into a pandas dataframe (in python) and use a <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html">chi-square test</a> to evaluate whether some players are more (or less) likely to hit into errors than other players. The null hypothesis is that all players are equally likely to hit into an error (note this test will never tell me who is more (or less) likely to hit into an error).</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">sys</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">chisquare</span>
-</span><span class="line">
-</span><span class="line"><span class="n">YEAR</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-</span><span class="line">
-</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">&#39;./processed_data/{}/errors_bip.out&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">YEAR</span><span class="p">),</span>
-</span><span class="line">		 <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-</span><span class="line">		 <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;player&#39;</span><span class="p">,</span> <span class="s">&#39;errors&#39;</span><span class="p">,</span> <span class="s">&#39;bip&#39;</span><span class="p">,</span> <span class="s">&#39;prop_error&#39;</span><span class="p">])</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># use chi2 test to look at if all frequencies are &quot;equal&quot;</span>
-</span><span class="line"><span class="n">AVG_ERROR_RATE</span> <span class="o">=</span> <span class="n">DF</span><span class="p">[</span><span class="s">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">*</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">DF</span><span class="p">[</span><span class="s">&#39;bip&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">chisquare</span><span class="p">(</span><span class="n">DF</span><span class="p">[</span><span class="s">&#39;errors&#39;</span><span class="p">],</span> <span class="n">f_exp</span><span class="o">=</span><span class="p">(</span><span class="n">DF</span><span class="p">[</span><span class="s">&#39;bip&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">AVG_ERROR_RATE</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">round</span><span class="p">)))</span>
-</span><span class="line">
-</span><span class="line"><span class="c">#Power_divergenceResult(statistic=59.17, pvalue=0.009)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>We do reject the null hypothesis, so it seems some players are more likely to hit into errors than others. This analysis doesn’t tell us who is more likely to hit into the error. In future analyses, I will explore which players are more likely to hit into an error.</p>
-
+<p>Now we have some data. In future posts I will explore how we can use statistics to evaluate whether some players are more likely to hit into errors than others.</p>
 ]]></content>
   </entry>
   

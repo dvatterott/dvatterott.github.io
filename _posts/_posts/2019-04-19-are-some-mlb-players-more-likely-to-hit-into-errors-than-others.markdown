@@ -170,7 +170,7 @@ cat ./processed_data/${YEAR}/errors_abs.out | sort -k 4 -nr | head
 #iglej001, 8, 432, 0.0185185
 {% endcodeblock %}
 
-At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play. I remove all players with less than 450 balls hit into play which limits us to just 37 players but the players have enough reps to make the statistics more valid.
+At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play. I remove all players with less than 450 balls hit into play which limits us to just 37 players but the players have enough reps to make the estimates more reliable.
 
 {% codeblock lang:bash %}
 echo "---------PLAYERS WITH MOST ERRORS PER BALL IN PLAY----------"
@@ -198,25 +198,4 @@ cat ./processed_data/${YEAR}/errors_bip.out | sort -k 4 -nr | head
 #freef001, 7, 486, 0.0144033
 {% endcodeblock %}
 
-Now that we've cleaned the data, I import it into a pandas dataframe (in python) and use a [chi-square test](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html) to evaluate whether some players are more (or less) likely to hit into errors than other players. The null hypothesis is that all players are equally likely to hit into an error (note this test will never tell me who is more (or less) likely to hit into an error).  
-
-{% codeblock lang:python %}
-import sys
-import pandas as pd
-from scipy.stats import chisquare
-
-YEAR = sys.argv[1]
-
-DF = pd.read_csv('./processed_data/{}/errors_bip.out'.format(YEAR), 
-		 header=None,
-		 names=['player', 'errors', 'bip', 'prop_error'])
-
-# use chi2 test to look at if all frequencies are "equal"
-AVG_ERROR_RATE = DF['errors'].sum()*1. / DF['bip'].sum()
-print(chisquare(DF['errors'], f_exp=(DF['bip'] * AVG_ERROR_RATE).apply(round)))
-
-#Power_divergenceResult(statistic=59.17, pvalue=0.009)
-{% endcodeblock %}
-
-We do reject the null hypothesis, so it seems some players are more likely to hit into errors than others. This analysis doesn't tell us who is more likely to hit into the error. In future analyses, I will explore which players are more likely to hit into an error.
-
+Now we have some data. In future posts I will explore how we can use statistics to evaluate whether some players are more likely to hit into errors than others.
