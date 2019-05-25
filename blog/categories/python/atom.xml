@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-05-25T11:47:20-05:00</updated>
+  <updated>2019-05-25T11:53:27-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -298,7 +298,7 @@
 </span><span class='line'><span class="c">#iglej001, 8, 432, 0.0185185</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
-<p>At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play.</p>
+<p>At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play. I remove all players with less than 450 balls hit into play which limits us to just 37 players but the players have enough reps to make the statistics more valid.</p>
 
 <p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -384,7 +384,7 @@
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
-<p>We do reject the null hypothesis.</p>
+<p>We do reject the null hypothesis, so it seems some players are more likely to hit into errors than others. This analysis doesn’t tell us who is more likely to hit into the error. In future analyses, I will explore which players are more likely to hit into an error.</p>
 
 ]]></content>
   </entry>

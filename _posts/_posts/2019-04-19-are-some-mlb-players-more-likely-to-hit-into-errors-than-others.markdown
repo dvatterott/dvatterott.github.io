@@ -170,7 +170,7 @@ cat ./processed_data/${YEAR}/errors_abs.out | sort -k 4 -nr | head
 #iglej001, 8, 432, 0.0185185
 {% endcodeblock %}
 
-At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play.
+At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play. I remove all players with less than 450 balls hit into play which limits us to just 37 players but the players have enough reps to make the statistics more valid.
 
 {% codeblock lang:bash %}
 echo "---------PLAYERS WITH MOST ERRORS PER BALL IN PLAY----------"
@@ -218,5 +218,5 @@ print(chisquare(DF['errors'], f_exp=(DF['bip'] * AVG_ERROR_RATE).apply(round)))
 #Power_divergenceResult(statistic=59.17, pvalue=0.009)
 {% endcodeblock %}
 
-We do reject the null hypothesis. 
+We do reject the null hypothesis, so it seems some players are more likely to hit into errors than others. This analysis doesn't tell us who is more likely to hit into the error. In future analyses, I will explore which players are more likely to hit into an error.
 
