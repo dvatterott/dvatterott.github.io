@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="I constantly use google calendar to schedule reminder emails, but I want some of my reminders to be stochastic! Google calendar wants all their &hellip;">
+  <meta name="description" content="Cron is great for automation, but when tasks begin to rely on each other (task C can only run after both tasks A and B finish) cron does not do the &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,53 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2018/06/13/integrating-apache-airflow-and-databricks/">Integrating Apache Airflow and Databricks</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2018-06-13T18:05:52-05:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>6:05 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Cron is great for automation, but when tasks begin to rely on each other (task C can only run after both tasks A and B finish) cron does not do the trick.</p>
+
+<p><a href="https://airflow.apache.org/">Apache Airflow</a> is open source software (from airbnb) designed to handle the relationship between tasks. I recently setup an airflow server which coordinates automated jobs on <a href="https://databricks.com/">databricks</a> (great software for coordinating spark clusters). Connecting databricks and airflow ended up being a little trickier than it should have been, so I am writing this blog post as a resource to anyone else who attempts to do the same in the future.</p>
+
+<p>For the most part I followed <a href="https://medium.com/a-r-g-o/installing-apache-airflow-on-ubuntu-aws-6ebac15db211">this tutorial from A-R-G-O</a> when setting up airflow. Databricks also has a decent <a href="https://docs.databricks.com/user-guide/dev-tools/data-pipelines.html">tutorial</a> on setting up airflow. The difficulty here is that the airflow software for talking to databricks clusters (DatabricksSubmitRunOperator) was not introduced into airflow until version 1.9 and the A-R-G-O tutorial uses airflow 1.8.</p>
+
+<p>Airflow 1.9 uses Celery version &gt;= 4.0 (I ended up using Celery version 4.1.1). Airflow 1.8 requires Celery &lt; 4.0. In fact, the A-R-G-O tutorial notes that using Celery &gt;= 4.0 will result in the error:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">airflow worker: Received and deleted unknown message. Wrong destination?!?</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>I can attest that this is true! If you use airflow 1.9 with Celery &lt; 4.0, everything might appear to work, but airflow will randomly stop scheduling jobs after awhile (check the airflow-scheduler logs if you run into this). You need to use Celery &gt;= 4.0! Preventing the Wrong destination error is easy, but the fix is hard to find (hence why I wrote this post).</p>
+
+<p>After much ado, here’s the fix! If you follow the A-R-G-O tutorial, install airflow 1.9, celery &gt;=4.0 AND set broker_url in airflow.cfg as follows:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">broker_url = pyamqp://guest:guest@localhost:5672//</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Note that compared to the A-R-G-O tutorial, I am just adding “py” in front of amqp. Easy!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1642,41 +1689,6 @@ Before stating whether the hypothesis was rejected or not, I should note that th
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2017/03/04/sifting-the-overflow/">Sifting the Overflow</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2017-03-04T09:11:45-06:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>4</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>9:11 am</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><em>DISCLAIMER: I PULLED DOWN THE EC2 INSTANCE SUPPORTING THIS PROJECT</em></p>
-
-<p>In January 2017, I started a fellowship at <a href="http://insightdatascience.com/">Insight Data Science</a>. Insight is a 7 week program for helping academics transition from academia to careers in data science. In the first 4 weeks, fellows build data science products, and fellows present these products to different companies in the last 3 weeks.</p>
-
-<p>At Insight, I built <a href="http://siftingtheoverflow.com/">Sifting the Overflow</a> (this link is broken since I pulled down the ec2 instance), a chrome extension which you can install from the <a href="https://chrome.google.com/webstore/detail/sifting-the-overflow/japbeffaagcpbjilckaoigpocdgncind?hl=en-US&amp;gl=US">google chrome store</a>. Sifting the Overflow identifies the most helpful parts of answers to questions about the programming language Python on <a href="http://stackoverflow.com/">StackOverflow.com</a>. To created Sifting the Overflow, I trained a recurrent neural net (RNN) to identify “helpful” answers, and when you use the browser extension on a stackoverflow page, this RNN rates the helpfulness of each sentence of each answer. The sentences that my model believes to be helpful are highlighted so that users can quickly find the most helpful parts of these pages.</p>
-
-<p>I wrote a quick post <a href="http://siftingtheoverflow.com/">here</a> about how I built Sifting the Overflow, so check it out if you’re interested. The code is also available on my <a href="https://github.com/dvatterott/stackex_sum">github</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/3">&larr; Older</a>
@@ -1724,11 +1736,15 @@ Before stating whether the hypothesis was rejected or not, I should note that th
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/06/04/are-some-mlb-players-more-likely-to-hit-into-errors-statistics/">Are Some MLB Players More Likely to Hit Into Errors: Statistics</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/05/19/data-science-lessons-learned-the-hard-way-coding/">Data Science Lessons Learned the Hard Way: Coding</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-than-others/">Are Some Mlb Players More Likely to Hit Into Errors Than Others?</a>
+        <a href="/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-munging/">Are Some Mlb Players More Likely to Hit Into Errors Than Others: Data Munging</a>
       </li>
     
       <li class="post">
@@ -1737,10 +1753,6 @@ Before stating whether the hypothesis was rejected or not, I should note that th
     
       <li class="post">
         <a href="/blog/2019/01/29/introducing-predeval/">Introducing Predeval</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/12/07/survival-function-in-pyspark/">Creating a Survival Function in PySpark</a>
       </li>
     
   </ul>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Bash | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/bash/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-05-25T12:57:55-05:00</updated>
+  <updated>2019-06-05T22:19:03-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -14,10 +14,10 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Are Some Mlb Players More Likely to Hit Into Errors Than Others?]]></title>
-    <link href="https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-than-others/"/>
+    <title type="html"><![CDATA[Are Some Mlb Players More Likely to Hit Into Errors Than Others: Data Munging]]></title>
+    <link href="https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-munging/"/>
     <updated>2019-04-19T11:02:56-05:00</updated>
-    <id>https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-than-others</id>
+    <id>https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-munging</id>
     <content type="html"><![CDATA[<p>I recently found myself wondering if some baseball players are more likely to hit into errors than others. In theory, the answer should be “no” since fielders produce errors regardless of who is hitting. Nonetheless, it’s also possible that some hitters “force” errors by hitting the ball harder or running to first base faster.</p>
 
 <p>In order to evaluate this possibility, I found play-by-play data on <a href="https://www.retrosheet.org/">retrosheet.org</a>. This data contains row by row data describing each event (e.g., a hit, stolen base etc) in a baseball game. I’ve posted this analysis on <a href="https://github.com/dvatterott/mlb_errors">github</a> and will walk through it here.</p>
@@ -349,6 +349,8 @@
 </span></code></pre></td></tr></table></div></figure></p>
 
 <p>Now we have some data. In future posts I will explore how we can use statistics to evaluate whether some players are more likely to hit into errors than others.</p>
+
+<p>Check out the <a href="https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-statistics/">companion post</a> that statistically explores this question.</p>
 ]]></content>
   </entry>
   

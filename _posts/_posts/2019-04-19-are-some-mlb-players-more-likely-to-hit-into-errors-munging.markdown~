@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Are some mlb players more likely to hit into errors than others?"
+title: "Are some mlb players more likely to hit into errors than others?: Data Munging"
 date: 2019-04-19 11:02:56 -0500
 comments: true
 categories: [python, data science, bash]
@@ -199,3 +199,5 @@ cat ./processed_data/${YEAR}/errors_bip.out | sort -k 4 -nr | head
 {% endcodeblock %}
 
 Now we have some data. In future posts I will explore how we can use statistics to evaluate whether some players are more likely to hit into errors than others.
+
+Check out the [companion post](https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-statistics/) that statistically explores this question.
