@@ -200,4 +200,4 @@ cat ./processed_data/${YEAR}/errors_bip.out | sort -k 4 -nr | head
 
 Now we have some data. In future posts I will explore how we can use statistics to evaluate whether some players are more likely to hit into errors than others.
 
-Check out the [companion post](https://danvatterott.com/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-statistics/) that statistically explores this question.
+Check out the [companion post](https://danvatterott.com/blog/2019/06/04/are-some-mlb-players-more-likely-to-hit-into-errors-statistics/) that statistically explores this question.
