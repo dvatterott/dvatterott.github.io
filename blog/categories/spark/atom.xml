@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Spark | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/spark/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-06-05T22:22:56-05:00</updated>
+  <updated>2019-07-15T20:43:48-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,469 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Limiting Cardinality With a PySpark Custom Transformer]]></title>
+    <link href="https://danvatterott.com/blog/2019/07/12/limiting-cardinality-with-a-pyspark-custom-transformer/"/>
+    <updated>2019-07-12T06:30:28-05:00</updated>
+    <id>https://danvatterott.com/blog/2019/07/12/limiting-cardinality-with-a-pyspark-custom-transformer</id>
+    <content type="html"><![CDATA[<p>When onehot-encoding columns in pyspark, <a href="https://livebook.datascienceheroes.com/data-preparation.html#high_cardinality_descriptive_stats">column cardinality</a> can become a problem. The size of the data often leads to an enourmous number of unique values. If a minority of the values are common and the majority of the values are rare, you might want to represent the rare values as a single group. Note that this might not be appropriate for your problem. <a href="https://livebook.datascienceheroes.com/data-preparation.html#analysis-for-predictive-modeling">Here’s</a> some nice text describing the costs and benefits of this approach. In the following blog post I describe how to implement this solution.</p>
+
+<p>I begin by importing the necessary libraries and creating a spark session.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">string</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">keyword_only</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.pipeline</span> <span class="kn">import</span> <span class="n">Transformer</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.param.shared</span> <span class="kn">import</span> <span class="n">HasInputCol</span><span class="p">,</span> <span class="n">HasOutputCol</span><span class="p">,</span> <span class="n">Param</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="err">“</span><span class="n">local</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">Example</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Next create the custom transformer. This class inherits from the <code>Transformer</code>, <code>HasInputCol</code>, and <code>HasOutputCol</code> classes. I also call an additional parameter <code>n</code> which controls the maximum cardinality allowed in the tranformed column. Because I have the additional parameter, I need some methods for calling and setting this paramter (<code>setN</code> and <code>getN</code>). Finally, there’s <code>_tranform</code> which limits the cardinality of the desired column (set by <code>inputCol</code> parameter). This tranformation method simply takes the desired column and changes all values greater than <code>n</code> to <code>n</code>. It outputs a column named by the <code>outputCol</code> parameter.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">LimitCardinality</span><span class="p">(</span><span class="n">Transformer</span><span class="p">,</span> <span class="n">HasInputCol</span><span class="p">,</span> <span class="n">HasOutputCol</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Limit Cardinality of a column.”””&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@keyword_only</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="nb">super</span><span class="p">(</span><span class="n">LimitCardinality</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;n&quot;</span><span class="p">,</span> <span class="s">&quot;Cardinality upper limit.&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@keyword_only</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">setN</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Set cardinality limit.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">getN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get cardinality limit.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Do transformation.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="n">out_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOutputCol</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">in_col</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">()]</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">dataframe</span>
+</span><span class='line'>            <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">out_col</span><span class="p">,</span> <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">in_col</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">())</span>
+</span><span class='line'>                                  <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">in_col</span><span class="p">))))</span>
+</span></code></pre></td></tr></table></div></figure>
+</code></pre>
+
+<p>Now that we have the tranformer, I will create some data and apply the transformer to it. I want categorical data, so I will randomly draw letters of the alphabet. The only trick is I’ve made some letters of the alphabet much more common than other ones.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">letter_pool</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span><span class="p">[:</span><span class="mi">26</span><span class="p">]</span>
+</span><span class='line'><span class="n">letter_pool</span> <span class="o">+=</span> <span class="err">‘‘</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">letter_pool</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">10</span><span class="p">))])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="n">x</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">letter_pool</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">“</span><span class="nb">id</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">category</span><span class="err">”</span><span class="p">])</span>
+</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span><span class='line'><span class="c"># +—+——–+                                                                &lt;br /&gt;</span>
+</span><span class='line'><span class="c"># | id|category|</span>
+</span><span class='line'><span class="c"># +—+——–+</span>
+</span><span class='line'><span class="c"># |  0|       a|</span>
+</span><span class='line'><span class="c"># |  1|       c|</span>
+</span><span class='line'><span class="c"># |  2|       e|</span>
+</span><span class='line'><span class="c"># |  3|       e|</span>
+</span><span class='line'><span class="c"># |  4|       a|</span>
+</span><span class='line'><span class="c"># +—+——–+</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Take a look at the data.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">(</span><span class="n">a</span>
+</span><span class='line'> <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">“</span><span class="n">category</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'> <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="err">“</span><span class="o">*</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">category_count</span><span class="err">”</span><span class="p">))</span>
+</span><span class='line'> <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">category_count</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+</span><span class='line'> <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+</span><span class='line'> <span class="o">.</span><span class="n">show</span><span class="p">())</span>
+</span><span class='line'><span class="c"># +——–+————–+                                                     &lt;br /&gt;</span>
+</span><span class='line'><span class="c"># |category|category_count|</span>
+</span><span class='line'><span class="c"># +——–+————–+</span>
+</span><span class='line'><span class="c"># |       b|           221|</span>
+</span><span class='line'><span class="c"># |       a|           217|</span>
+</span><span class='line'><span class="c"># |       c|           197|</span>
+</span><span class='line'><span class="c"># |       d|           162|</span>
+</span><span class='line'><span class="c"># |       e|           149|</span>
+</span><span class='line'><span class="c"># |       k|             5|</span>
+</span><span class='line'><span class="c"># |       p|             5|</span>
+</span><span class='line'><span class="c"># |       u|             5|</span>
+</span><span class='line'><span class="c"># |       f|             4|</span>
+</span><span class='line'><span class="c"># |       l|             3|</span>
+</span><span class='line'><span class="c"># |       g|             3|</span>
+</span><span class='line'><span class="c"># |       m|             3|</span>
+</span><span class='line'><span class="c"># |       o|             3|</span>
+</span><span class='line'><span class="c"># |       y|             3|</span>
+</span><span class='line'><span class="c"># |       j|             3|</span>
+</span><span class='line'><span class="c"># |       x|             2|</span>
+</span><span class='line'><span class="c"># |       n|             2|</span>
+</span><span class='line'><span class="c"># |       h|             2|</span>
+</span><span class='line'><span class="c"># |       i|             2|</span>
+</span><span class='line'><span class="c"># |       q|             2|</span>
+</span><span class='line'><span class="c"># +——–+————–+</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Now to apply the new class <code>LimitCardinality</code> after <code>StringIndexer</code> which maps each category (starting with the most common category) to numbers. This means the most common letter will be 1. <code>LimitCardinality</code> then sets the max value of <code>StringIndexer</code>’s output to <code>n</code>. <code>OneHotEncoderEstimator</code> one-hot encodes <code>LimitCardinality</code>’s output. I wrap <code>StringIndexer</code>, <code>LimitCardinality</code>, and <code>OneHotEncoderEstimator</code> into a single pipeline so that I can fit/transform the dataset at one time.</p>
+
+<p>Note that <code>LimitCardinality</code> needs additional code in order to be saved to disk.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.feature</span> <span class="kn">import</span> <span class="n">OneHotEncoderEstimator</span><span class="p">,</span> <span class="n">StringIndexer</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml</span> <span class="kn">import</span> <span class="n">Pipeline</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">string_to_num</span> <span class="o">=</span> <span class="n">StringIndexer</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category</span><span class="err">”</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">stringOrderType</span><span class="o">=</span><span class="err">”</span><span class="n">frequencyDesc</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="n">censor_category</span> <span class="o">=</span> <span class="n">LimitCardinality</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">censored_category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span class='line'><span class="n">onehot_category</span> <span class="o">=</span> <span class="n">OneHotEncoderEstimator</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">censored_category_index</span><span class="err">”</span><span class="p">],</span>
+</span><span class='line'>                                     <span class="n">outputCols</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">onehot_category</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">onehot_censored_category</span><span class="err">”</span><span class="p">])</span>
+</span><span class='line'><span class="n">onehot_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">string_to_num</span><span class="p">,</span> <span class="n">censor_category</span><span class="p">,</span> <span class="n">onehot_category</span><span class="p">])</span>
+</span><span class='line'><span class="n">fit_pipeline</span> <span class="o">=</span> <span class="n">onehot_pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">fit_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
+</span><span class='line'><span class="c"># | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
+</span><span class='line'><span class="c"># |  0|       a|           1.0|                    1.0| (25,[1],[1.0])|          (10,[1],[1.0])|</span>
+</span><span class='line'><span class="c"># |  1|       c|           2.0|                    2.0| (25,[2],[1.0])|          (10,[2],[1.0])|</span>
+</span><span class='line'><span class="c"># |  2|       e|           4.0|                    4.0| (25,[4],[1.0])|          (10,[4],[1.0])|</span>
+</span><span class='line'><span class="c"># |  3|       e|           4.0|                    4.0| (25,[4],[1.0])|          (10,[4],[1.0])|</span>
+</span><span class='line'><span class="c"># |  4|       a|           1.0|                    1.0| (25,[1],[1.0])|          (10,[1],[1.0])|</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">fit_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">category</span><span class="err">”</span><span class="p">)</span> <span class="o">==</span> <span class="err">“</span><span class="n">n</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
+</span><span class='line'><span class="c"># | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
+</span><span class='line'><span class="c"># | 35|       n|          16.0|                   10.0|(25,[16],[1.0])|              (10,[],[])|</span>
+</span><span class='line'><span class="c"># |458|       n|          16.0|                   10.0|(25,[16],[1.0])|              (10,[],[])|</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>A quick improvement to <code>LimitCardinality</code> would be to set a column’s cardinality so that X% of rows retain their category values and 100-X% receive the default value (rather than arbitrarily selecting a cardinality limit). I implement this below. Note that <code>LimitCardinalityModel</code> is identical to the original <code>LimitCardinality</code>. The new <code>LimitCardinality</code> has a <code>_fit</code> method rather than <code>_transform</code> and this method determines a column’s cardinality.</p>
+
+<p>In the <code>_fit</code> method I find the proportion of columns that are required to describe the requested amount of data.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.pipeline</span> <span class="kn">import</span> <span class="n">Estimator</span><span class="p">,</span> <span class="n">Model</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">class</span> <span class="nc">LimitCardinality</span><span class="p">(</span><span class="n">Estimator</span><span class="p">,</span> <span class="n">HasInputCol</span><span class="p">,</span> <span class="n">HasOutputCol</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Limit Cardinality of a column.”””&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@keyword_only</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">proportion</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="nb">super</span><span class="p">(</span><span class="n">LimitCardinality</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">proportion</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;proportion&quot;</span><span class="p">,</span> <span class="s">&quot;Cardinality upper limit as a proportion of data.&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">proportion</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@keyword_only</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">proportion</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">setProportion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Set cardinality limit as proportion of data.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">proportion</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">getProportion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get cardinality limit as proportion of data.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proportion</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Fit transformer.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="n">pandas_df</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">())</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;my_count&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">n</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">pandas_df</span>
+</span><span class='line'>             <span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s">&quot;my_count&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</span><span class='line'>             <span class="o">.</span><span class="n">cumsum</span><span class="p">()[</span><span class="s">&quot;my_count&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">pandas_df</span><span class="p">[</span><span class="s">&quot;my_count&quot;</span><span class="p">])</span>
+</span><span class='line'>            <span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">getProportion</span><span class="p">())</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">LimitCardinalityModel</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">(),</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getOutputCol</span><span class="p">(),</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">class</span> <span class="nc">LimitCardinalityModel</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">HasInputCol</span><span class="p">,</span> <span class="n">HasOutputCol</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Limit Cardinality of a column.”””&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@keyword_only</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="nb">super</span><span class="p">(</span><span class="n">LimitCardinalityModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;n&quot;</span><span class="p">,</span> <span class="s">&quot;Cardinality upper limit.&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@keyword_only</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">setN</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Set cardinality limit.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">getN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get cardinality limit.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Do transformation.&quot;&quot;&quot;</span>
+</span><span class='line'>    <span class="n">out_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOutputCol</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">in_col</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">()]</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">dataframe</span>
+</span><span class='line'>            <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">out_col</span><span class="p">,</span> <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">in_col</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">())</span>
+</span><span class='line'>                                  <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">in_col</span><span class="p">))))</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">string_to_num</span> <span class="o">=</span> <span class="n">StringIndexer</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category</span><span class="err">”</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">handleInvalid</span><span class="o">=</span><span class="err">”</span><span class="n">skip</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="n">censor_category</span> <span class="o">=</span> <span class="n">LimitCardinality</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">censored_category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">proportion</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+</span><span class='line'><span class="n">onehot_category</span> <span class="o">=</span> <span class="n">OneHotEncoderEstimator</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">censored_category_index</span><span class="err">”</span><span class="p">],</span>
+</span><span class='line'>                                     <span class="n">outputCols</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">onehot_category</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">onehot_censored_category</span><span class="err">”</span><span class="p">])</span>
+</span><span class='line'><span class="n">onehot_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">string_to_num</span><span class="p">,</span> <span class="n">censor_category</span><span class="p">,</span> <span class="n">onehot_category</span><span class="p">])</span>
+</span><span class='line'><span class="n">fit_pipeline</span> <span class="o">=</span> <span class="n">onehot_pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">fit_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
+</span><span class='line'><span class="c"># | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
+</span><span class='line'><span class="c"># |  0|       a|           1.0|                    1.0| (25,[1],[1.0])|           (3,[1],[1.0])|</span>
+</span><span class='line'><span class="c"># |  1|       c|           2.0|                    2.0| (25,[2],[1.0])|           (3,[2],[1.0])|</span>
+</span><span class='line'><span class="c"># |  2|       e|           4.0|                    3.0| (25,[4],[1.0])|               (3,[],[])|</span>
+</span><span class='line'><span class="c"># |  3|       e|           4.0|                    3.0| (25,[4],[1.0])|               (3,[],[])|</span>
+</span><span class='line'><span class="c"># |  4|       a|           1.0|                    1.0| (25,[1],[1.0])|           (3,[1],[1.0])|</span>
+</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>There are <a href="https://towardsdatascience.com/smarter-ways-to-encode-categorical-data-for-machine-learning-part-1-of-3-6dca2f71b159">other options</a> for dealing with high cardinality columns such as using a clustering or a <a href="https://tech.instacart.com/predicting-real-time-availability-of-200-million-grocery-items-in-us-canada-stores-61f43a16eafe">mean encoding</a> scheme.</p>
+
+<p>Hope you find this useful and reach out if you have any questions.</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Complex Aggregations in PySpark]]></title>
@@ -1136,174 +1599,6 @@
 </table>
 
 <p>There we go! Hope you find this info helpful!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA['Is Not in' With PySpark]]></title>
-    <link href="https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark/"/>
-    <updated>2018-02-06T21:10:32-06:00</updated>
-    <id>https://danvatterott.com/blog/2018/02/06/is-not-in-with-pyspark</id>
-    <content type="html"><![CDATA[<p>In SQL it’s easy to find people in one list who are not in a second list (i.e., the “not in” command), but there is no similar command in PySpark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn’t involve collecting the second list onto the master instance.</p>
-
-<p><strong>EDIT</strong><br />
-Check the note at the bottom regarding “anti joins”. Using an anti join is much cleaner than the code described here.</p>
-
-<p>Here is a tidbit of code which replicates SQL’s “not in” command, while keeping your data with the workers (it will require a shuffle).</p>
-
-<p>I start by creating some small dataframes.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pyspark</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueA</span><span class="err">’</span><span class="p">])</span>
-</span><span class='line'><span class="n">b</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="err">‘</span><span class="n">d</span><span class="err">’</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="err">‘</span><span class="n">e</span><span class="err">’</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">valueB</span><span class="err">’</span><span class="p">])</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Take a quick look at dataframe <em>a</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>b</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>c</td>
- </tr>
-</table>
-
-<p>And dataframe <em>b</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
- </tr>
-</table>
-
-<p>I create a new column in <em>a</em> that is all ones. I could have used an existing column, but this way I know the column is never null.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>b</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>c</td>
-   <td>1</td>
- </tr>
-</table>
-
-<p>I join <em>a</em> and <em>b</em> with a left join. This way all values in <em>b</em> which are not in <em>a</em> have null values in the column “inA”.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>valueB</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>a</td>
-   <td>a</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
-</table>
-
-<p>By filtering out rows in the new dataframe <em>c</em>, which are not null, I remove all values of <em>b</em>, which were also in <em>a</em>.
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">inA</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">isNull</span><span class="p">())</span>
-</span><span class='line'><span class="n">c</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-<table style="width:5%">
- <tr>
-   <th>id</th>
-   <th>valueA</th>
-   <th>valueB</th>
-   <th>inA</th>
- </tr>
- <tr>
-   <td>5</td>
-   <td>e</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>d</td>
-   <td>null</td>
-   <td>null</td>
- </tr>
-</table>
-
-<p><strong>EDIT</strong><br />
-I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">PySpark documentation</a> a more thorough reading and realized that PySpark’s join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
-
-<p>For example, the following code will produce rows in b where the id value is not present in a.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">left_anti</span><span class="err">’</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
 ]]></content>
   </entry>
   

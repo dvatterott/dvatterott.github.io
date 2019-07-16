@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://danvatterott.com/blog/2019/07/12/limiting-cardinality-with-a-pyspark-custom-transformer/</loc>
+    <lastmod>2019-07-12T06:30:28-05:00</lastmod>
+  </url>
+  <url>
     <loc>https://danvatterott.com/blog/2019/06/04/are-some-mlb-players-more-likely-to-hit-into-errors-statistics/</loc>
     <lastmod>2019-06-04T20:04:31-05:00</lastmod>
   </url>
