@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="When onehot-encoding columns in pyspark, column cardinality can become a problem. The size of the data often leads to an enourmous number of unique &hellip;">
+  <meta name="description" content="CDFs are a useful tool for understanding your data. This tutorial will demonstrate how to create a CDF in PySpark. I start by creating normally &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,200 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/08/26/creating-a-cdf-in-pyspark/">Creating a CDF in PySpark</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-08-26T19:36:15-05:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>7:36 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">CDFs</a> are a useful tool for understanding your data. This tutorial will demonstrate how to create a CDF in PySpark.</p>
+
+<p>I start by creating normally distributed, fake data.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql.window</span> <span class="kn">import</span> <span class="n">Window</span>
+</span><span class="line">
+</span><span class="line"><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="s">&quot;local&quot;</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">),)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;X&#39;</span><span class="p">]))</span>
+</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>X</th>
+ </tr>
+ <tr>
+   <td>1.3162087724709406</td>
+ </tr>
+ <tr>
+   <td>-0.9226127327757598</td>
+ </tr>
+ <tr>
+   <td>0.5388249247619141</td>
+ </tr>
+ <tr>
+   <td>-0.38263792383896356</td>
+ </tr>
+ <tr>
+   <td>0.20584675505779562</td>
+ </tr>
+</table>
+
+<p>To create the CDF I need to use a <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Window">window</a> function to order the data. I can then use <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.percent_rank">percent_rank</a> to retrieve the percentile associated with each value.</p>
+
+<p>The only trick here is I round the column of interest to make sure I don’t retrieve too much data onto the master node (not a concern here, but always good to think about).</p>
+
+<p>After rounding, I group by the variable of interest, again, to limit the amount of data returned.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">win</span> <span class="o">=</span> <span class="n">Window</span><span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span>
+</span><span class="line">          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;cumulative_probability&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">percent_rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+</span><span class="line">          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class="line">          <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">)</span>
+</span><span class="line">          <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="s">&quot;cumulative_probability&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;cumulative_probability&quot;</span><span class="p">),</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;my_count&quot;</span><span class="p">)))</span>
+</span><span class="line">
+</span><span class="line"><span class="n">output</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>X</th>
+   <th>cumulative_probability</th>
+   <th>my_count</th>
+ </tr>
+ <tr>
+   <td>-3.5</td>
+   <td>0.0</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-3.3</td>
+   <td>0.001001001001001001</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.9</td>
+   <td>0.002002002002002002</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.8</td>
+   <td>0.003003003003003003</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.7</td>
+   <td>0.004004004004004004</td>
+   <td>1</td>
+ </tr>
+</table>
+
+<p>A CDF should report the percent of data less than or <em>equal</em> to the specified value. The data returned above is the percent of data less than the specified value. We need to fix this by shifting the data up.</p>
+
+<p>To shift the data, I will use the function, <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.lead">lead</a>.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span>
+</span><span class="line">          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&#39;cumulative_probability&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">percent_rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+</span><span class="line">          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class="line">          <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">)</span>
+</span><span class="line">          <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="s">&quot;cumulative_probability&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;cumulative_probability&quot;</span><span class="p">),</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;my_count&quot;</span><span class="p">))</span>
+</span><span class="line">          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;cumulative_probability&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lead</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;cumulative_probability&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+</span><span class="line">          <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;cumulative_probability&quot;</span><span class="p">]))</span>
+</span><span class="line">
+</span><span class="line"><span class="n">output</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<table style="width:100%">
+ <tr>
+   <th>X</th>
+   <th>cumulative_probability</th>
+   <th>my_count</th>
+ </tr>
+ <tr>
+   <td>-3.5</td>
+   <td>0.001001001001001001</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-3.3</td>
+   <td>0.002002002002002002</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.9</td>
+   <td>0.003003003003003003</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.8</td>
+   <td>0.004004004004004004</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.7</td>
+   <td>0.005005005005005005</td>
+   <td>1</td>
+ </tr>
+</table>
+
+<p>There we go! A CDF of the data! I hope you find this helpful!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -3053,135 +3247,6 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/08/29/custom-email-alerts-in-airflow/">Custom Email Alerts in Airflow</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-08-29T18:19:42-05:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>6:19 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="https://airflow.apache.org/">Apache Airflow</a> is great for coordinating automated jobs, and it provides a simple interface for sending email alerts when these jobs fail. Typically, one can request these emails by setting <code>email_on_failure</code> to <code>True</code> in your operators.</p>
-
-<p>These email alerts work great, but I wanted to include additional links in them (I wanted to include a link to my spark cluster which can be grabbed from the <a href="https://airflow.incubator.apache.org/_modules/airflow/contrib/operators/databricks_operator.html#DatabricksSubmitRunOperator">Databricks Operator</a>). Here’s how I created a custom email alert on job failure.</p>
-
-<p>First, I set <code>email_on_failure</code> to <code>False</code> and use the operators’s <code>on_failure_callback</code>. I give <code>on_failure_callback</code> the function described below.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">airflow.utils.email</span> <span class="kn">import</span> <span class="n">send_email</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">notify_email</span><span class="p">(</span><span class="n">contextDict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span class="line">    <span class="sd">&quot;&quot;&quot;Send custom email alerts.&quot;&quot;&quot;</span>
-</span><span class="line">
-</span><span class="line">    <span class="c"># email title.</span>
-</span><span class="line">    <span class="n">title</span> <span class="o">=</span> <span class="s">&quot;Airflow alert: {task_name} Failed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">contextDict</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="c"># email contents</span>
-</span><span class="line">    <span class="n">body</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
-</span><span class="line"><span class="s">    Hi Everyone, &lt;br&gt;</span>
-</span><span class="line"><span class="s">    &lt;br&gt;</span>
-</span><span class="line"><span class="s">    There&#39;s been an error in the {task_name} job.&lt;br&gt;</span>
-</span><span class="line"><span class="s">    &lt;br&gt;</span>
-</span><span class="line"><span class="s">    Forever yours,&lt;br&gt;</span>
-</span><span class="line"><span class="s">    Airflow bot &lt;br&gt;</span>
-</span><span class="line"><span class="s">    &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">contextDict</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">send_email</span><span class="p">(</span><span class="s">&#39;you_email@address.com&#39;</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>send_email</code> is a function imported from Airflow. <code>contextDict</code> is a dictionary given to the callback function on error. Importantly, <code>contextDict</code> contains lots of relevant information. This includes the Task Instance (key=’ti’) and Operator Instance (key=’task’) associated with your error. I was able to use the Operator Instance, to grab the relevant cluster’s address and I included this address in my email (this exact code is not present here).</p>
-
-<p>To use the <code>notify_email</code>, I set <code>on_failure_callback</code> equal to <code>notify_email</code>.</p>
-
-<p>I write out a short example airflow dag below.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">airflow.models</span> <span class="kn">import</span> <span class="n">DAG</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">airflow.operators</span> <span class="kn">import</span> <span class="n">PythonOperator</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
-</span><span class="line">
-</span><span class="line"><span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class="line">  <span class="s">&#39;owner&#39;</span><span class="p">:</span> <span class="s">&#39;me&#39;</span><span class="p">,</span>
-</span><span class="line">  <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;my_example&#39;</span><span class="p">,</span>
-</span><span class="line">  <span class="s">&#39;start_date&#39;</span><span class="p">:</span> <span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># run every day at 12:05 UTC</span>
-</span><span class="line"><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">dag_id</span><span class="o">=</span><span class="s">&#39;example_dag&#39;</span><span class="p">,</span> <span class="n">default_args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">schedule_interval</span><span class="o">=</span><span class="s">&#39;0 5 * * *&#39;</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">def</span> <span class="nf">print_hello</span><span class="p">():</span>
-</span><span class="line">  <span class="k">return</span> <span class="s">&#39;hello!&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">py_task</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span><span class="n">task_id</span><span class="o">=</span><span class="s">&#39;example&#39;</span><span class="p">,</span>
-</span><span class="line">                         <span class="n">python_callable</span><span class="o">=</span><span class="n">print_hello</span><span class="p">,</span>
-</span><span class="line">                         <span class="n">on_failure_callback</span><span class="o">=</span><span class="n">notify_email</span><span class="p">,</span>
-</span><span class="line">                         <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">)</span>
-</span><span class="line">
-</span><span class="line"><span class="n">py_task</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Note where set <code>on_failure_callback</code> equal to <code>notify_email</code> in the <code>PythonOperator</code>.</p>
-
-<p>Hope you find this helpful! Don’t hesitate to reach out if you have a question.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -3227,6 +3292,10 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/26/creating-a-cdf-in-pyspark/">Creating a CDF in PySpark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/07/12/limiting-cardinality-with-a-pyspark-custom-transformer/">Limiting Cardinality With a PySpark Custom Transformer</a>
       </li>
     
@@ -3240,10 +3309,6 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
     
       <li class="post">
         <a href="/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-munging/">Are Some Mlb Players More Likely to Hit Into Errors Than Others: Data Munging</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/02/05/complex-aggregations-in-pyspark/">Complex Aggregations in PySpark</a>
       </li>
     
   </ul>

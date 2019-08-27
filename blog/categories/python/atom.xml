@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-07-15T20:43:48-05:00</updated>
+  <updated>2019-08-26T20:37:53-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,180 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Creating a CDF in PySpark]]></title>
+    <link href="https://danvatterott.com/blog/2019/08/26/creating-a-cdf-in-pyspark/"/>
+    <updated>2019-08-26T19:36:15-05:00</updated>
+    <id>https://danvatterott.com/blog/2019/08/26/creating-a-cdf-in-pyspark</id>
+    <content type="html"><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">CDFs</a> are a useful tool for understanding your data. This tutorial will demonstrate how to create a CDF in PySpark.</p>
+
+<p>I start by creating normally distributed, fake data.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql.window</span> <span class="kn">import</span> <span class="n">Window</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="err">“</span><span class="n">local</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">Example</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">),)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="n">X</span><span class="err">’</span><span class="p">]))</span>
+</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>X</th>
+ </tr>
+ <tr>
+   <td>1.3162087724709406</td>
+ </tr>
+ <tr>
+   <td>-0.9226127327757598</td>
+ </tr>
+ <tr>
+   <td>0.5388249247619141</td>
+ </tr>
+ <tr>
+   <td>-0.38263792383896356</td>
+ </tr>
+ <tr>
+   <td>0.20584675505779562</td>
+ </tr>
+</table>
+
+<p>To create the CDF I need to use a <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Window">window</a> function to order the data. I can then use <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.percent_rank">percent_rank</a> to retrieve the percentile associated with each value.</p>
+
+<p>The only trick here is I round the column of interest to make sure I don’t retrieve too much data onto the master node (not a concern here, but always good to think about).</p>
+
+<p>After rounding, I group by the variable of interest, again, to limit the amount of data returned.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">win</span> <span class="o">=</span> <span class="n">Window</span><span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="err">‘</span><span class="n">X</span><span class="err">’</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">cumulative_probability</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">percent_rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">),</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="err">‘</span><span class="o">*</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">my_count</span><span class="err">”</span><span class="p">)))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">output</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>X</th>
+   <th>cumulative_probability</th>
+   <th>my_count</th>
+ </tr>
+ <tr>
+   <td>-3.5</td>
+   <td>0.0</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-3.3</td>
+   <td>0.001001001001001001</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.9</td>
+   <td>0.002002002002002002</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.8</td>
+   <td>0.003003003003003003</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.7</td>
+   <td>0.004004004004004004</td>
+   <td>1</td>
+ </tr>
+</table>
+
+<p>A CDF should report the percent of data less than or <em>equal</em> to the specified value. The data returned above is the percent of data less than the specified value. We need to fix this by shifting the data up.</p>
+
+<p>To shift the data, I will use the function, <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.lead">lead</a>.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">cumulative_probability</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">percent_rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">),</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="err">‘</span><span class="o">*</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">my_count</span><span class="err">”</span><span class="p">))</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lead</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">))</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+</span><span class='line'>          <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">]))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">output</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<table style="width:100%">
+ <tr>
+   <th>X</th>
+   <th>cumulative_probability</th>
+   <th>my_count</th>
+ </tr>
+ <tr>
+   <td>-3.5</td>
+   <td>0.001001001001001001</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-3.3</td>
+   <td>0.002002002002002002</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.9</td>
+   <td>0.003003003003003003</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.8</td>
+   <td>0.004004004004004004</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>-2.7</td>
+   <td>0.005005005005005005</td>
+   <td>1</td>
+ </tr>
+</table>
+
+<p>There we go! A CDF of the data! I hope you find this helpful!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Limiting Cardinality With a PySpark Custom Transformer]]></title>
@@ -1971,35 +2145,6 @@ Sampling 2 chains: 100%|██████████| 6000/6000 [01:47&lt;00:0
 </table>
 
 <p>Voila! Hope you find this little trick helpful! Let me know if you have any questions or comments.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Introducing Predeval]]></title>
-    <link href="https://danvatterott.com/blog/2019/01/29/introducing-predeval/"/>
-    <updated>2019-01-29T20:27:57-06:00</updated>
-    <id>https://danvatterott.com/blog/2019/01/29/introducing-predeval</id>
-    <content type="html"><![CDATA[<p><a href="https://predeval.readthedocs.io/en/latest/">Predeval</a> is software designed to help you identify changes in a model’s output.</p>
-
-<p>For instance, you might be tasked with building a model to predict churn. When you deploy this model in production, you have to wait to learn which users churned in order to know how your model performed. While Predeval will not free you from this wait, it can provide initial signals as to whether the model is producing reasonable (i.e., expected) predictions. Unexpected predictions <em>might</em> reflect a poor performing model. They also <em>might</em> reflect a change in your input data. Either way, something has changed and you will want to investigate further.</p>
-
-<p>Using predeval, you can detect changes in model output ASAP. You can then use python’s libraries to build a surrounding alerting system that will signal a need to investigate. This system should give you additional confidence that your model is performing reasonably. Here’s a <a href="https://danvatterott.com/blog/2018/06/02/random-weekly-reminders/">post</a> where I configure an alerting system using python, mailutils, and postfix (although the alerting system is not built around predeval).</p>
-
-<p>Predeval operates by forming expectations about what your model’s outputs will look like. For example, you might give predeval the model’s output from a validation dataset. Predeval will then compare new outputs to the outputs produced by the validation dataset, and will report whether it detects a difference.</p>
-
-<p>Predeval works with models producing both categorical and continuous outputs.</p>
-
-<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#categoricalevaluator">example</a> of predeval with a model producing categorical outputs. Predeval will (by default) check whether all expected output categories are present, and whether the output categories occur at their expected frequencies (using a <a href="https://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.stats.chi2_contingency.html">Chi-square test of independence of variables in a contingency table</a>).</p>
-
-<p>Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#continuousevaluator">example</a> of predeval with a model producing continuous outputs. Predeval will (by default) check whether the new output have a minimum lower than expected, a maximum greater than expected, a different mean, a different standard deviation, and whether the new output are distributed as expected (using a <a href="https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.stats.ks_2samp.html#scipy.stats.ks_2samp">Kolmogorov-Smirnov test</a>)</p>
-
-<p>I’ve tried to come up with reasonable defaults for determining whether data are different, but you can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#updating-test-parameters">set these thresholds yourself</a>. You can also <a href="https://predeval.readthedocs.io/en/latest/usage.html#changing-evaluation-tests">choose what comparison tests to run</a> (e.g., checking the minimum, maximum etc.).</p>
-
-<p>You will likely need to save your predeval objects so that you can apply them to future data. Here’s an <a href="https://predeval.readthedocs.io/en/latest/usage.html#saving-and-loading-your-evaluator">example</a> of saving the objects.</p>
-
-<p>Documentation about how to install predeval can be found <a href="https://predeval.readthedocs.io/en/latest/installation.html#installation">here</a>.</p>
-
-<p>If you have comments about improvements or would like to <a href="https://predeval.readthedocs.io/en/latest/contributing.html">contribute</a>, please reach out!</p>
 ]]></content>
   </entry>
   
