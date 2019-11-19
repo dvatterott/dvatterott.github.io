@@ -9,7 +9,7 @@
   
   <meta name="author" content="Dan Vatterott">
   
-  <meta name="description" content="CDFs are a useful tool for understanding your data. This tutorial will demonstrate how to create a CDF in PySpark. I start by creating normally &hellip;">
+  <meta name="description" content="Imbalanced classes is a common problem. Scikit-learn provides an easy fix - “balancing” class weights. This makes models more likely to predict the &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,179 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/11/18/balancing-model-weights-in-pyspark/">Balancing Model Weights in PySpark</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-11-18T18:57:03-06:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>18</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>6:57 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="https://www.jeremyjordan.me/imbalanced-data/">Imbalanced classes</a> is a common problem. Scikit-learn provides an easy fix - “balancing” class weights. This makes models more likely to predict the less common classes (e.g., <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html">logistic regression</a>).</p>
+
+<p>The PySpark ML API doesn’t have this same functionality, so in this blog post, I describe how to balance class weights yourself.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.ml.feature</span> <span class="kn">import</span> <span class="n">VectorAssembler</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.ml.classification</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+</span><span class="line">
+</span><span class="line"><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="s">&quot;local&quot;</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Generate some random data and put the data in a Spark DataFrame. Note that the input variables are not predictive. The model will behave randomly. This is okay, since I am not interested in model accuracy.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+</span><span class="line">
+</span><span class="line"><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</span><span class="line"><span class="n">y</span><span class="p">[:</span><span class="mi">1000</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class="line"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="c"># 0.9</span>
+</span><span class="line">
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">withColumnRenamed</span><span class="p">(</span><span class="s">&quot;10&quot;</span><span class="p">,</span> <span class="s">&quot;y&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Here’s how Scikit-learn computes class weights when “balanced” weights are requested.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c"># class weight</span>
+</span><span class="line"><span class="c"># https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html</span>
+</span><span class="line"><span class="c"># n_samples / (n_classes * np.bincount(y)).</span>
+</span><span class="line">
+</span><span class="line"><span class="n">class_weights</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">ii</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">y</span><span class="p">)))}</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">class_weights</span><span class="p">)</span> <span class="c"># {0: 5.0, 1: 0.5555555555555556}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Here’s how we can compute “balanced” weights with data from a PySpark DataFrame.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">y_collect</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</span><span class="line"><span class="n">unique_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s">&quot;y&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">]</span>
+</span><span class="line"><span class="n">total_y</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s">&quot;count&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">])</span>
+</span><span class="line"><span class="n">unique_y_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_collect</span><span class="p">)</span>
+</span><span class="line"><span class="n">bin_count</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s">&quot;count&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">]</span>
+</span><span class="line">
+</span><span class="line"><span class="n">class_weights_spark</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">ii</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">unique_y</span><span class="p">,</span> <span class="n">total_y</span> <span class="o">/</span> <span class="p">(</span><span class="n">unique_y_count</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bin_count</span><span class="p">)))}</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">class_weights_spark</span><span class="p">)</span> <span class="c"># {0.0: 5.0, 1.0: 0.5555555555555556}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>PySpark needs to have a weight assigned to each instance (i.e., row) in the training set. I create a mapping to apply a weight to each training instance.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">mapping_expr</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">create_map</span><span class="p">([</span><span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">class_weights_spark</span><span class="o">.</span><span class="n">items</span><span class="p">())])</span>
+</span><span class="line">
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;weight&quot;</span><span class="p">,</span> <span class="n">mapping_expr</span><span class="o">.</span><span class="n">getItem</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">)))</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>I assemble all the input features into a vector.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">assembler</span> <span class="o">=</span> <span class="n">VectorAssembler</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)],</span> <span class="n">outputCol</span><span class="o">=</span><span class="s">&quot;features&quot;</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">assembler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>And train a logistic regression. Without the instance weights, the model predicts all instances as the frequent class.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">featuresCol</span><span class="o">=</span><span class="s">&quot;features&quot;</span><span class="p">,</span> <span class="n">labelCol</span><span class="o">=</span><span class="s">&quot;y&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">lrModel</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
+</span><span class="line"><span class="n">lrModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s">&quot;prediction&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>+---------------+
+|avg(prediction)|
++---------------+
+|            1.0|
++---------------+
+</code></pre>
+
+<p>With the weights, the model assigns half the instances to each class (even the less commmon one).</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">featuresCol</span><span class="o">=</span><span class="s">&quot;features&quot;</span><span class="p">,</span> <span class="n">labelCol</span><span class="o">=</span><span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="n">weightCol</span><span class="o">=</span><span class="s">&quot;weight&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">lrModel</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
+</span><span class="line"><span class="n">lrModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s">&quot;prediction&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>+---------------+
+|avg(prediction)|
++---------------+
+|         0.5089|
++---------------+
+</code></pre>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -3031,222 +3204,6 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">Python Aggregate UDFs in PySpark</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-09-06T16:04:43-05:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>4:04 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>PySpark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you’re trying to avoid costly Shuffle operations).</p>
-
-<p>PySpark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only “apply” one pandas_udf at a time. If you want to use more than one, you’ll have to preform multiple groupBys…and there goes avoiding those shuffles.</p>
-
-<p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
-</span><span class="line">
-</span><span class="line"><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">],</span>
-</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span>
-</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span>
-</span><span class="line">                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">])</span>
-</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<table style="width:100%">
- <tr>
-   <th>id</th>
-   <th>value</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>'a'</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>'b'</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>'b'</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>'c'</td>
- </tr>
-</table>
-
-<p>I use <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.collect_list">collect_list</a> to bring all data from a given group into a single row. I print the output of this operation below.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;value_list&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<table style="width:100%">
- <tr>
-   <th>id</th>
-   <th>value_list</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>['a', 'b', 'b']</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>['c']</td>
- </tr>
-</table>
-
-<p>I then create a <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.udf">UDF</a> which will count all the occurences of the letter ‘a’ in these lists (this can be easily done without a UDF but you get the point). This UDF wraps around collect_list, so it acts on the output of collect_list.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="k">def</span> <span class="nf">find_a</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-</span><span class="line">  <span class="sd">&quot;&quot;&quot;Count &#39;a&#39;s in list.&quot;&quot;&quot;</span>
-</span><span class="line">  <span class="n">output_count</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class="line">  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-</span><span class="line">    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="s">&#39;a&#39;</span><span class="p">:</span>
-</span><span class="line">      <span class="n">output_count</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span class="line">  <span class="k">return</span> <span class="n">output_count</span>
-</span><span class="line">
-</span><span class="line"><span class="n">find_a_udf</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">udf</span><span class="p">(</span><span class="n">find_a</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">())</span>
-</span><span class="line">
-</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">find_a_udf</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;a_count&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<table style="width:100%">
- <tr>
-   <th>id</th>
-   <th>a_count</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>0</td>
- </tr>
-</table>
-
-<p>There we go! A UDF that acts on aggregated data! Next, I show the power of this approach when combined with <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.when">when</a> which let’s us control which data enters F.collect_list.</p>
-
-<p>First, let’s create a dataframe with an extra column.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
-</span><span class="line">
-</span><span class="line"><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">],</span>
-</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">],</span>
-</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span>
-</span><span class="line">                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">],</span>
-</span><span class="line">                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;value1&#39;</span><span class="p">,</span> <span class="s">&#39;value2&#39;</span><span class="p">])</span>
-</span><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<table style="width:100%">
- <tr>
-   <th>id</th>
-   <th>value1</th>
-   <th>value2</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>1</td>
-   <td>'a'</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>2</td>
-   <td>'a'</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>1</td>
-   <td>'b'</td>
- </tr>
- <tr>
-   <td>1</td>
-   <td>2</td>
-   <td>'b'</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>1</td>
-   <td>'c'</td>
- </tr>
-</table>
-
-<p>Notice, how I included a when in the collect_list. Note that the UDF still wraps around collect_list.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">a</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">find_a_udf</span><span class="p">(</span> <span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value1&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&#39;value2&#39;</span><span class="p">))))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;a_count&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<table style="width:100%">
- <tr>
-   <th>id</th>
-   <th>a_count</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>1</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>0</td>
- </tr>
-</table>
-
-<p>There we go! Hope you find this info helpful!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/posts/2">&larr; Older</a>
@@ -3292,6 +3249,10 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/11/18/balancing-model-weights-in-pyspark/">Balancing Model Weights in PySpark</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/26/creating-a-cdf-in-pyspark/">Creating a CDF in PySpark</a>
       </li>
     
@@ -3305,10 +3266,6 @@ It doesn’t matter whether you save your project’s dependencies as a anaconda
     
       <li class="post">
         <a href="/blog/2019/05/19/data-science-lessons-learned-the-hard-way-coding/">Data Science Lessons Learned the Hard Way: Coding</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/04/19/are-some-mlb-players-more-likely-to-hit-into-errors-munging/">Are Some Mlb Players More Likely to Hit Into Errors Than Others: Data Munging</a>
       </li>
     
   </ul>

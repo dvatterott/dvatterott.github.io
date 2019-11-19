@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark/</loc>
+    <lastmod>2019-11-18T18:57:03-06:00</lastmod>
+  </url>
+  <url>
     <loc>https://danvatterott.com/blog/2019/08/26/creating-a-cdf-in-pyspark/</loc>
     <lastmod>2019-08-26T19:36:15-05:00</lastmod>
   </url>

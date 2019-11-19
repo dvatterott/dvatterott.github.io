@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/python/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-08-26T20:37:53-05:00</updated>
+  <updated>2019-11-18T19:07:17-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,159 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Balancing Model Weights in PySpark]]></title>
+    <link href="https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark/"/>
+    <updated>2019-11-18T18:57:03-06:00</updated>
+    <id>https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark</id>
+    <content type="html"><![CDATA[<p><a href="https://www.jeremyjordan.me/imbalanced-data/">Imbalanced classes</a> is a common problem. Scikit-learn provides an easy fix - “balancing” class weights. This makes models more likely to predict the less common classes (e.g., <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html">logistic regression</a>).</p>
+
+<p>The PySpark ML API doesn’t have this same functionality, so in this blog post, I describe how to balance class weights yourself.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.feature</span> <span class="kn">import</span> <span class="n">VectorAssembler</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.classification</span> <span class="kn">import</span> <span class="n">LogisticRegression</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="err">“</span><span class="n">local</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">Example</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Generate some random data and put the data in a Spark DataFrame. Note that the input variables are not predictive. The model will behave randomly. This is okay, since I am not interested in model accuracy.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</span><span class='line'><span class="n">y</span><span class="p">[:</span><span class="mi">1000</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="c"># 0.9&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">DF</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+</span><span class='line'><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">withColumnRenamed</span><span class="p">(</span><span class="err">“</span><span class="mi">10</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Here’s how Scikit-learn computes class weights when “balanced” weights are requested.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># class weight</span>
+</span><span class='line'><span class="c"># https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html</span>
+</span><span class='line'><span class="c"># n_samples / (n_classes * np.bincount(y)).&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">class_weights</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">ii</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">y</span><span class="p">)))}</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">class_weights</span><span class="p">)</span> <span class="c"># {0: 5.0, 1: 0.5555555555555556}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Here’s how we can compute “balanced” weights with data from a PySpark DataFrame.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">y_collect</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</span><span class='line'><span class="n">unique_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">]</span>
+</span><span class='line'><span class="n">total_y</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">count</span><span class="err">”</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">])</span>
+</span><span class='line'><span class="n">unique_y_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_collect</span><span class="p">)</span>
+</span><span class='line'><span class="n">bin_count</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">count</span><span class="err">”</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">class_weights_spark</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">ii</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">unique_y</span><span class="p">,</span> <span class="n">total_y</span> <span class="o">/</span> <span class="p">(</span><span class="n">unique_y_count</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bin_count</span><span class="p">)))}</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">class_weights_spark</span><span class="p">)</span> <span class="c"># {0.0: 5.0, 1.0: 0.5555555555555556}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>PySpark needs to have a weight assigned to each instance (i.e., row) in the training set. I create a mapping to apply a weight to each training instance.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">mapping_expr</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">create_map</span><span class="p">([</span><span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">class_weights_spark</span><span class="o">.</span><span class="n">items</span><span class="p">())])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">“</span><span class="n">weight</span><span class="err">”</span><span class="p">,</span> <span class="n">mapping_expr</span><span class="o">.</span><span class="n">getItem</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">)))</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>I assemble all the input features into a vector.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">assembler</span> <span class="o">=</span> <span class="n">VectorAssembler</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)],</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">features</span><span class="err">”</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">DF</span> <span class="o">=</span> <span class="n">assembler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>And train a logistic regression. Without the instance weights, the model predicts all instances as the frequent class.</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">featuresCol</span><span class="o">=</span><span class="err">”</span><span class="n">features</span><span class="err">”</span><span class="p">,</span> <span class="n">labelCol</span><span class="o">=</span><span class="err">”</span><span class="n">y</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="n">lrModel</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
+</span><span class='line'><span class="n">lrModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="err">“</span><span class="n">prediction</span><span class="err">”</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<pre><code>+---------------+
+|avg(prediction)|
++---------------+
+|            1.0|
++---------------+
+</code></pre>
+
+<p>With the weights, the model assigns half the instances to each class (even the less commmon one).</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">featuresCol</span><span class="o">=</span><span class="err">”</span><span class="n">features</span><span class="err">”</span><span class="p">,</span> <span class="n">labelCol</span><span class="o">=</span><span class="err">”</span><span class="n">y</span><span class="err">”</span><span class="p">,</span> <span class="n">weightCol</span><span class="o">=</span><span class="err">”</span><span class="n">weight</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'><span class="n">lrModel</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
+</span><span class='line'><span class="n">lrModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="err">“</span><span class="n">prediction</span><span class="err">”</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<pre><code>+---------------+
+|avg(prediction)|
++---------------+
+|         0.5089|
++---------------+
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Creating a CDF in PySpark]]></title>
@@ -1956,195 +2109,6 @@ Sampling 2 chains: 100%|██████████| 6000/6000 [01:47&lt;00:0
 <p>Now we have some data. In future posts I will explore how we can use statistics to evaluate whether some players are more likely to hit into errors than others.</p>
 
 <p>Check out the <a href="https://danvatterott.com/blog/2019/06/04/are-some-mlb-players-more-likely-to-hit-into-errors-statistics/">companion post</a> that statistically explores this question.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Complex Aggregations in PySpark]]></title>
-    <link href="https://danvatterott.com/blog/2019/02/05/complex-aggregations-in-pyspark/"/>
-    <updated>2019-02-05T19:09:32-06:00</updated>
-    <id>https://danvatterott.com/blog/2019/02/05/complex-aggregations-in-pyspark</id>
-    <content type="html"><![CDATA[<p>I’ve touched on this in <a href="https://danvatterott.com/blog/2018/09/06/python-aggregate-udfs-in-pyspark/">past posts</a>, but wanted to write a post specifically describing the power of what I call complex aggregations in PySpark.</p>
-
-<p>The idea is that you have have a data request which initially seems to require multiple different queries, but using ‘complex aggregations’ you can create the requested data using a single query (and a single shuffle).</p>
-
-<p>Let’s say you have a dataset like the following. You have one column (id) which is a unique key for each user, another column (group) which expresses the group that each user belongs to, and finally (value) which expresses the value of each customer. I apologize for the contrived example.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="err">“</span><span class="n">local</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">Example</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">,</span> <span class="mf">5.1</span><span class="p">],</span>
-</span><span class='line'>                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">,</span> <span class="mf">2.6</span><span class="p">],</span>
-</span><span class='line'>                    <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">,</span> <span class="mf">3.4</span><span class="p">],</span>
-</span><span class='line'>                    <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">,</span> <span class="mf">1.7</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="nb">id</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">])</span>
-</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>          <span class="o">&lt;</span><span class="n">br</span> <span class="o">/&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>id</th>
-   <th>group</th>
-   <th>value</th>
- </tr>
- <tr>
-   <td>1</td>
-   <td>'a'</td>
-   <td>5.1</td>
- </tr>
- <tr>
-   <td>2</td>
-   <td>'b'</td>
-   <td>2.6</td>
- </tr>
- <tr>
-   <td>3</td>
-   <td>'b'</td>
-   <td>3.4</td>
- </tr>
- <tr>
-   <td>4</td>
-   <td>'c'</td>
-   <td>1.7</td>
- </tr>
-</table>
-
-<p>Let’s say someone wants the average value of group a, b, and c, <em>AND</em> the average value of users in group a <em>OR</em> b, the average value of users in group b <em>OR</em> c AND the value of users in group a <em>OR</em> c. Adds a wrinkle, right? The ‘or’ clauses prevent us from using a simple groupby, and we don’t want to have to write 4 different queries.</p>
-
-<p>Using complex aggregations, we can access all these different conditions in a single query.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">final_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span>
-</span><span class='line'>              <span class="o">.</span><span class="n">agg</span><span class="p">(</span>
-</span><span class='line'>                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">group_a_avg</span><span class="err">’</span><span class="p">),</span>
-</span><span class='line'>                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">group_b_avg</span><span class="err">’</span><span class="p">),</span>
-</span><span class='line'>                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">group_c_avg</span><span class="err">’</span><span class="p">),</span>
-</span><span class='line'>                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">((</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span>
-</span><span class='line'>                        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span>
-</span><span class='line'>                        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
-</span><span class='line'>                      <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">group_ab_avg</span><span class="err">’</span><span class="p">),</span>
-</span><span class='line'>                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">((</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span>
-</span><span class='line'>                        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span>
-</span><span class='line'>                        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
-</span><span class='line'>                      <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">group_bc_avg</span><span class="err">’</span><span class="p">),</span>
-</span><span class='line'>                <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">((</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span>
-</span><span class='line'>                        <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span>
-</span><span class='line'>                        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
-</span><span class='line'>                      <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">group_ac_avg</span><span class="err">’</span><span class="p">),</span>
-</span><span class='line'>                <span class="p">)</span>
-</span><span class='line'>              <span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">final_data</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>group_a_avg</th>
-   <th>group_b_avg</th>
-   <th>group_c_avg</th>
-   <th>group_ab_avg</th>
-   <th>group_ac_avg</th>
-   <th>group_bc_avg</th>
- </tr>
- <tr>
-   <td>5.1</td>
-   <td>3.0</td>
-   <td>1.7</td>
-   <td>3.7</td>
-   <td>3.4</td>
-   <td>2.6</td>
- </tr>
-</table>
-
-<p>They key here is using  <code>when</code> to filter different data in and out of different aggregations.</p>
-
-<p>This approach can be quite concise when used with python list comprehensions. I’ll rewrite the query above, but using a list comprehension.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">groups</span>  <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">a</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">b</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">c</span><span class="err">’</span><span class="p">]</span>
-</span><span class='line'><span class="n">combos</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span>  <span class="mi">2</span><span class="p">)]</span>
-</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">combos</span><span class="p">)</span>
-</span><span class='line'><span class="c">#[(‘a’, ‘b’), (‘a’, ‘c’), (‘b’, ‘c’)]&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">single_group</span> <span class="o">=</span> <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">group_</span><span class="o">%</span><span class="n">s_avg</span><span class="err">’</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
-</span><span class='line'><span class="n">double_group</span> <span class="o">=</span> <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">group</span><span class="err">’</span><span class="p">)</span><span class="o">==</span><span class="n">y</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">‘</span><span class="n">value</span><span class="err">’</span><span class="p">))</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="bp">None</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">‘</span><span class="n">group_</span><span class="o">%</span><span class="n">s</span><span class="o">%</span><span class="n">s_avg</span><span class="err">’</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">combos</span><span class="p">]</span>
-</span><span class='line'><span class="n">final_data</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="o">*</span><span class="n">single_group</span> <span class="o">+</span> <span class="n">double_group</span><span class="p">)</span>
-</span><span class='line'><span class="n">final_data</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<table style="width:100%">
- <tr>
-   <th>group_a_avg</th>
-   <th>group_b_avg</th>
-   <th>group_c_avg</th>
-   <th>group_ab_avg</th>
-   <th>group_ac_avg</th>
-   <th>group_bc_avg</th>
- </tr>
- <tr>
-   <td>5.1</td>
-   <td>3.0</td>
-   <td>1.7</td>
-   <td>3.7</td>
-   <td>3.4</td>
-   <td>2.6</td>
- </tr>
-</table>
-
-<p>Voila! Hope you find this little trick helpful! Let me know if you have any questions or comments.</p>
 ]]></content>
   </entry>
   

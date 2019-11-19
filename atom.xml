@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="https://danvatterott.com/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2019-08-26T20:37:53-05:00</updated>
+  <updated>2019-11-18T19:07:17-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,159 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Balancing Model Weights in PySpark]]></title>
+    <link href="https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark/"/>
+    <updated>2019-11-18T18:57:03-06:00</updated>
+    <id>https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark</id>
+    <content type="html"><![CDATA[<p><a href="https://www.jeremyjordan.me/imbalanced-data/">Imbalanced classes</a> is a common problem. Scikit-learn provides an easy fix - “balancing” class weights. This makes models more likely to predict the less common classes (e.g., <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html">logistic regression</a>).</p>
+
+<p>The PySpark ML API doesn’t have this same functionality, so in this blog post, I describe how to balance class weights yourself.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class="line"><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.ml.feature</span> <span class="kn">import</span> <span class="n">VectorAssembler</span>
+</span><span class="line"><span class="kn">from</span> <span class="nn">pyspark.ml.classification</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+</span><span class="line">
+</span><span class="line"><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="s">&quot;local&quot;</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Generate some random data and put the data in a Spark DataFrame. Note that the input variables are not predictive. The model will behave randomly. This is okay, since I am not interested in model accuracy.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+</span><span class="line">
+</span><span class="line"><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</span><span class="line"><span class="n">y</span><span class="p">[:</span><span class="mi">1000</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class="line"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="c"># 0.9</span>
+</span><span class="line">
+</span><span class="line"><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">withColumnRenamed</span><span class="p">(</span><span class="s">&quot;10&quot;</span><span class="p">,</span> <span class="s">&quot;y&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Here’s how Scikit-learn computes class weights when “balanced” weights are requested.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c"># class weight</span>
+</span><span class="line"><span class="c"># https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html</span>
+</span><span class="line"><span class="c"># n_samples / (n_classes * np.bincount(y)).</span>
+</span><span class="line">
+</span><span class="line"><span class="n">class_weights</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">ii</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">y</span><span class="p">)))}</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">class_weights</span><span class="p">)</span> <span class="c"># {0: 5.0, 1: 0.5555555555555556}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Here’s how we can compute “balanced” weights with data from a PySpark DataFrame.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">y_collect</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</span><span class="line"><span class="n">unique_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s">&quot;y&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">]</span>
+</span><span class="line"><span class="n">total_y</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s">&quot;count&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">])</span>
+</span><span class="line"><span class="n">unique_y_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_collect</span><span class="p">)</span>
+</span><span class="line"><span class="n">bin_count</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s">&quot;count&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">]</span>
+</span><span class="line">
+</span><span class="line"><span class="n">class_weights_spark</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">ii</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">unique_y</span><span class="p">,</span> <span class="n">total_y</span> <span class="o">/</span> <span class="p">(</span><span class="n">unique_y_count</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bin_count</span><span class="p">)))}</span>
+</span><span class="line"><span class="k">print</span><span class="p">(</span><span class="n">class_weights_spark</span><span class="p">)</span> <span class="c"># {0.0: 5.0, 1.0: 0.5555555555555556}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>PySpark needs to have a weight assigned to each instance (i.e., row) in the training set. I create a mapping to apply a weight to each training instance.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">mapping_expr</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">create_map</span><span class="p">([</span><span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">class_weights_spark</span><span class="o">.</span><span class="n">items</span><span class="p">())])</span>
+</span><span class="line">
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;weight&quot;</span><span class="p">,</span> <span class="n">mapping_expr</span><span class="o">.</span><span class="n">getItem</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">)))</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>I assemble all the input features into a vector.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">assembler</span> <span class="o">=</span> <span class="n">VectorAssembler</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)],</span> <span class="n">outputCol</span><span class="o">=</span><span class="s">&quot;features&quot;</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">DF</span> <span class="o">=</span> <span class="n">assembler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>And train a logistic regression. Without the instance weights, the model predicts all instances as the frequent class.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">featuresCol</span><span class="o">=</span><span class="s">&quot;features&quot;</span><span class="p">,</span> <span class="n">labelCol</span><span class="o">=</span><span class="s">&quot;y&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">lrModel</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
+</span><span class="line"><span class="n">lrModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s">&quot;prediction&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>+---------------+
+|avg(prediction)|
++---------------+
+|            1.0|
++---------------+
+</code></pre>
+
+<p>With the weights, the model assigns half the instances to each class (even the less commmon one).</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">featuresCol</span><span class="o">=</span><span class="s">&quot;features&quot;</span><span class="p">,</span> <span class="n">labelCol</span><span class="o">=</span><span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="n">weightCol</span><span class="o">=</span><span class="s">&quot;weight&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="n">lrModel</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
+</span><span class="line"><span class="n">lrModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s">&quot;prediction&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<pre><code>+---------------+
+|avg(prediction)|
++---------------+
+|         0.5089|
++---------------+
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Creating a CDF in PySpark]]></title>
@@ -4178,107 +4331,6 @@ Spend a few hours thinking about how to describe your academic accomplishments a
 <p>No matter what your job is, having a good boss is important. If you get a funny feeling about a potential boss in the interview process, don’t take the job.</p>
 
 <p>Some companies are trying to hire data scientists but don’t want to change their company. By this I mean they want their data scientists to work in excel. Excel is a great tool, but it’s not a tool I would want to use every day. If you feel the same way, then keep an eye out for this.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Using Cron to Automate Jobs on Ubuntu]]></title>
-    <link href="https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu/"/>
-    <updated>2017-09-01T17:04:17-05:00</updated>
-    <id>https://danvatterott.com/blog/2017/09/01/automating-jobs-on-ubuntu</id>
-    <content type="html"><![CDATA[<p>I recently spent an entire afternoon debugging a solution for automatically launching a weekly emr job.</p>
-
-<p>Hopefully, I can save someone the same pain by writing this blog post.</p>
-
-<p>I decided to use Cron to launch the weekly jobs. Actually launching a weekly job on Cron was not difficult. Check out the <a href="https://help.ubuntu.com/community/CronHowto">Ubuntu Cron manual</a> for a good description on how to use Cron.</p>
-
-<p>What took me forever was realizing that <strong>Cron jobs have an extremely limited path</strong>. Because of this, specifying the complete path to executed files <strong>and their executors</strong> is necessary.</p>
-
-<p>Below I describe how I used an ec2 instance (Ubuntu 16.04) to automatically launch this weekly job.</p>
-
-<p>First, here is what my Cron job list looks like (call “crontab -e” in the terminal).</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">SHELL</span><span class="o">=</span>/bin/bash
-</span><span class="line"><span class="m">05</span> <span class="m">01</span> * * <span class="m">2</span> <span class="nv">$HOME</span>/automated_jobs/production_cluster.sh
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>The important thing to note here is that I am creating the variable SHELL, and $HOME is replaced by the actual path to my home directory.</p>
-
-<p>Next, is the shell script called by Cron.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="c">#!/bin/bash</span>
-</span><span class="line"><span class="nb">source</span> <span class="nv">$HOME</span>/.bash_profile
-</span><span class="line">
-</span><span class="line">python <span class="nv">$HOME</span>/automated_jobs/launch_production_cluster.py
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Again, $HOME is replaced with the actual path to my home directory.</p>
-
-<p>I had to make this shell script and the python script called within it executable (call “chmod +x” in the terminal). The reason that I used this shell script rather than directly launching the python script from Cron is I wanted access to environment variables in my bash_profile. In order to get access to them, I had to source bash_profile.</p>
-
-<p>Finally, below I have the python file that executes the week job that I wanted. I didn’t include the code that actually launches our emr cluster because that wasn’t the hard part here, but just contact me if you would like to see it.</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="c">#!$HOME/anaconda2/bin/python</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">os</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">sys</span>
-</span><span class="line"><span class="kn">import</span> <span class="nn">datetime</span> <span class="kn">as</span> <span class="nn">dt</span>
-</span><span class="line"><span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">check_output</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># setup logging</span>
-</span><span class="line"><span class="n">old_stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
-</span><span class="line"><span class="n">log_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;production_cluster_</span><span class="si">%s</span><span class="s">.log&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y_%m_</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">),</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
-</span><span class="line"><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">log_file</span>
-</span><span class="line">
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;created log file&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># organize local files and s3 files</span>
-</span><span class="line">
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;organized files&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># call emr cluster</span>
-</span><span class="line">
-</span><span class="line"><span class="k">print</span> <span class="s">&#39;launched production job&#39;</span>
-</span><span class="line">
-</span><span class="line"><span class="c"># close log file</span>
-</span><span class="line"><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">old_stdout</span>
-</span><span class="line"><span class="n">log_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>While the code is not included here, I use aws cli to launch my emr cluster, and I had to specify the path to aws (call “which aws” in the terminal) when making this call.</p>
-
-<p>You might have noticed the logging I am doing in this script. I found logging both within this python script and piping the output of this script to additional logs helpful when debugging.</p>
-
-<p>The Ubuntu Cron manual I linked above, makes it perfectly clear that my Cron path issues are common, but I wanted to post my solution in case other people needed a little guidance.</p>
 ]]></content>
   </entry>
   
