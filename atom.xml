@@ -4,7 +4,7 @@
   <title><![CDATA[Dan Vatterott]]></title>
   <link href="https://danvatterott.com/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2020-01-17T21:13:21-06:00</updated>
+  <updated>2020-08-11T20:48:30-05:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -12,6 +12,47 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Posting Collections as Hive Tables]]></title>
+    <link href="https://danvatterott.com/blog/2020/08/10/posting-collections-as-hive-tables/"/>
+    <updated>2020-08-10T20:03:43-05:00</updated>
+    <id>https://danvatterott.com/blog/2020/08/10/posting-collections-as-hive-tables</id>
+    <content type="html"><![CDATA[<p>I was recently asked to post a series of parquet collection as tables so analysts could query them in SQL. This should be straight forward, but it took me awhile to figure out. Hopefully, you find this post before spending too much time on such an easy task.</p>
+
+<p>You should use the <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/create-table.html"><code>CREATE TABLE</code></a>. This is pretty straight forward. By creating a permanent table (rather than a temp table), you can use a database name. Also, by using a table (rather than  a view), you can load the data from an s3 location.</p>
+
+<p>Next, you can specify the table’s schema. Again, this is pretty straight forward. Columns used to partition the data should be declared here.</p>
+
+<p>Next, you can specify how the data is stored (below, I use Parquet) and how the data is partitioned (below, there are two partitioning columns).</p>
+
+<p>Finally, you specify the data’s location.</p>
+
+<p>The part that really threw me for a loop here is that I wasn’t done yet! You need one more command so that Spark can go examine the partitions - <a href="https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-repair-table.html"><code>MSCK REPAIR TABLE</code></a>. Also please note that this command needs to be re-run whenever a partition is added.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+</span><span class="line"><span class="s">CREATE TABLE my_db.my_table (</span>
+</span><span class="line"><span class="s">(example_key INT, example_col STRING, example_string STRING, example_date STRING)</span>
+</span><span class="line"><span class="s">)</span>
+</span><span class="line"><span class="s">USING PARQUET</span>
+</span><span class="line"><span class="s">PARTITIONED BY (example_string, example_date)</span>
+</span><span class="line"><span class="s">LOCATION &#39;s3://my.example.bucket/my_db/my_table/&#39;</span>
+</span><span class="line"><span class="s">&quot;&quot;&quot;</span>
+</span><span class="line"><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="s">&quot;MSCK REPAIR TABLE my_db.my_table&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Hope this post saves you some time!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Balancing Model Weights in PySpark]]></title>
@@ -4278,59 +4319,6 @@ I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pysp
 <p>One set of skills that I haven’t touched on is cluster computing (e.g., Hadoop, Spark). Unfortunately, I don’t think there is much you can do here. I’ve heard good things about the book <a href="http://shop.oreilly.com/product/0636920028512.do">Learning Spark</a>, but books can only get you so far. If you apply for a job that wants Spark, I would install Spark on your local computer and play around, but it’s hard to learn cluster computing when you’re not on a cluster. Spark is more or less fancy SQL (aside from the ML aspects), so learning SQL is a good way to prepare for a Spark mindset. I didn’t include cluster computing above, because many teams seem okay with employees learning this on the job.</p>
 
 <p>Not that there’s a lack of content here, but <a href="https://blog.insightdatascience.com/preparing-for-insight-ca7cc6087f91">here</a>’s a good list of must know topics that I used when transitioning from academia to data science.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Psychology to Data Science: Part 1]]></title>
-    <link href="https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1/"/>
-    <updated>2018-01-10T19:21:28-06:00</updated>
-    <id>https://danvatterott.com/blog/2018/01/10/psychology-to-data-science-part-1</id>
-    <content type="html"><![CDATA[<p>A number of people have asked about moving from a PhD in Psychology/Cognitive Psychology/Cognitive Neuroscience to data science. This blog post is part of a 2-part series where I record my answers to the best and most common questions I’ve heard. Part 2 can be found <a href="https://danvatterott.com/blog/2018/01/16/psychology-to-data-science-part-2/">here</a>.</p>
-
-<p>Before I get started, I want to thank <a href="https://www.linkedin.com/in/rickcwolf/">Rick Wolf</a> for providing comments on an earlier version of this post.</p>
-
-<p>This first post is a series of general questions I’ve received. The second post will focus on technical skills required to get a job in data science.</p>
-
-<p>Each header in this post represents a question. Below the header/question I record my response.</p>
-
-<p>Anyone starting this process should know they are starting a marathon. Not a sprint. Making the leap from academia to data science is more than possible, but it takes time and dedication.</p>
-
-<h3 id="do-you-think-that-being-a-psychology-phd-is-a-disadvantage">Do you think that being a Psychology PhD is a disadvantage?</h3>
-<p>I think it can be a disadvantage in the job application process. Most people don’t understand how quantitative Psychology is, so psychology grads have to overcome these stereotypes. This doesn’t mean having a Psychology PhD is a disadvantage when it comes to BEING a data scientist. Having a Psychology PhD can be a huge advantage because Psychology PhDs have experience measuring behavior which is 90% of data science. Every company wants to know what their customers are doing and how to change their customers’ behavior. This is literally what Psychology PhDs do, so Psychology PhDs might have the most pertinent experience of any science PhD.</p>
-
-<h3 id="when-it-is-the-right-time-to-apply-for-a-boot-camp">When it is the right time to apply for a boot camp?</h3>
-<p>(I did the <a href="http://insightdatascience.com/">Insight Data Science</a> bootcamp)<br />
-Apply when you’re good enough to get a phone screen but not good enough to get a job. Don’t count on a boot camp to give you all the skills. Instead, think of boot camps as polishing your skills.<br />
-<br />
-Here is the game plan I would use:<br />
-Send out 3-4 job applications and see if you get any hits. If not, think about how you can improve your resume (see post #2), and go about those improvements. After a few iterations of this, you will start getting invitations to do phone screens. At this stage, a boot camp will be useful.<br />
-The boot camps are of varying quality. Ask around to get an idea for which boot camps are better or worse. Also, look into how each boot camp gets paid. If you pay tuition, the boot camp will care less about whether you get a job. If the boot camp gets paid through recruiting fees or collecting tuition from your paychecks, it is more invested in your job.</p>
-
-<h3 id="should-i-start-a-blog">Should I start a blog?</h3>
-<p>Yes, I consider this a must (and so do <a href="http://varianceexplained.org/r/start-blog/">others</a>). It’s a good opportunity to practice data science, and, more importantly, it’s a good opportunity to show off your skills.</p>
-
-<p>Most people (including myself) host their page on github and generate the html with a static site generator. I use <a href="http://octopress.org/">octopress</a>, which works great. Most people seem to use <a href="http://docs.getpelican.com/en/stable/">pelican</a>. I would recommend pelican because it’s built in Python. I haven’t used it, but a quick google search led me to <a href="http://mathamy.com/migrating-to-github-pages-using-pelican.html">this tutorial</a> on building a github site with pelican.</p>
-
-<p>I wish I’d sent more of my posts to friends/colleagues. Peer review is always good for a variety of reasons. I’d be more than happy to review posts for anyone reading this blog.</p>
-
-<h3 id="how-should-i-frame-what-ive-done-in-academia-on-my-cvresume">How should I frame what I’ve done in academia on my CV/resume?</h3>
-<p>First, no one in industry cares about publications. People might notice if the journal is Science/Nature but most will not.
-Spend a few hours thinking about how to describe your academic accomplishments as technical skills. For example, as a Postdoc, I was on a Neurophysiology project that required writing code to collect, ingest, and transform electrophysiology data. In academia, none of this code mattered. In industry, it’s the only thing that matters. What I built was a data-pipeline, and this is a product many companies desire.</p>
-
-<p>We all have examples like this, but they’re not obvious because academics don’t know what companies want. Think of your data-pipelines, your interactive experiments, your scripted analytics.</p>
-
-<p>Transforming academic work into skills that companies desire will take a bit of creativity (I am happy to help with this), but remember that your goal here is to express how the technical skills you used in academia will apply to what you will do as a data scientist.</p>
-
-<p>Many people (including myself) love to say they can learn fast. While this is an important skill it’s hard to measure and it calls attention to what you do not know. In general, avoid it.</p>
-
-<h3 id="did-you-focus-on-one-specific-industry">Did you focus on one specific industry?</h3>
-<p>I think a better question than what industry is what size of team/company you want to work on. At a big company you will have a more specific job with more specific requirements (and probably more depth of knowledge). At a smaller company, you will be expected to have a broader skill set. This matters in terms of what you want in a job and what skills you have. Having industry specific knowledge is awesome, but most academics have never worked in an industry so by definition they don’t have industry specific knowledge. Unfortunately, we just have to punt on this aspect of the job application.</p>
-
-<h3 id="anything-to-be-wary-of">Anything to be wary of?</h3>
-<p>No matter what your job is, having a good boss is important. If you get a funny feeling about a potential boss in the interview process, don’t take the job.</p>
-
-<p>Some companies are trying to hire data scientists but don’t want to change their company. By this I mean they want their data scientists to work in excel. Excel is a great tool, but it’s not a tool I would want to use every day. If you feel the same way, then keep an eye out for this.</p>
 ]]></content>
   </entry>
   
