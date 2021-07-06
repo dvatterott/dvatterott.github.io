@@ -3,14 +3,14 @@ layout: post
 title: "PCA Tutorial"
 date: 2016-11-06 13:33:50 -0500
 comments: true
-categories: [Python, Open Source, Tutorial, PCA]
+categories: [python, open source, tutorial, pca]
 ---
 
-[Principal Component Analysis](http://setosa.io/ev/principal-component-analysis/) (PCA) is an important method for dimensionality reduction and data cleaning. I have used PCA in the past on this blog for estimating the latent variables that underlie player statistics. For example, I might have two features: average number of offensive rebounds and average number of defensive rebounds. The two features are highly correlated because a latent variable, the player's *rebounding ability*, explains common variance in the two features. PCA is a method for extracting these latent variables that explain common variance across features. 
+[Principal Component Analysis](http://setosa.io/ev/principal-component-analysis/) (PCA) is an important method for dimensionality reduction and data cleaning. I have used PCA in the past on this blog for estimating the latent variables that underlie player statistics. For example, I might have two features: average number of offensive rebounds and average number of defensive rebounds. The two features are highly correlated because a latent variable, the player's *rebounding ability*, explains common variance in the two features. PCA is a method for extracting these latent variables that explain common variance across features.
 
-In this tutorial I generate fake data in order to help gain insight into the mechanics underlying PCA. 
+In this tutorial I generate fake data in order to help gain insight into the mechanics underlying PCA.
 
-Below I create my first feature by sampling from a normal distribution. I create a second feature by adding a noisy normal distribution to the first feature multiplied by two. Because I generated the data here, I know it's composed to two latent variables, and PCA should be able to identify these latent variables. 
+Below I create my first feature by sampling from a normal distribution. I create a second feature by adding a noisy normal distribution to the first feature multiplied by two. Because I generated the data here, I know it's composed to two latent variables, and PCA should be able to identify these latent variables.
 
 I generate the data and plot it below.
 
@@ -58,11 +58,11 @@ plt.axis([-4,4,-4,4]);
 <img src="{{ root_url }}/images/PCA/stand_data.png" />
 
 
-After standardizing the data, I need to find the [eigenvectors and eigenvalues](http://setosa.io/ev/eigenvectors-and-eigenvalues/). The eigenvectors point in the direction of a component and eigenvalues represent the amount of variance explained by the component. Below, I plot the standardized data with the eigenvectors ploted with their eigenvalues as the vectors distance from the origin. 
+After standardizing the data, I need to find the [eigenvectors and eigenvalues](http://setosa.io/ev/eigenvectors-and-eigenvalues/). The eigenvectors point in the direction of a component and eigenvalues represent the amount of variance explained by the component. Below, I plot the standardized data with the eigenvectors ploted with their eigenvalues as the vectors distance from the origin.
 
-As you can see, the blue eigenvector is longer and points in the direction with the most variability. The purple eigenvector is shorter and points in the direction with less variability. 
+As you can see, the blue eigenvector is longer and points in the direction with the most variability. The purple eigenvector is shorter and points in the direction with less variability.
 
-As expected, one component explains far more variability than the other component (becaus both my features share variance from a single latent gaussian distribution). 
+As expected, one component explains far more variability than the other component (becaus both my features share variance from a single latent gaussian distribution).
 
 
 {% codeblock lang:python %}
@@ -82,7 +82,7 @@ plt.axis([-4,4,-4,4]);
 <img src="{{ root_url }}/images/PCA/eigen_data.png" />
 
 
-Next I order the eigenvectors according to the magnitude of their eigenvalues. This orders the components so that the components that explain more variability occur first. I then transform the data so that they're axis aligned. This means the first component explain variability on the x-axis and the second component explains variance on the y-axis. 
+Next I order the eigenvectors according to the magnitude of their eigenvalues. This orders the components so that the components that explain more variability occur first. I then transform the data so that they're axis aligned. This means the first component explain variability on the x-axis and the second component explains variance on the y-axis.
 
 
 {% codeblock lang:python %}
@@ -105,7 +105,7 @@ plt.axis([-4,4,-4,4]);
 <img src="{{ root_url }}/images/PCA/trans_data.png" />
 
 
-Finally, just to make sure the PCA was done correctly, I will call PCA from the sklearn library, run it, and make sure it produces the same results as my analysis. 
+Finally, just to make sure the PCA was done correctly, I will call PCA from the sklearn library, run it, and make sure it produces the same results as my analysis.
 
 
 {% codeblock lang:python %}
@@ -120,4 +120,3 @@ print(stats.stats.pearsonr(X_rotated.T[1],test.T[1]))
 
     (-1.0, 0.0)
     (-1.0, 0.0)
-

@@ -2,13 +2,13 @@
 #      Main Configs       #
 # ----------------------- #
 
-url: http://www.danvatterott.com
+url: https://danvatterott.com
 title: Dan Vatterott
 subtitle: Data Scientist
 author: Dan Vatterott
 simple_search: https://duckduckgo.com/
-description: Dan Vatterott is a data scientist working as a fellow at Insight in New York. Dan Vatterott uses python and other data science tools to unlock meaning from data.
-keywords: Dan Vatterott, Columbia, Iowa, Psychology, Neuroscience, Data Science, Python, Insight, Open Source
+description: Dan Vatterott is a data scientist at Showtime Inc. Dan Vatterott uses python and other data science tools to unlock meaning from data.
+keywords: Dan Vatterott, Columbia, Iowa, Psychology, Neuroscience, Data Science, Python, Insight, Open Source, Showtime
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
 # http://www.ruby-doc.org/core-1.9.2/Time.html#method-i-strftime
@@ -64,10 +64,8 @@ default_asides: [asides/about.html, asides/recent_posts.html]
 #   3rd Party Settings    #
 # ----------------------- #
 
-facebook_user: dan.vatterott
 linkedin_user: dan-vatterott
 gscholar_user: -S7mhDQAAAAJ&hl
-rgate_user: Daniel_Vatterott
 email_user: dvatterott@gmail.com
 
 # Github repositories
@@ -79,15 +77,15 @@ github_skip_forks: true
 
 # Twitter
 twitter_user: dvatterott
-twitter_tweet_button: true
+twitter_tweet_button: false
 
 # Google +1
-google_plus_one: true
+google_plus_one: false
 google_plus_one_size: medium
 
 # Google Plus Profile
 # Hidden: No visible button, just add author information to search results
-googleplus_user: dvatterott
+googleplus_user:
 googleplus_hidden: true
 
 # Pinboard
@@ -106,4 +104,4 @@ disqus_show_comment_count: false
 google_analytics_tracking_id: UA-35559761-1
 
 # Facebook Like
-facebook_like: true
+facebook_like: false

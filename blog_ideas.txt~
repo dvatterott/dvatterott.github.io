@@ -1,0 +1,7 @@
+pyspark unit tests
+baseball. are there some players that hit into errors more often than other players?
+  would have to look at how often batted ball becomes hit, ball in play, and error. Could use retrosheet.org data.
+set up postgres database and record internet speed every minute on raspberry pi
+regression of proportion in pymc
+the importance of making it easy to do good code practice. How to do this (make sample data automatically and readily available).
+makeFiles as a critical part to any data science repo. testing. shareable/importable code. nothing is a one-off

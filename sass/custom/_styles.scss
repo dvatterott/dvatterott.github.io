@@ -33,3 +33,18 @@
 // ... but undo that for tables for pygments-generated code
 .entry-content .code tr                 { background-color: inherit }
 .entry-content .code tr:nth-child(even) { background-color: inherit }
+
+
+/* ***************
+   * Icons aside *
+   *************** */
+#social-icons {
+    text-align: center;
+    white-space: nowrap;
+    font-size: 1.1em;
+    margin-bottom: -0.5em;
+    a, span {
+        text-decoration: none;
+        white-space: nowrap;
+    }
+}

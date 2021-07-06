@@ -1,0 +1,22 @@
+#https://spark.apache.org/docs/2.3.1/api/python/
+#https://spark.apache.org/docs/2.3.1/api/python/pyspark.ml.html#module-pyspark.ml.linalg
+coefficients = [1.6469720190175334, 0.2173248679643944, 0.72478176736625299, 0.26500985623202405, 1.1742059690625448, 3.1695197155080126, 6.7289621835053968, 1.3534624177125312, 2.1145399254778399, 0.96400815575280541, 4.0346190640939481, 3.8889030098845452, 2.6396779986604155, 1.0419495257724785, 1.1518203295325535, 5.533150610229101, 0.71664763204086612, 4.4312293830713099, 8.9950630052138578, 5.2395658166071488, 3.0469687125958695]
+
+from pyspark.sql import types as T
+from pyspark.ml.linalg import DenseVector
+
+def sparse_to_array(v):
+  v = DenseVector(v)
+  new_array = list([float(x) for x in v])
+  return new_array
+
+sparse_to_array_udf = F.udf(sparse_to_array, T.ArrayType(T.FloatType()))
+mul = F.udf(lambda xx,yy: [x * y for x, y in zip(xx, yy)], T.ArrayType(T.FloatType()))
+
+output_df = (output_df
+             .withColumn('coefficients', F.array(*[F.lit(x).cast('float') for x in coefficients]))
+             .withColumn('features_array', sparse_to_array_udf('scaledFeatures'))
+             .withColumn('output', mul(F.col('coefficients'), F.col('features_array')))
+            )
+
+display(output_df.limit(5))

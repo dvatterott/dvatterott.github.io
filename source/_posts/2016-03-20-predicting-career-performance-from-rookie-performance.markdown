@@ -3,10 +3,10 @@ layout: post
 title: "Predicting Career Performance from Rookie Performance"
 date: 2016-03-20 15:56:18 -0400
 comments: true
-categories: [Python, Data Analytics, open source, NBA, Machine Learning, Regression]
+categories: [Python, data analytics, open source, nba, machine learning, regression]
 ---
 
-As a huge t-wolves fan, I've been curious all year by what we can infer from Karl-Anthony Towns' great rookie season. To answer this question, I've create a simple linear regression model that uses rookie year performance to predict career performance. 
+As a huge t-wolves fan, I've been curious all year by what we can infer from Karl-Anthony Towns' great rookie season. To answer this question, I've create a simple linear regression model that uses rookie year performance to predict career performance.
 
 Many have attempted to predict NBA players' success via regression style approaches. Notable models I know of include [Layne Vashro's model](http://laynevashro.com/basketball/predsFAQ.html) which uses combine and college performance to predict career performance. Layne Vashro's model is a quasi-poisson GLM. I tried a similar approach, but had the most success when using ws/48 and OLS. I will discuss this a little more at the end of the post.
 
@@ -14,7 +14,7 @@ A jupyter notebook of this post can be found on my [github](https://github.com/d
 
 
 {% codeblock lang:python %}
-#import some libraries and tell ipython we want inline figures rather than interactive figures. 
+#import some libraries and tell ipython we want inline figures rather than interactive figures.
 import matplotlib.pyplot as plt, pandas as pd, numpy as np, matplotlib as mpl
 
 from __future__ import print_function
@@ -32,11 +32,11 @@ This data includes per 36 stats and advanced statistics such as usage percentage
 
 
 {% codeblock lang:python %}
-df = pd.read_pickle('nba_bballref_career_stats_2016_Mar_15.pkl') #here's the career data. 
+df = pd.read_pickle('nba_bballref_career_stats_2016_Mar_15.pkl') #here's the career data.
 rookie_df = pd.read_pickle('nba_bballref_rookie_stats_2016_Mar_15.pkl') #here's the rookie year data
 {% endcodeblock %}
 
-The variable I am trying to predict is average [WS/48](http://www.basketball-reference.com/about/ws.html) over a player's career. There's no perfect box-score statistic when it comes to quantifying a player's peformance, but ws/48 seems relatively solid. 
+The variable I am trying to predict is average [WS/48](http://www.basketball-reference.com/about/ws.html) over a player's career. There's no perfect box-score statistic when it comes to quantifying a player's peformance, but ws/48 seems relatively solid.
 
 
 {% codeblock lang:python %}
@@ -54,7 +54,7 @@ plt.xlabel('WS/48');
 <img src="{{ root_url }}/images/regressionNBA/predictor_hist.png" />
 
 
-The predicted variable looks pretty gaussian, so I can use ordinary least squares. This will be nice because while ols is not flexible, it's highly interpretable. At the end of the post I'll mention some more complex models that I will try. 
+The predicted variable looks pretty gaussian, so I can use ordinary least squares. This will be nice because while ols is not flexible, it's highly interpretable. At the end of the post I'll mention some more complex models that I will try.
 
 
 {% codeblock lang:python %}
@@ -62,7 +62,7 @@ rook_games = rookie_df['Career Games']>50
 rook_year = rookie_df['Year']>1980
 
 #remove rookies from before 1980 and who have played less than 50 games. I also remove some features that seem irrelevant or unfair
-rookie_df_games = rookie_df[rook_games & rook_year] #only players with more than 50 games. 
+rookie_df_games = rookie_df[rook_games & rook_year] #only players with more than 50 games.
 rookie_df_drop = rookie_df_games.drop(['Year','Career Games','Name'],1)
 {% endcodeblock %}
 
@@ -70,7 +70,7 @@ Above, I remove some predictors from the rookie data. Lets run the regression!
 
 
 {% codeblock lang:python %}
-import statsmodels.api as sm 
+import statsmodels.api as sm
 
 X_rookie = rookie_df_drop.as_matrix() #take data out of dataframe
 X_rookie = sm.add_constant(X_rookie)  # Adds a constant term to the predictor
@@ -148,7 +148,7 @@ print(estAll.summary())
     Skew:                           0.300   Prob(JB):                     1.16e-12
     Kurtosis:                       3.649   Cond. No.                     1.88e+05
     ==============================================================================
-    
+
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
     [2] The condition number is large, 1.88e+05. This might indicate that there are
@@ -169,15 +169,15 @@ plt.xlabel('Predicted WS/48');
 <img src="{{ root_url }}/images/regressionNBA/regression1_predict.png" />
 
 
-The blue line above is NOT the best-fit line. It's the identity line. I plot it to help visualize where the model fails. The model seems to primarily fail in the extremes - it tends to overestimate the worst players. 
+The blue line above is NOT the best-fit line. It's the identity line. I plot it to help visualize where the model fails. The model seems to primarily fail in the extremes - it tends to overestimate the worst players.
 
-All in all, This model does a remarkably good job given its simplicity (linear regression), but it also leaves a lot of variance unexplained. 
+All in all, This model does a remarkably good job given its simplicity (linear regression), but it also leaves a lot of variance unexplained.
 
-One reason this model might miss some variance is there's more than one way to be a productive basketball player. For instance, Dwight Howard and Steph Curry find very different ways to contribute. One linear regression model is unlikely to succesfully predict both players. 
+One reason this model might miss some variance is there's more than one way to be a productive basketball player. For instance, Dwight Howard and Steph Curry find very different ways to contribute. One linear regression model is unlikely to succesfully predict both players.
 
-In a [previous post](http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/), I grouped players according to their on-court performance. These player groupings might help predict career performance. 
+In a [previous post](http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/), I grouped players according to their on-court performance. These player groupings might help predict career performance.
 
-Below, I will use the same player grouping I developed in my previous post, and examine how these groupings impact my ability to predict career performance. 
+Below, I will use the same player grouping I developed in my previous post, and examine how these groupings impact my ability to predict career performance.
 
 
 {% codeblock lang:python %}
@@ -203,7 +203,7 @@ final_fit = KMeans(n_clusters=6).fit(reduced_data) #fit 6 clusters
 df['kmeans_label'] = final_fit.labels_ #label each data point with its clusters
 {% endcodeblock %}
 
-See my other post for more details about this clustering procedure. 
+See my other post for more details about this clustering procedure.
 
 Let's see how WS/48 varies across the groups.
 
@@ -217,9 +217,9 @@ plt.boxplot(WS_48);
 <img src="{{ root_url }}/images/regressionNBA/boxwhisk_ws48.png" />
 
 
-Some groups perform better than others, but there's lots of overlap between the groups. Importantly, each group has a fair amount of variability. Each group spans at least 0.15 WS/48. This gives the regression enough room to successfully predict performance in each group. 
+Some groups perform better than others, but there's lots of overlap between the groups. Importantly, each group has a fair amount of variability. Each group spans at least 0.15 WS/48. This gives the regression enough room to successfully predict performance in each group.
 
-Now, lets get a bit of a refresher on what the groups are. Again, my previous post has a good description of these groups. 
+Now, lets get a bit of a refresher on what the groups are. Again, my previous post has a good description of these groups.
 
 
 {% codeblock lang:python %}
@@ -251,8 +251,8 @@ I've plotted the groups across a number of useful categories. For information ab
 Here's a quick rehash of the groupings. See my [previous post](http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/) for more detail.
 
 <ul>
-<li>**Group 1:** These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li> 
-<li>**Group 2:** These are the scorers who get to the free throw line, dish out assists, and carry a high usage.</li> 
+<li>**Group 1:** These are the distributors who shoot a fair number of threes, don't rebound at all, dish out assists, gather steals, and ...turn the ball over.</li>
+<li>**Group 2:** These are the scorers who get to the free throw line, dish out assists, and carry a high usage.</li>
 <li>**Group 3:** These are the bench players who don't score...or do much in general.</li>
 <li>**Group 4:** These are the 3 point shooters who shoot tons of 3 pointers, almost no free throws, and don't rebound well.</li>
 <li>**Group 5:** These are the mid-range shooters who shoot well, but don't shoot threes or draw free throws</li>
@@ -270,14 +270,14 @@ X = rookie_df.as_matrix() #take data out of dataframe
 ScaleRookie = StandardScaler().fit(X) #scale data
 X = ScaleRookie.transform(X) #transform data to scale
 
-reduced_model_rookie = PCA(n_components=10).fit(X) #create pca model of first 10 components. 
+reduced_model_rookie = PCA(n_components=10).fit(X) #create pca model of first 10 components.
 {% endcodeblock %}
 
-You might have noticed the giant condition number in the regression above. This indicates significant [multicollinearity](https://en.wikipedia.org/wiki/Multicollinearity) of the features, which isn't surprising since I have many features that reflect the same abilities. 
+You might have noticed the giant condition number in the regression above. This indicates significant [multicollinearity](https://en.wikipedia.org/wiki/Multicollinearity) of the features, which isn't surprising since I have many features that reflect the same abilities.
 
-The multicollinearity doesn't prevent the regression model from making accurate predictions, but does it make the beta weight estimates irratic. With irratic beta weights, it's hard to tell whether the different clusters use different models when predicting career ws/48. 
+The multicollinearity doesn't prevent the regression model from making accurate predictions, but does it make the beta weight estimates irratic. With irratic beta weights, it's hard to tell whether the different clusters use different models when predicting career ws/48.
 
-In the following regression, I put the predicting features through a PCA and keep only the first 10 PCA components. Using only the first 10 PCA components keeps the component score below 20, indicating that multicollinearity is not a problem. I then examine whether the different groups exhibit a different patterns of beta weights (whether different models predict success of the different groups). 
+In the following regression, I put the predicting features through a PCA and keep only the first 10 PCA components. Using only the first 10 PCA components keeps the component score below 20, indicating that multicollinearity is not a problem. I then examine whether the different groups exhibit a different patterns of beta weights (whether different models predict success of the different groups).
 
 
 {% codeblock lang:python %}
@@ -287,27 +287,27 @@ rookie_df_drop['kmeans_label'] = cluster_labels #label each data point with its 
 estHold = [[],[],[],[],[],[]]
 
 for i,group in enumerate(np.unique(final_fit.labels_)):
-           
+
     Grouper = df['kmeans_label']==group #do regression one group at a time
     Yearer = df['Year']>1980
-    
+
     Group1 = df[Grouper & Yearer]
     Y = Group1['WS/48'] #get predicted data
-    
+
     Group1_rookie = rookie_df_drop[rookie_df_drop['kmeans_label']==group] #get predictor data of group
     Group1_rookie = Group1_rookie.drop(['kmeans_label'],1)
 
     X = Group1_rookie.as_matrix() #take data out of dataframe
     X = ScaleRookie.transform(X) #scale data
-    
+
     X = reduced_model_rookie.transform(X) #transform data into the 10 PCA components space
-    
+
     X = sm.add_constant(X)  # Adds a constant term to the predictor
     est = sm.OLS(Y,X) #create regression model
     est = est.fit()
     #print(est.summary())
-    estHold[i] = est 
-    
+    estHold[i] = est
+
 {% endcodeblock %}
 
 
@@ -316,7 +316,7 @@ plt.figure(figsize=(12,6)) #plot the beta weights
 width=0.12
 for i,est in enumerate(estHold):
     plt.bar(np.arange(11)+width*i,est.params,color=plt.rcParams['axes.color_cycle'][i],width=width,yerr=(est.conf_int()[1]-est.conf_int()[0])/2)
-    
+
 plt.xlim(right=11)
 plt.xlabel('Principle Components')
 plt.legend(('Group 1','Group 2','Group 3','Group 4','Group 5','Group 6'))
@@ -327,7 +327,7 @@ plt.ylabel('Beta Weights');
 <img src="{{ root_url }}/images/regressionNBA/beta_weights.png" />
 
 
-Above I plot the beta weights for each principle component across the groupings. This plot is a lot to look at, but I wanted to depict how the beta values changed across the groups. They are not drastically different, but they're also not identical. Error bars depict 95% confidence intervals. 
+Above I plot the beta weights for each principle component across the groupings. This plot is a lot to look at, but I wanted to depict how the beta values changed across the groups. They are not drastically different, but they're also not identical. Error bars depict 95% confidence intervals.
 
 Below I fit a regression to each group, but with all the features. Again, multicollinearity will be a problem, but this will not decrease the regression's accuracy, which is all I really care about.
 
@@ -343,55 +343,55 @@ plt.figure(figsize=(8,6));
 estHold = [[],[],[],[],[],[]]
 
 for i,group in enumerate(np.unique(final_fit.labels_)):
-           
+
     Grouper = df['kmeans_label']==group #do one regression at a time
     Yearer = df['Year']>1980
-    
+
     Group1 = df[Grouper & Yearer]
     Y = Group1['WS/48'] #get predictor data
-    
+
     Group1_rookie = rookie_df_drop[rookie_df_drop['kmeans_label']==group]
     Group1_rookie = Group1_rookie.drop(['kmeans_label'],1) #get predicted data
 
     X = Group1_rookie.as_matrix() #take data out of dataframe    
-    
+
     X = sm.add_constant(X)  # Adds a constant term to the predictor
     est = sm.OLS(Y,X) #fit with linear regression model
     est = est.fit()
     estHold[i] = est
     #print est.summary()
-    
+
     plt.subplot(3,2,i+1) #plot each regression's prediction against actual data
     plt.plot(est.predict(X),Y,'o',color=plt.rcParams['axes.color_cycle'][i])
     plt.plot(np.arange(-0.1,0.25,0.01),np.arange(-0.1,0.25,0.01),'-')
     plt.title('Group %d'%(i+1))
     plt.text(0.15,-0.05,'$r^2$=%.2f'%est.rsquared)
     plt.xticks([0.0,0.12,0.25])
-    plt.yticks([0.0,0.12,0.25]); 
+    plt.yticks([0.0,0.12,0.25]);
 {% endcodeblock %}
 
 
 <img src="{{ root_url }}/images/regressionNBA/model2_predictions.png" />
 
 
-The plots above depict each regression's predictions against actual ws/48. I provide each model's r^2 in the plot too. 
+The plots above depict each regression's predictions against actual ws/48. I provide each model's r^2 in the plot too.
 
 Some regressions are better than others. For instance, the regression model does a pretty awesome job predicting the bench warmers...I wonder if this is because they have shorter careers... The regression model does not do a good job predicting the 3-point shooters.
 
-Now onto the fun stuff though. 
+Now onto the fun stuff though.
 
-Below, create a function for predicting a players career WS/48. First, I write a function that finds what cluster a player would belong to, and what the regression model predicts for this players career (with 95% confidence intervals). 
+Below, create a function for predicting a players career WS/48. First, I write a function that finds what cluster a player would belong to, and what the regression model predicts for this players career (with 95% confidence intervals).
 
 
 {% codeblock lang:python %}
 def player_prediction__regressionModel(PlayerName):
     from statsmodels.sandbox.regression.predstd import wls_prediction_std
-    
+
     clust_df = pd.read_pickle('nba_bballref_career_stats_2016_Mar_05.pkl')
     clust_df = clust_df[clust_df['Name']==PlayerName]
     clust_df = clust_df.drop(['Name','G','GS','MP','FG','FGA','FG%','3P','2P','FT','TRB','PTS','ORtg','DRtg','PER','TS%','3PAr','FTr','ORB%','DRB%','TRB%','AST%','STL%','BLK%','TOV%','USG%','OWS','DWS','WS','WS/48','OBPM','DBPM','BPM','VORP'],1)
     new_vect = ScaleModel.transform(clust_df.as_matrix()[0])
-    reduced_data = reduced_model.transform(new_vect) 
+    reduced_data = reduced_model.transform(new_vect)
     Group = final_fit.predict(reduced_data)
     clust_df['kmeans_label'] = Group[0]
 
@@ -405,39 +405,39 @@ def player_prediction__regressionModel(PlayerName):
 
 {% endcodeblock %}
 
-Here I create a function that creates a list of all the first round draft picks from a given year. 
+Here I create a function that creates a list of all the first round draft picks from a given year.
 
 
 {% codeblock lang:python %}
 def gather_draftData(Year):
-    
+
     import urllib2
     from bs4 import BeautifulSoup
     import pandas as pd
     import numpy as np
-    
+
     draft_len = 30
-    
+
     def convert_float(val):
         try:
             return float(val)
         except ValueError:
             return np.nan
-    
+
     url = 'http://www.basketball-reference.com/draft/NBA_'+str(Year)+'.html'
     html = urllib2.urlopen(url)
     soup = BeautifulSoup(html,"lxml")
-    
+
     draft_num = [soup.findAll('tbody')[0].findAll('tr')[i].findAll('td')[0].text for i in range(draft_len)]
     draft_nam = [soup.findAll('tbody')[0].findAll('tr')[i].findAll('td')[3].text for i in range(draft_len)]
-        
+
     draft_df = pd.DataFrame([draft_num,draft_nam]).T
     draft_df.columns = ['Number','Name']
     df.index = range(np.size(df,0))
     return draft_df
 {% endcodeblock %}
 
-Below I create predictions for each first-round draft pick from 2015. The spurs' first round pick, Nikola Milutinov, has yet to play so I do not create a prediction for him. 
+Below I create predictions for each first-round draft pick from 2015. The spurs' first round pick, Nikola Milutinov, has yet to play so I do not create a prediction for him.
 
 
 {% codeblock lang:python %}
@@ -445,7 +445,7 @@ import matplotlib.patches as mpatches
 
 draft_df = gather_draftData(2015)
 
-draft_df['Name'][14] =  'Kelly Oubre Jr.' #annoying name inconsistencies 
+draft_df['Name'][14] =  'Kelly Oubre Jr.' #annoying name inconsistencies
 
 plt.subplots(figsize=(14,6));
 plt.xticks(range(1,31),draft_df['Name'],rotation=90)
@@ -454,12 +454,12 @@ draft_df = draft_df.drop(17, 0) #Sam Dekker has received little playing time mak
 draft_df = draft_df.drop(25, 0) #spurs' 1st round pick has not played yet
 
 for name in draft_df['Name']:
-        
+
     draft_num = draft_df[draft_df['Name']==name]['Number']
-        
+
     predict_dict = player_prediction__regressionModel(name)
     yerr = (predict_dict['Upper_CI']-predict_dict['Lower_CI'])/2
-        
+
     plt.errorbar(draft_num,predict_dict['Prediction'],fmt='o',label=name,
                 color=plt.rcParams['axes.color_cycle'][predict_dict['Group']-1],yerr=yerr);
 
@@ -474,23 +474,23 @@ plt.xlabel('Draft Position');
 <img src="{{ root_url }}/images/regressionNBA/draft_2015_predict.png" />
 
 
-The plot above is ordered by draft pick. The error bars depict 95% confidence interbals...which are a little wider than I would like. It's interesting to look at what clusters these players fit into. Lots of 3-pt shooters! It could be that rookies play a limited role in the offense - just shooting 3s. 
+The plot above is ordered by draft pick. The error bars depict 95% confidence interbals...which are a little wider than I would like. It's interesting to look at what clusters these players fit into. Lots of 3-pt shooters! It could be that rookies play a limited role in the offense - just shooting 3s.
 
-As a t-wolves fan, I am relatively happy about the high prediction for Karl-Anthony Towns. His predicted ws/48 is between Marc Gasol and Elton Brand. Again, the CIs are quite wide, so the model says there's a 95% chance he is somewhere between Lebron James ever and a player that averages less than 0.1 ws/48. 
+As a t-wolves fan, I am relatively happy about the high prediction for Karl-Anthony Towns. His predicted ws/48 is between Marc Gasol and Elton Brand. Again, the CIs are quite wide, so the model says there's a 95% chance he is somewhere between Lebron James ever and a player that averages less than 0.1 ws/48.
 
 Karl-Anthony Towns would have the highest predicted ws/48 if it were not for Kevin Looney who the model loves. Kevin Looney has not seen much playing time though, which likely makes his prediction more erratic. Keep in mind I did not use draft position as a predictor in the model.
 
-Sam Dekker has a pretty huge error bar, likely because of his limited playing time this year. 
+Sam Dekker has a pretty huge error bar, likely because of his limited playing time this year.
 
 While I fed a ton of features into this model, it's still just a linear regression. The simplicity of the model might prevent me from making more accurate predictions.
 
-I've already started playing with some more complex models. If those work out well, I will post them here. I ended up sticking with a plain linear regression because my vast number of features is a little unwieldy in a more complex models. If you're interested (and the models produce better results) check back in the future. 
+I've already started playing with some more complex models. If those work out well, I will post them here. I ended up sticking with a plain linear regression because my vast number of features is a little unwieldy in a more complex models. If you're interested (and the models produce better results) check back in the future.
 
-For now, these models explain between 40 and 70% of the variance in career ws/48 from only a player's rookie year. Even predicting 30% of variance is pretty remarkable, so I don't want to trash on this part of the model. Explaining 65% of the variance is pretty awesome. The model gives us a pretty accurate idea of how these "bench players" will perform. For instance, the future does not look bright for players like Emmanuel Mudiay and Tyus Jones. Not to say these players are doomed. The model assumes that players will retain their grouping for the entire career. Emmanuel Mudiay and Tyus Jones might start performing more like distributors as their career progresses. This could result in a better career. 
+For now, these models explain between 40 and 70% of the variance in career ws/48 from only a player's rookie year. Even predicting 30% of variance is pretty remarkable, so I don't want to trash on this part of the model. Explaining 65% of the variance is pretty awesome. The model gives us a pretty accurate idea of how these "bench players" will perform. For instance, the future does not look bright for players like Emmanuel Mudiay and Tyus Jones. Not to say these players are doomed. The model assumes that players will retain their grouping for the entire career. Emmanuel Mudiay and Tyus Jones might start performing more like distributors as their career progresses. This could result in a better career.
 
-One nice part about this model is it tells us where the predictions are less confident. For instance, it is nice to know that we're relatively confident when predicting bench players, but not when we're predicting 3-point shooters. 
+One nice part about this model is it tells us where the predictions are less confident. For instance, it is nice to know that we're relatively confident when predicting bench players, but not when we're predicting 3-point shooters.
 
-For those curious, I output each groups regression summary below. 
+For those curious, I output each groups regression summary below.
 
 
 {% codeblock lang:python %}
@@ -554,7 +554,7 @@ For those curious, I output each groups regression summary below.
     Skew:                           0.007   Prob(JB):                        0.290
     Kurtosis:                       3.529   Cond. No.                     1.78e+05
     ==============================================================================
-    
+
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
     [2] The condition number is large, 1.78e+05. This might indicate that there are
@@ -616,7 +616,7 @@ For those curious, I output each groups regression summary below.
     Skew:                           0.222   Prob(JB):                        0.379
     Kurtosis:                       3.067   Cond. No.                     3.94e+05
     ==============================================================================
-    
+
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
     [2] The condition number is large, 3.94e+05. This might indicate that there are
@@ -678,7 +678,7 @@ For those curious, I output each groups regression summary below.
     Skew:                           0.272   Prob(JB):                       0.0703
     Kurtosis:                       3.362   Cond. No.                     3.70e+05
     ==============================================================================
-    
+
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
     [2] The condition number is large, 3.7e+05. This might indicate that there are
@@ -740,7 +740,7 @@ For those curious, I output each groups regression summary below.
     Skew:                           0.226   Prob(JB):                       0.0775
     Kurtosis:                       3.221   Cond. No.                     4.51e+05
     ==============================================================================
-    
+
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
     [2] The condition number is large, 4.51e+05. This might indicate that there are
@@ -802,7 +802,7 @@ For those curious, I output each groups regression summary below.
     Skew:                           0.226   Prob(JB):                        0.132
     Kurtosis:                       3.364   Cond. No.                     4.24e+05
     ==============================================================================
-    
+
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
     [2] The condition number is large, 4.24e+05. This might indicate that there are
@@ -864,9 +864,8 @@ For those curious, I output each groups regression summary below.
     Skew:                           0.236   Prob(JB):                        0.283
     Kurtosis:                       3.357   Cond. No.                     6.96e+05
     ==============================================================================
-    
+
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
     [2] The condition number is large, 6.96e+05. This might indicate that there are
     strong multicollinearity or other numerical problems.
-

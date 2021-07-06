@@ -1,0 +1,49 @@
+# pyspark unit tests
+
+# regression of proportion in pymc
+
+# DATA SCIENCE LESSONS LEARNED THE HARD WAY
+1. No project is too small for good code practices
+2. Building infrastructure for creating and acquiring fake/sample data pays off
+3. CONTINIUOUS DEPLOYMENT
+4. makeFiles are always worth it
+5. TLDR - if you ever find yourself trying to justify bad code practice, you should look at the roadblocks pushing you towards this bad decision,
+6. No project is a one-off (think about git repo for sql queries by that woman on twitter)
+7. Baseline models!!
+8. Building monitoring of data quality pays off big time.
+9. Don't schedule with CRON. It won't last
+10. Take the time to understand your data. It's the understandings your skip that always come back to haunt you.
+11. Take time to setup your infastructure!
+12. Take the time to learn to use anaconda and pyenv or whatever it's called.
+13. Make sure people want the product you're building
+14. Make sure people have the infastructure to use the product you're building
+15. Make sure people know what they want.
+16. Don't just throw everything into your model
+17. LEARN YOUR DATA
+
+Seems like there's a division here.
+There's code lessons, model lessons, and project management.
+
+Title. Data Science Lessons Learned the Hard Way 1: No Project is too small for good code practices.
+1. Always use git.
+2. Always build tests.
+3. Take the time to build infastructure for generating fake or sample data.
+4. makeFiles are worthwhile.
+5. Learn to use anaconda/pyenv
+6. Find a good job scheduler.
+
+Summary if you find yourself justifying bad code pratices, take a look at what roadblocks push you in this direction.
+
+Title. Data Science Lessons Learned the Hard Way 2: Modeling is hard.
+1. Always build baseline models.
+2. Monitor and log Data Quality.
+3. Take the time to thoroughly understand your data.
+4. Don't just throw your data at the model.
+5. Make models as plug and play as possible.
+
+Title. Data Science Lessons Learned the Hard Way 3: Identifying Projects is Hard.
+1. Make sure they actually want a project.
+2. Make sure they have the infastructure to use a project.
+3. Make sure they know what they want.
+4. Prototype
+5. Be explicit (and thorough) in describing business rules
