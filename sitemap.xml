@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://danvatterott.com/blog/2021/10/10/data-team-onboarding-checklist/</loc>
+    <lastmod>2021-10-10T10:36:37-05:00</lastmod>
+  </url>
+  <url>
     <loc>https://danvatterott.com/blog/2020/08/10/posting-collections-as-hive-tables/</loc>
     <lastmod>2020-08-10T20:03:43-05:00</lastmod>
   </url>
@@ -309,6 +313,21 @@
   </url>
   <url>
     <loc>https://danvatterott.com/blog/categories/hive/</loc>
+  </url>
+  <url>
+    <loc>https://danvatterott.com/blog/categories/data/</loc>
+  </url>
+  <url>
+    <loc>https://danvatterott.com/blog/categories/analytics/</loc>
+  </url>
+  <url>
+    <loc>https://danvatterott.com/blog/categories/data-analytics/</loc>
+  </url>
+  <url>
+    <loc>https://danvatterott.com/blog/categories/managing/</loc>
+  </url>
+  <url>
+    <loc>https://danvatterott.com/blog/categories/data-teams/</loc>
   </url>
   <url>
     <loc>https://danvatterott.com/presentations/pyspark_tutorial/plugin/notes-server/notes.html</loc>
