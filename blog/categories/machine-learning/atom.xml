@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Machine-learning | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/machine-learning/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2022-01-01T20:11:04-06:00</updated>
+  <updated>2022-02-25T14:33:11-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -55,25 +55,25 @@
 
 <p>Our existing machine-learning workflows might look a little like the following (please forgive the drastic oversimplification of a purely sequential progression across stages!).</p>
 
-<p><img src="/presentations/automation_presentation/slides/data_science_pipeline/ds_pipeline.png" style="background-color:white;" /></p>
+<p><img src="{{ root_url }}/presentations/automation_presentation/slides/data_science_pipeline/ds_pipeline.png" style="background-color:white;" /></p>
 
 <p>Where does automation exist in this workflow? Where can automation improve this workflow?</p>
 
 <p>Not all these stages are within the scope of machine-learning. For instance, while you should automate gathering data, I view this as a data engineering problem. In the image below, I depict the stages that I consider ripe for automation, and the stages I consider wrong for automation. For example, data cleaning is too idiosyncratic to each dataset for true automation. I “X” out model evaluation as wrong for automation. In retrospect, I believe this is a great place for automation, but I don’t know of any existing python packages handling it.</p>
 
-<p><img src="/presentations/automation_presentation/slides/libraries_pipeline/tpot_pipeline.png" style="background-color:white;" /></p>
+<p><img src="{{ root_url }}/presentations/automation_presentation/slides/libraries_pipeline/tpot_pipeline.png" style="background-color:white;" /></p>
 
 <p>I depict feature engineering and model selection as the most promising areas for automation. I consider feature engineering as the stage where advances in automation can have the largest impact on your model performance. In the presentation, I include a <a href="https://www.quora.com/What-generally-improves-a-models-score-more-on-average-feature-engineering-or-hyperparameter-tuning">strong quote</a> from a Quora user saying that <a href="https://en.wikipedia.org/wiki/Hyperparameter_optimization">hyper-parameter tuning</a> (a part of model selection) “hardly matters at all.” I agree with the sentiment of this quote, but it’s not true. Choosing roughly the correct hyper-parameter values is <em>VERY</em> important, and choosing the very best hyper-parameter values can be equally important depending on how your model is used. I highlight feature engineering over model selection because automated model selection is largely solved. For example <a href="http://scikit-learn.org/stable/modules/grid_search.html">grid-search</a> automates model selection. It’s not a fast solution, but given infinite time, it will find the best hyper-parameter values!</p>
 
 <p>There are many python libraries automating these parts of the workflow. I highlight three libraries that automate feature engineering.</p>
 
-<p><img src="/presentations/automation_presentation/slides/feature_automation/tpot-logo.jpg" width="200" style="background-color:white;" /></p>
+<p><img src="{{ root_url }}/presentations/automation_presentation/slides/feature_automation/tpot-logo.jpg" width="200" style="background-color:white;" /></p>
 
 <p>The first is <a href="https://github.com/EpistasisLab/tpot">teapot</a>. Teapot (more or less) takes all the different operations and models available in <a href="http://scikit-learn.org/stable/">scikit-learn</a>, and allows you to assemble these operations into a pipeline. Many of these operations (e.g., <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a>) are forms of feature engineering. Teapot measures which operations lead to the best model performance. Because Teapot enables users to assemble <em>SO MANY</em> different operations, it utilizes a <a href="https://en.wikipedia.org/wiki/Genetic_algorithm">genetic search algorithm</a> to search through the different possibilities more efficiently than grid-search would.</p>
 
 <p>The second is <a href="https://github.com/ClimbsRocks/auto_ml">auto_ml</a>. In auto_ml users simply pass a dataset to the software and it will do model selection and hyper-parameter tuning for you. Users can also <a href="https://auto-ml.readthedocs.io/en/latest/deep_learning.html#feature-learning">ask the software to train a deep learning model that will learn new features</a> from your dataset. The authors claim this approach can improve model accuracy by 5%.</p>
 
-<p><img src="/presentations/automation_presentation/slides/feature_automation/featuretools.png" width="400" style="background-color:white;" /></p>
+<p><img src="{{ root_url }}/presentations/automation_presentation/slides/feature_automation/featuretools.png" width="400" style="background-color:white;" /></p>
 
 <p>The third is <a href="https://github.com/Featuretools/featuretools">feature tools</a>. Feature Tools is the piece of automation software whose future I am most excited about. I find this software exciting because users can feed it pre-aggregated data. Most machine-learning models expect that for each value of the <a href="https://www.quora.com/What-is-a-response-variable-in-statistics">response variable</a>, you supply a vector of explanatory variables. This is an example of aggregated data. Teapot and auto_ml both expect users to supply aggregated data. Lots of important information is lost in the aggregation process, and allowing automation to thoroughly explore different aggregations will lead to predictive features that we would not have created otherwise (any many believe this is why deep learning is so effective). Feature tools explores different aggregations all while creating easily interpreted variables (in contrast to deep learning). While I am excited about the future of feature tools, it is a new piece of software and has a ways to go before I use it in my workflows. Like most automation machine-learning software it’s very slow/resource intensive. Also, the software is not very intuitive. That said, I created a <a href="https://mybinder.org/v2/gh/dvatterott/explore_feature_automation/master">binder notebook</a> demoing feature tools, so check it out yourself!</p>
 

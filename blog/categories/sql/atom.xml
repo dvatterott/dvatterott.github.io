@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Sql | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/sql/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2022-01-01T20:11:04-06:00</updated>
+  <updated>2022-02-25T14:33:11-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -30,25 +30,17 @@
 
 <p>The part that really threw me for a loop here is that I wasn’t done yet! You need one more command so that Spark can go examine the partitions - <a href="https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-repair-table.html"><code>MSCK REPAIR TABLE</code></a>. Also please note that this command needs to be re-run whenever a partition is added.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="err">“””</span>
-</span><span class='line'><span class="n">CREATE</span> <span class="n">TABLE</span> <span class="n">my_db</span><span class="o">.</span><span class="n">my_table</span> <span class="p">(</span>
-</span><span class='line'><span class="p">(</span><span class="n">example_key</span> <span class="n">INT</span><span class="p">,</span> <span class="n">example_col</span> <span class="n">STRING</span><span class="p">,</span> <span class="n">example_string</span> <span class="n">STRING</span><span class="p">,</span> <span class="n">example_date</span> <span class="n">STRING</span><span class="p">)</span>
-</span><span class='line'><span class="p">)</span>
-</span><span class='line'><span class="n">USING</span> <span class="n">PARQUET</span>
-</span><span class='line'><span class="n">PARTITIONED</span> <span class="n">BY</span> <span class="p">(</span><span class="n">example_string</span><span class="p">,</span> <span class="n">example_date</span><span class="p">)</span>
-</span><span class='line'><span class="n">LOCATION</span> <span class="err">‘</span><span class="n">s3</span><span class="p">:</span><span class="o">//</span><span class="n">my</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">bucket</span><span class="o">/</span><span class="n">my_db</span><span class="o">/</span><span class="n">my_table</span><span class="o">/</span><span class="err">’</span>
-</span><span class='line'><span class="err">“””</span>
-</span><span class='line'><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="err">“</span><span class="n">MSCK</span> <span class="n">REPAIR</span> <span class="n">TABLE</span> <span class="n">my_db</span><span class="o">.</span><span class="n">my_table</span><span class="err">”</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+spark.sql(“””
+CREATE TABLE my_db.my_table (
+(example_key INT, example_col STRING, example_string STRING, example_date STRING)
+)
+USING PARQUET
+PARTITIONED BY (example_string, example_date)
+LOCATION ‘s3://my.example.bucket/my_db/my_table/’
+“””
+spark.sql(“MSCK REPAIR TABLE my_db.my_table”)
+{% endcodeblock %}</p>
 
 <p>Hope this post saves you some time!</p>
 ]]></content>

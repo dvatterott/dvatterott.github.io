@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data Science | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-science/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2022-01-01T20:11:04-06:00</updated>
+  <updated>2022-02-25T14:33:11-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -22,123 +22,84 @@
 
 <p>The PySpark ML API doesn’t have this same functionality, so in this blog post, I describe how to balance class weights yourself.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.feature</span> <span class="kn">import</span> <span class="n">VectorAssembler</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.classification</span> <span class="kn">import</span> <span class="n">LogisticRegression</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="err">“</span><span class="n">local</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">Example</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+import numpy as np
+import pandas as pd
+from itertools import chain
+from pyspark.sql import SparkSession
+from pyspark import SparkContext
+from pyspark.sql import functions as F
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.classification import LogisticRegression</p>
+
+<p>sc = SparkContext(“local”, “Example”)
+spark = SparkSession(sc)
+{% endcodeblock %}</p>
 
 <p>Generate some random data and put the data in a Spark DataFrame. Note that the input variables are not predictive. The model will behave randomly. This is okay, since I am not interested in model accuracy.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-</span><span class='line'><span class="n">y</span><span class="p">[:</span><span class="mi">1000</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class='line'><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="c"># 0.9&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">DF</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-</span><span class='line'><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">withColumnRenamed</span><span class="p">(</span><span class="err">“</span><span class="mi">10</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+X = np.random.normal(0, 1, (10000, 10))</p>
+
+<p>y = np.ones(X.shape[0]).astype(int)
+y[:1000] = 0
+np.random.shuffle(y)</p>
+
+<p>print(np.mean(y)) # 0.9</p>
+
+<p>X = np.append(X, y.reshape((10000, 1)), 1)</p>
+
+<p>DF = spark.createDataFrame(pd.DataFrame(X))
+DF = DF.withColumnRenamed(“10”, “y”)
+{% endcodeblock %}</p>
 
 <p>Here’s how Scikit-learn computes class weights when “balanced” weights are requested.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># class weight</span>
-</span><span class='line'><span class="c"># https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html</span>
-</span><span class='line'><span class="c"># n_samples / (n_classes * np.bincount(y)).&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">class_weights</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">ii</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">y</span><span class="p">)))}</span>
-</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">class_weights</span><span class="p">)</span> <span class="c"># {0: 5.0, 1: 0.5555555555555556}</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+# class weight
+# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+# n_samples / (n_classes * np.bincount(y)).</p>
+
+<p>class_weights = {i: ii for i, ii in zip(np.unique(y), len(y) / (len(np.unique(y)) * np.bincount(y)))}
+print(class_weights) # {0: 5.0, 1: 0.5555555555555556}
+{% endcodeblock %}</p>
 
 <p>Here’s how we can compute “balanced” weights with data from a PySpark DataFrame.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">y_collect</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
-</span><span class='line'><span class="n">unique_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">]</span>
-</span><span class='line'><span class="n">total_y</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">count</span><span class="err">”</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">])</span>
-</span><span class='line'><span class="n">unique_y_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_collect</span><span class="p">)</span>
-</span><span class='line'><span class="n">bin_count</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">count</span><span class="err">”</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y_collect</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">class_weights_spark</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">ii</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">unique_y</span><span class="p">,</span> <span class="n">total_y</span> <span class="o">/</span> <span class="p">(</span><span class="n">unique_y_count</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bin_count</span><span class="p">)))}</span>
-</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">class_weights_spark</span><span class="p">)</span> <span class="c"># {0.0: 5.0, 1.0: 0.5555555555555556}</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+y_collect = DF.select(“y”).groupBy(“y”).count().collect()
+unique_y = [x[“y”] for x in y_collect]
+total_y = sum([x[“count”] for x in y_collect])
+unique_y_count = len(y_collect)
+bin_count = [x[“count”] for x in y_collect]</p>
+
+<p>class_weights_spark = {i: ii for i, ii in zip(unique_y, total_y / (unique_y_count * np.array(bin_count)))}
+print(class_weights_spark) # {0.0: 5.0, 1.0: 0.5555555555555556}
+{% endcodeblock %}</p>
 
 <p>PySpark needs to have a weight assigned to each instance (i.e., row) in the training set. I create a mapping to apply a weight to each training instance.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">mapping_expr</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">create_map</span><span class="p">([</span><span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">class_weights_spark</span><span class="o">.</span><span class="n">items</span><span class="p">())])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">“</span><span class="n">weight</span><span class="err">”</span><span class="p">,</span> <span class="n">mapping_expr</span><span class="o">.</span><span class="n">getItem</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">y</span><span class="err">”</span><span class="p">)))</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+mapping_expr = F.create_map([F.lit(x) for x in chain(*class_weights_spark.items())])</p>
+
+<p>DF = DF.withColumn(“weight”, mapping_expr.getItem(F.col(“y”)))
+{% endcodeblock %}</p>
 
 <p>I assemble all the input features into a vector.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">assembler</span> <span class="o">=</span> <span class="n">VectorAssembler</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)],</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">features</span><span class="err">”</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">DF</span> <span class="o">=</span> <span class="n">assembler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+assembler = VectorAssembler(inputCols=[str(x) for x in range(10)], outputCol=”features”)</p>
+
+<p>DF = assembler.transform(DF).drop(*[str(x) for x in range(10)])
+{% endcodeblock %}</p>
 
 <p>And train a logistic regression. Without the instance weights, the model predicts all instances as the frequent class.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">featuresCol</span><span class="o">=</span><span class="err">”</span><span class="n">features</span><span class="err">”</span><span class="p">,</span> <span class="n">labelCol</span><span class="o">=</span><span class="err">”</span><span class="n">y</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">lrModel</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
-</span><span class='line'><span class="n">lrModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="err">“</span><span class="n">prediction</span><span class="err">”</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+lr = LogisticRegression(featuresCol=”features”, labelCol=”y”)
+lrModel = lr.fit(DF)
+lrModel.transform(DF).agg(F.mean(“prediction”)).show()
+{% endcodeblock %}</p>
 
 <pre><code>+---------------+
 |avg(prediction)|
@@ -149,13 +110,11 @@
 
 <p>With the weights, the model assigns half the instances to each class (even the less commmon one).</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">featuresCol</span><span class="o">=</span><span class="err">”</span><span class="n">features</span><span class="err">”</span><span class="p">,</span> <span class="n">labelCol</span><span class="o">=</span><span class="err">”</span><span class="n">y</span><span class="err">”</span><span class="p">,</span> <span class="n">weightCol</span><span class="o">=</span><span class="err">”</span><span class="n">weight</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">lrModel</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
-</span><span class='line'><span class="n">lrModel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="err">“</span><span class="n">prediction</span><span class="err">”</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+lr = LogisticRegression(featuresCol=”features”, labelCol=”y”, weightCol=”weight”)
+lrModel = lr.fit(DF)
+lrModel.transform(DF).agg(F.mean(“prediction”)).show()
+{% endcodeblock %}</p>
 
 <pre><code>+---------------+
 |avg(prediction)|
@@ -175,29 +134,19 @@
 
 <p>I start by creating normally distributed, fake data.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql.window</span> <span class="kn">import</span> <span class="n">Window</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="err">“</span><span class="n">local</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">Example</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">),)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">‘</span><span class="n">X</span><span class="err">’</span><span class="p">]))</span>
-</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+import numpy as np
+from pyspark.sql import SparkSession
+from pyspark import SparkContext
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window</p>
+
+<p>sc = SparkContext(“local”, “Example”)
+spark = SparkSession(sc)</p>
+
+<p>a = (sc.parallelize([(float(x),) for x in np.random.normal(0, 1, 1000)]).toDF([‘X’]))
+a.limit(5).show() 
+{% endcodeblock %}</p>
 
 <table style="width:100%">
  <tr>
@@ -226,25 +175,17 @@
 
 <p>After rounding, I group by the variable of interest, again, to limit the amount of data returned.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">win</span> <span class="o">=</span> <span class="n">Window</span><span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="err">‘</span><span class="n">X</span><span class="err">’</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">cumulative_probability</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">percent_rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">),</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="err">‘</span><span class="o">*</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">my_count</span><span class="err">”</span><span class="p">)))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">output</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+win = Window.orderBy(‘X’)</p>
+
+<p>output = (a
+          .withColumn(‘cumulative_probability’, F.percent_rank().over(win))
+          .withColumn(“X”, F.round(F.col(“X”), 1))
+          .groupBy(“X”)
+          .agg(F.max(“cumulative_probability”).alias(“cumulative_probability”),F.count(‘*’).alias(“my_count”)))</p>
+
+<p>output.limit(5).show()
+{% endcodeblock %}</p>
 
 <table style="width:100%">
  <tr>
@@ -283,25 +224,17 @@
 
 <p>To shift the data, I will use the function, <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.lead">lead</a>.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">‘</span><span class="n">cumulative_probability</span><span class="err">’</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">percent_rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">“</span><span class="n">X</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">),</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="err">‘</span><span class="o">*</span><span class="err">’</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">my_count</span><span class="err">”</span><span class="p">))</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lead</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">))</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
-</span><span class='line'>          <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">cumulative_probability</span><span class="err">”</span><span class="p">]))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">output</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+output = (a
+          .withColumn(‘cumulative_probability’, F.percent_rank().over(win))
+          .withColumn(“X”, F.round(F.col(“X”), 1))
+          .groupBy(“X”)
+          .agg(F.max(“cumulative_probability”).alias(“cumulative_probability”),F.count(‘*’).alias(“my_count”))
+          .withColumn(“cumulative_probability”, F.lead(F.col(“cumulative_probability”)).over(win))
+          .fillna(1, subset=[“cumulative_probability”]))</p>
+
+<p>output.limit(5).show()
+{% endcodeblock %}</p>
 
 <table style="width:100%">
  <tr>
@@ -349,452 +282,246 @@
 
 <p>I begin by importing the necessary libraries and creating a spark session.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">string</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">keyword_only</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.pipeline</span> <span class="kn">import</span> <span class="n">Transformer</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.param.shared</span> <span class="kn">import</span> <span class="n">HasInputCol</span><span class="p">,</span> <span class="n">HasOutputCol</span><span class="p">,</span> <span class="n">Param</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="err">“</span><span class="n">local</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">Example</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+import string
+import random
+from pyspark.sql import SparkSession
+from pyspark import SparkContext
+from pyspark.sql import functions as F
+from pyspark import keyword_only
+from pyspark.ml.pipeline import Transformer
+from pyspark.ml.param.shared import HasInputCol, HasOutputCol, Param</p>
+
+<p>random.seed(1)</p>
+
+<p>sc = SparkContext(“local”, “Example”)
+spark = SparkSession(sc)
+{% endcodeblock %}</p>
 
 <p>Next create the custom transformer. This class inherits from the <code>Transformer</code>, <code>HasInputCol</code>, and <code>HasOutputCol</code> classes. I also call an additional parameter <code>n</code> which controls the maximum cardinality allowed in the tranformed column. Because I have the additional parameter, I need some methods for calling and setting this paramter (<code>setN</code> and <code>getN</code>). Finally, there’s <code>_tranform</code> which limits the cardinality of the desired column (set by <code>inputCol</code> parameter). This tranformation method simply takes the desired column and changes all values greater than <code>n</code> to <code>n</code>. It outputs a column named by the <code>outputCol</code> parameter.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">LimitCardinality</span><span class="p">(</span><span class="n">Transformer</span><span class="p">,</span> <span class="n">HasInputCol</span><span class="p">,</span> <span class="n">HasOutputCol</span><span class="p">):</span>
-</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Limit Cardinality of a column.”””&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@keyword_only</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="nb">super</span><span class="p">(</span><span class="n">LimitCardinality</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;n&quot;</span><span class="p">,</span> <span class="s">&quot;Cardinality upper limit.&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@keyword_only</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">setN</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Set cardinality limit.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">getN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get cardinality limit.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Do transformation.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="n">out_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOutputCol</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">in_col</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">()]</span>
-</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">dataframe</span>
-</span><span class='line'>            <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">out_col</span><span class="p">,</span> <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">in_col</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">())</span>
-</span><span class='line'>                                  <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">in_col</span><span class="p">))))</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>{% codeblock lang:python %}
+class LimitCardinality(Transformer, HasInputCol, HasOutputCol):
+    “"”Limit Cardinality of a column.”””</p>
+
+<pre><code>@keyword_only
+def __init__(self, inputCol=None, outputCol=None, n=None):  
+    """Initialize."""
+    super(LimitCardinality, self).__init__()
+    self.n = Param(self, "n", "Cardinality upper limit.")  
+    self._setDefault(n=25)
+    kwargs = self._input_kwargs
+    self.setParams(**kwargs)
+
+@keyword_only
+def setParams(self, inputCol=None, outputCol=None, n=None):  
+    """Get params."""
+    kwargs = self._input_kwargs
+    return self._set(**kwargs)
+
+def setN(self, value):  
+    """Set cardinality limit."""
+    return self._set(n=value)
+
+def getN(self):  
+    """Get cardinality limit."""
+    return self.getOrDefault(self.n)
+
+def _transform(self, dataframe):
+    """Do transformation."""
+    out_col = self.getOutputCol()
+    in_col = dataframe[self.getInputCol()]
+    return (dataframe
+            .withColumn(out_col, (F.when(in_col &gt; self.getN(), self.getN())
+                                  .otherwise(in_col)))) {% endcodeblock %}
 </code></pre>
 
 <p>Now that we have the tranformer, I will create some data and apply the transformer to it. I want categorical data, so I will randomly draw letters of the alphabet. The only trick is I’ve made some letters of the alphabet much more common than other ones.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">letter_pool</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span><span class="p">[:</span><span class="mi">26</span><span class="p">]</span>
-</span><span class='line'><span class="n">letter_pool</span> <span class="o">+=</span> <span class="err">‘‘</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">letter_pool</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">10</span><span class="p">))])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="n">x</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">letter_pool</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="err">“</span><span class="nb">id</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">category</span><span class="err">”</span><span class="p">])</span>
-</span><span class='line'><span class="n">a</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span><span class='line'><span class="c"># +—+——–+                                                                &lt;br /&gt;</span>
-</span><span class='line'><span class="c"># | id|category|</span>
-</span><span class='line'><span class="c"># +—+——–+</span>
-</span><span class='line'><span class="c"># |  0|       a|</span>
-</span><span class='line'><span class="c"># |  1|       c|</span>
-</span><span class='line'><span class="c"># |  2|       e|</span>
-</span><span class='line'><span class="c"># |  3|       e|</span>
-</span><span class='line'><span class="c"># |  4|       a|</span>
-</span><span class='line'><span class="c"># +—+——–+</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}</p>
+
+<p>letter_pool = string.ascii_letters[:26]
+letter_pool += ‘‘.join([x*y for x, y in zip(letter_pool[:5], range(100,50,-10))])</p>
+
+<p>a = sc.parallelize([[x, random.choice(letter_pool)] for x in range(1000)]).toDF([“id”, “category”])
+a.limit(5).show()
+# +—+——–+                                                                <br />
+# | id|category|
+# +—+——–+
+# |  0|       a|
+# |  1|       c|
+# |  2|       e|
+# |  3|       e|
+# |  4|       a|
+# +—+——–+
+{% endcodeblock %}</p>
 
 <p>Take a look at the data.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">(</span><span class="n">a</span>
-</span><span class='line'> <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="err">“</span><span class="n">category</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'> <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="err">“</span><span class="o">*</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="err">“</span><span class="n">category_count</span><span class="err">”</span><span class="p">))</span>
-</span><span class='line'> <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">category_count</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
-</span><span class='line'> <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-</span><span class='line'> <span class="o">.</span><span class="n">show</span><span class="p">())</span>
-</span><span class='line'><span class="c"># +——–+————–+                                                     &lt;br /&gt;</span>
-</span><span class='line'><span class="c"># |category|category_count|</span>
-</span><span class='line'><span class="c"># +——–+————–+</span>
-</span><span class='line'><span class="c"># |       b|           221|</span>
-</span><span class='line'><span class="c"># |       a|           217|</span>
-</span><span class='line'><span class="c"># |       c|           197|</span>
-</span><span class='line'><span class="c"># |       d|           162|</span>
-</span><span class='line'><span class="c"># |       e|           149|</span>
-</span><span class='line'><span class="c"># |       k|             5|</span>
-</span><span class='line'><span class="c"># |       p|             5|</span>
-</span><span class='line'><span class="c"># |       u|             5|</span>
-</span><span class='line'><span class="c"># |       f|             4|</span>
-</span><span class='line'><span class="c"># |       l|             3|</span>
-</span><span class='line'><span class="c"># |       g|             3|</span>
-</span><span class='line'><span class="c"># |       m|             3|</span>
-</span><span class='line'><span class="c"># |       o|             3|</span>
-</span><span class='line'><span class="c"># |       y|             3|</span>
-</span><span class='line'><span class="c"># |       j|             3|</span>
-</span><span class='line'><span class="c"># |       x|             2|</span>
-</span><span class='line'><span class="c"># |       n|             2|</span>
-</span><span class='line'><span class="c"># |       h|             2|</span>
-</span><span class='line'><span class="c"># |       i|             2|</span>
-</span><span class='line'><span class="c"># |       q|             2|</span>
-</span><span class='line'><span class="c"># +——–+————–+</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+(a
+ .groupBy(“category”)
+ .agg(F.count(“*”).alias(“category_count”))
+ .orderBy(F.col(“category_count”).desc())
+ .limit(20)
+ .show())
+# +——–+————–+                                                     <br />
+# |category|category_count|
+# +——–+————–+
+# |       b|           221|
+# |       a|           217|
+# |       c|           197|
+# |       d|           162|
+# |       e|           149|
+# |       k|             5|
+# |       p|             5|
+# |       u|             5|
+# |       f|             4|
+# |       l|             3|
+# |       g|             3|
+# |       m|             3|
+# |       o|             3|
+# |       y|             3|
+# |       j|             3|
+# |       x|             2|
+# |       n|             2|
+# |       h|             2|
+# |       i|             2|
+# |       q|             2|
+# +——–+————–+
+{% endcodeblock %}</p>
 
 <p>Now to apply the new class <code>LimitCardinality</code> after <code>StringIndexer</code> which maps each category (starting with the most common category) to numbers. This means the most common letter will be 1. <code>LimitCardinality</code> then sets the max value of <code>StringIndexer</code>’s output to <code>n</code>. <code>OneHotEncoderEstimator</code> one-hot encodes <code>LimitCardinality</code>’s output. I wrap <code>StringIndexer</code>, <code>LimitCardinality</code>, and <code>OneHotEncoderEstimator</code> into a single pipeline so that I can fit/transform the dataset at one time.</p>
 
 <p>Note that <code>LimitCardinality</code> needs additional code in order to be saved to disk.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.feature</span> <span class="kn">import</span> <span class="n">OneHotEncoderEstimator</span><span class="p">,</span> <span class="n">StringIndexer</span>
-</span><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml</span> <span class="kn">import</span> <span class="n">Pipeline</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">string_to_num</span> <span class="o">=</span> <span class="n">StringIndexer</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category</span><span class="err">”</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">stringOrderType</span><span class="o">=</span><span class="err">”</span><span class="n">frequencyDesc</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">censor_category</span> <span class="o">=</span> <span class="n">LimitCardinality</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">censored_category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</span><span class='line'><span class="n">onehot_category</span> <span class="o">=</span> <span class="n">OneHotEncoderEstimator</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">censored_category_index</span><span class="err">”</span><span class="p">],</span>
-</span><span class='line'>                                     <span class="n">outputCols</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">onehot_category</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">onehot_censored_category</span><span class="err">”</span><span class="p">])</span>
-</span><span class='line'><span class="n">onehot_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">string_to_num</span><span class="p">,</span> <span class="n">censor_category</span><span class="p">,</span> <span class="n">onehot_category</span><span class="p">])</span>
-</span><span class='line'><span class="n">fit_pipeline</span> <span class="o">=</span> <span class="n">onehot_pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">fit_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
-</span><span class='line'><span class="c"># | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
-</span><span class='line'><span class="c"># |  0|       a|           1.0|                    1.0| (25,[1],[1.0])|          (10,[1],[1.0])|</span>
-</span><span class='line'><span class="c"># |  1|       c|           2.0|                    2.0| (25,[2],[1.0])|          (10,[2],[1.0])|</span>
-</span><span class='line'><span class="c"># |  2|       e|           4.0|                    4.0| (25,[4],[1.0])|          (10,[4],[1.0])|</span>
-</span><span class='line'><span class="c"># |  3|       e|           4.0|                    4.0| (25,[4],[1.0])|          (10,[4],[1.0])|</span>
-</span><span class='line'><span class="c"># |  4|       a|           1.0|                    1.0| (25,[1],[1.0])|          (10,[1],[1.0])|</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">fit_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="err">“</span><span class="n">category</span><span class="err">”</span><span class="p">)</span> <span class="o">==</span> <span class="err">“</span><span class="n">n</span><span class="err">”</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
-</span><span class='line'><span class="c"># | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
-</span><span class='line'><span class="c"># | 35|       n|          16.0|                   10.0|(25,[16],[1.0])|              (10,[],[])|</span>
-</span><span class='line'><span class="c"># |458|       n|          16.0|                   10.0|(25,[16],[1.0])|              (10,[],[])|</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+from pyspark.ml.feature import OneHotEncoderEstimator, StringIndexer
+from pyspark.ml import Pipeline</p>
+
+<p>string_to_num = StringIndexer(inputCol=”category”, outputCol=”category_index”, stringOrderType=”frequencyDesc”)
+censor_category = LimitCardinality(inputCol=”category_index”, outputCol=”censored_category_index”, n=10)
+onehot_category = OneHotEncoderEstimator(inputCols=[“category_index”, “censored_category_index”],
+                                     outputCols=[“onehot_category”, “onehot_censored_category”])
+onehot_pipeline = Pipeline(stages=[string_to_num, censor_category, onehot_category])
+fit_pipeline = onehot_pipeline.fit(a)</p>
+
+<p>fit_pipeline.transform(a).limit(5).show()
+# +—+——–+————–+———————–+—————+————————+
+# | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|
+# +—+——–+————–+———————–+—————+————————+
+# |  0|       a|           1.0|                    1.0| (25,[1],[1.0])|          (10,[1],[1.0])|
+# |  1|       c|           2.0|                    2.0| (25,[2],[1.0])|          (10,[2],[1.0])|
+# |  2|       e|           4.0|                    4.0| (25,[4],[1.0])|          (10,[4],[1.0])|
+# |  3|       e|           4.0|                    4.0| (25,[4],[1.0])|          (10,[4],[1.0])|
+# |  4|       a|           1.0|                    1.0| (25,[1],[1.0])|          (10,[1],[1.0])|
+# +—+——–+————–+———————–+—————+————————+</p>
+
+<p>fit_pipeline.transform(a).limit(5).filter(F.col(“category”) == “n”).show()
+# +—+——–+————–+———————–+—————+————————+
+# | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|
+# +—+——–+————–+———————–+—————+————————+
+# | 35|       n|          16.0|                   10.0|(25,[16],[1.0])|              (10,[],[])|
+# |458|       n|          16.0|                   10.0|(25,[16],[1.0])|              (10,[],[])|
+# +—+——–+————–+———————–+—————+————————+
+{% endcodeblock %}</p>
 
 <p>A quick improvement to <code>LimitCardinality</code> would be to set a column’s cardinality so that X% of rows retain their category values and 100-X% receive the default value (rather than arbitrarily selecting a cardinality limit). I implement this below. Note that <code>LimitCardinalityModel</code> is identical to the original <code>LimitCardinality</code>. The new <code>LimitCardinality</code> has a <code>_fit</code> method rather than <code>_transform</code> and this method determines a column’s cardinality.</p>
 
 <p>In the <code>_fit</code> method I find the proportion of columns that are required to describe the requested amount of data.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">pyspark.ml.pipeline</span> <span class="kn">import</span> <span class="n">Estimator</span><span class="p">,</span> <span class="n">Model</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">class</span> <span class="nc">LimitCardinality</span><span class="p">(</span><span class="n">Estimator</span><span class="p">,</span> <span class="n">HasInputCol</span><span class="p">,</span> <span class="n">HasOutputCol</span><span class="p">):</span>
-</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Limit Cardinality of a column.”””&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@keyword_only</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">proportion</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="nb">super</span><span class="p">(</span><span class="n">LimitCardinality</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">proportion</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;proportion&quot;</span><span class="p">,</span> <span class="s">&quot;Cardinality upper limit as a proportion of data.&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">proportion</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@keyword_only</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">proportion</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">setProportion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Set cardinality limit as proportion of data.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">proportion</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">getProportion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get cardinality limit as proportion of data.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proportion</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Fit transformer.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="n">pandas_df</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">())</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;my_count&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">n</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">pandas_df</span>
-</span><span class='line'>             <span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s">&quot;my_count&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</span><span class='line'>             <span class="o">.</span><span class="n">cumsum</span><span class="p">()[</span><span class="s">&quot;my_count&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">pandas_df</span><span class="p">[</span><span class="s">&quot;my_count&quot;</span><span class="p">])</span>
-</span><span class='line'>            <span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">getProportion</span><span class="p">())</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">LimitCardinalityModel</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">(),</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getOutputCol</span><span class="p">(),</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">class</span> <span class="nc">LimitCardinalityModel</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">HasInputCol</span><span class="p">,</span> <span class="n">HasOutputCol</span><span class="p">):</span>
-</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Limit Cardinality of a column.”””&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@keyword_only</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="nb">super</span><span class="p">(</span><span class="n">LimitCardinalityModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;n&quot;</span><span class="p">,</span> <span class="s">&quot;Cardinality upper limit.&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@keyword_only</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">setN</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Set cardinality limit.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">getN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Get cardinality limit.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Do transformation.&quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="n">out_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getOutputCol</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">in_col</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">()]</span>
-</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">dataframe</span>
-</span><span class='line'>            <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">out_col</span><span class="p">,</span> <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">in_col</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">())</span>
-</span><span class='line'>                                  <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">in_col</span><span class="p">))))</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">string_to_num</span> <span class="o">=</span> <span class="n">StringIndexer</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category</span><span class="err">”</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">handleInvalid</span><span class="o">=</span><span class="err">”</span><span class="n">skip</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'><span class="n">censor_category</span> <span class="o">=</span> <span class="n">LimitCardinality</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="err">”</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">outputCol</span><span class="o">=</span><span class="err">”</span><span class="n">censored_category_index</span><span class="err">”</span><span class="p">,</span> <span class="n">proportion</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
-</span><span class='line'><span class="n">onehot_category</span> <span class="o">=</span> <span class="n">OneHotEncoderEstimator</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">category_index</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">censored_category_index</span><span class="err">”</span><span class="p">],</span>
-</span><span class='line'>                                     <span class="n">outputCols</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">onehot_category</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">onehot_censored_category</span><span class="err">”</span><span class="p">])</span>
-</span><span class='line'><span class="n">onehot_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">string_to_num</span><span class="p">,</span> <span class="n">censor_category</span><span class="p">,</span> <span class="n">onehot_category</span><span class="p">])</span>
-</span><span class='line'><span class="n">fit_pipeline</span> <span class="o">=</span> <span class="n">onehot_pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">fit_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
-</span><span class='line'><span class="c"># | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
-</span><span class='line'><span class="c"># |  0|       a|           1.0|                    1.0| (25,[1],[1.0])|           (3,[1],[1.0])|</span>
-</span><span class='line'><span class="c"># |  1|       c|           2.0|                    2.0| (25,[2],[1.0])|           (3,[2],[1.0])|</span>
-</span><span class='line'><span class="c"># |  2|       e|           4.0|                    3.0| (25,[4],[1.0])|               (3,[],[])|</span>
-</span><span class='line'><span class="c"># |  3|       e|           4.0|                    3.0| (25,[4],[1.0])|               (3,[],[])|</span>
-</span><span class='line'><span class="c"># |  4|       a|           1.0|                    1.0| (25,[1],[1.0])|           (3,[1],[1.0])|</span>
-</span><span class='line'><span class="c"># +—+——–+————–+———————–+—————+————————+</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+from pyspark.ml.pipeline import Estimator, Model</p>
+
+<p>class LimitCardinality(Estimator, HasInputCol, HasOutputCol):
+    “"”Limit Cardinality of a column.”””</p>
+
+<pre><code>@keyword_only
+def __init__(self, inputCol=None, outputCol=None, proportion=None):
+    """Initialize."""
+    super(LimitCardinality, self).__init__()
+    self.proportion = Param(self, "proportion", "Cardinality upper limit as a proportion of data.")
+    self._setDefault(proportion=0.75)
+    kwargs = self._input_kwargs
+    self.setParams(**kwargs)
+
+@keyword_only
+def setParams(self, inputCol=None, outputCol=None, proportion=None):
+    """Get params."""
+    kwargs = self._input_kwargs
+    return self._set(**kwargs)
+
+def setProportion(self, value):
+    """Set cardinality limit as proportion of data."""
+    return self._set(proportion=value)
+
+def getProportion(self):
+    """Get cardinality limit as proportion of data."""
+    return self.getOrDefault(self.proportion)
+
+def _fit(self, dataframe):
+    """Fit transformer."""
+    pandas_df = dataframe.groupBy(self.getInputCol()).agg(F.count("*").alias("my_count")).toPandas()
+    n = sum((pandas_df
+             .sort_values("my_count", ascending=False)
+             .cumsum()["my_count"] / sum(pandas_df["my_count"])
+            ) &lt; self.getProportion())
+    return LimitCardinalityModel(inputCol=self.getInputCol(), outputCol=self.getOutputCol(), n=n)
+</code></pre>
+
+<p>class LimitCardinalityModel(Model, HasInputCol, HasOutputCol):
+    “"”Limit Cardinality of a column.”””</p>
+
+<pre><code>@keyword_only
+def __init__(self, inputCol=None, outputCol=None, n=None):
+    """Initialize."""
+    super(LimitCardinalityModel, self).__init__()
+    self.n = Param(self, "n", "Cardinality upper limit.")
+    self._setDefault(n=25)
+    kwargs = self._input_kwargs
+    self.setParams(**kwargs)
+
+@keyword_only
+def setParams(self, inputCol=None, outputCol=None, n=None):
+    """Get params."""
+    kwargs = self._input_kwargs
+    return self._set(**kwargs)
+
+def setN(self, value):
+    """Set cardinality limit."""
+    return self._set(n=value)
+
+def getN(self):
+    """Get cardinality limit."""
+    return self.getOrDefault(self.n)
+
+def _transform(self, dataframe):
+    """Do transformation."""
+    out_col = self.getOutputCol()
+    in_col = dataframe[self.getInputCol()]
+    return (dataframe
+            .withColumn(out_col, (F.when(in_col &gt; self.getN(), self.getN())
+                                  .otherwise(in_col))))
+</code></pre>
+
+<p>string_to_num = StringIndexer(inputCol=”category”, outputCol=”category_index”, handleInvalid=”skip”)
+censor_category = LimitCardinality(inputCol=”category_index”, outputCol=”censored_category_index”, proportion=0.75)
+onehot_category = OneHotEncoderEstimator(inputCols=[“category_index”, “censored_category_index”],
+                                     outputCols=[“onehot_category”, “onehot_censored_category”])
+onehot_pipeline = Pipeline(stages=[string_to_num, censor_category, onehot_category])
+fit_pipeline = onehot_pipeline.fit(a)</p>
+
+<p>fit_pipeline.transform(a).limit(5).show()
+# +—+——–+————–+———————–+—————+————————+
+# | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|
+# +—+——–+————–+———————–+—————+————————+
+# |  0|       a|           1.0|                    1.0| (25,[1],[1.0])|           (3,[1],[1.0])|
+# |  1|       c|           2.0|                    2.0| (25,[2],[1.0])|           (3,[2],[1.0])|
+# |  2|       e|           4.0|                    3.0| (25,[4],[1.0])|               (3,[],[])|
+# |  3|       e|           4.0|                    3.0| (25,[4],[1.0])|               (3,[],[])|
+# |  4|       a|           1.0|                    1.0| (25,[1],[1.0])|           (3,[1],[1.0])|
+# +—+——–+————–+———————–+—————+————————+
+{% endcodeblock %}</p>
 
 <p>There are <a href="https://towardsdatascience.com/smarter-ways-to-encode-categorical-data-for-machine-learning-part-1-of-3-6dca2f71b159">other options</a> for dealing with high cardinality columns such as using a clustering or a <a href="https://tech.instacart.com/predicting-real-time-availability-of-200-million-grocery-items-in-us-canada-stores-61f43a16eafe">mean encoding</a> scheme.</p>
 
@@ -816,39 +543,27 @@
 
 <p>This data enables me to use data from multiple years for each player, giving me more data when estimating how likely a particular player is to hit into an error.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>%%bash&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;for i in <span class="o">{</span>1970..2018<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
-</span><span class='line'>    <span class="nb">echo</span> “YEAR: <span class="nv">$i</span>”
-</span><span class='line'>    ../scripts/get_data.sh <span class="k">${</span><span class="nv">i</span><span class="k">}</span><span class="p">;</span>
-</span><span class='line'><span class="k">done</span>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;find processed_data/* -type f -name ‘errors_bip.out’ <span class="p">|</span> <span class="se">\</span>
-</span><span class='line'>    xargs awk ‘<span class="o">{</span>print <span class="nv">$0</span>”, “FILENAME<span class="o">}</span>’ <span class="p">|</span> <span class="se">\</span>
-</span><span class='line'>    sed s1processed_data/11g1 <span class="p">|</span> <span class="se">\</span>
-</span><span class='line'>    sed s1/errors_bip.out11g1 <span class="p">&amp;</span>gt<span class="p">;</span> <span class="se">\</span>
-</span><span class='line'>        processed_data/all_errors_bip.out
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:bash %}
+%%bash</p>
+
+<p>for i in {1970..2018}; do
+    echo “YEAR: $i”
+    ../scripts/get_data.sh ${i};
+done</p>
+
+<p>find processed_data/* -type f -name ‘errors_bip.out’ | \
+    xargs awk ‘{print $0”, “FILENAME}’ | \
+    sed s1processed_data/11g1 | \
+    sed s1/errors_bip.out11g1 &gt; \
+        processed_data/all_errors_bip.out
+{% endcodeblock %}</p>
 
 <p>The data has 5 columns: playerid, playername, errors hit into, balls hit into play (BIP), and year. The file does not have a header.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>%%bash
-</span><span class='line'>head ../processed_data/all_errors_bip.out
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:bash %}
+%%bash
+head ../processed_data/all_errors_bip.out
+{% endcodeblock %}</p>
 
 <pre><code>aaroh101, Hank Aaron, 8, 453, 1970
 aarot101, Tommie Aaron, 0, 53, 1970
@@ -864,21 +579,17 @@ alleg101, Gene Alley, 6, 356, 1970
 
 <p>I can load the data into pandas using the following command.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">DF</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="err">‘</span><span class="o">../</span><span class="n">processed_data</span><span class="o">/</span><span class="n">all_errors_bip</span><span class="o">.</span><span class="n">out</span><span class="err">’</span><span class="p">,</span>
-</span><span class='line'>                 <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-</span><span class='line'>                 <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="err">‘</span><span class="n">playerid</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">player_name</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">errors</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">bip</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">year</span><span class="err">’</span><span class="p">])</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+import pandas as pd</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">DF</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>DF = pd.read_csv(‘../processed_data/all_errors_bip.out’,
+                 header=None,
+                 names=[‘playerid’, ‘player_name’, ‘errors’, ‘bip’, ‘year’])
+{% endcodeblock %}</p>
+
+<p>{% codeblock lang:python %}
+DF.head()
+{% endcodeblock %}</p>
 
 <div>
 <style scoped="">
@@ -950,9 +661,9 @@ alleg101, Gene Alley, 6, 356, 1970
 </table>
 </div>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nb">len</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+len(DF)
+{% endcodeblock %}</p>
 
 <pre><code>38870
 </code></pre>
@@ -961,53 +672,42 @@ alleg101, Gene Alley, 6, 356, 1970
 
 <p>While exploring the data, I noticed that players hit into errors less frequently now than they used to. Let’s see how the probability that a player hits into an error has changed across the years.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">YEAR_DF</span> <span class="o">=</span> <span class="p">(</span><span class="n">DF</span>
-</span><span class='line'>           <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="err">“</span><span class="n">year</span><span class="err">”</span><span class="p">)</span>
-</span><span class='line'>           <span class="o">.</span><span class="n">agg</span><span class="p">({</span>
-</span><span class='line'>               <span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">,</span>
-</span><span class='line'>               <span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span>
-</span><span class='line'>           <span class="p">})</span>
-</span><span class='line'>           <span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">prop_error</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">])</span>
-</span><span class='line'>          <span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">YEAR_DF</span><span class="p">[</span><span class="err">“</span><span class="n">prop_error</span><span class="err">”</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="err">”</span><span class="n">o</span><span class="o">-</span><span class="err">“</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+%matplotlib inline</p>
 
-<p><img src="/images/mlb/error_year.png" /></p>
+<p>YEAR_DF = (DF
+           .groupby(“year”)
+           .agg({
+               “errors”: “sum”,
+               “bip”: “sum”
+           })
+           .assign(prop_error=lambda x: x[“errors”] / x[“bip”])
+          )</p>
+
+<p>YEAR_DF[“prop_error”].plot(style=”o-“);
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/mlb/error_year.png" /></p>
 
 <p>Interestingly, the proportion of errors per BIP <a href="https://www.pinstripealley.com/2013/8/16/4623050/mlb-errors-trends-statistics">has been dropping over time</a>. I am not sure if this is a conscious effort by MLB score keepers, a change in how hitters hit, or improved fielding (but I suspect it’s the score keepers). It looks like this drop in errors per BIP leveled off around 2015. Zooming in.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">YEAR_DF</span><span class="p">[</span><span class="n">YEAR_DF</span><span class="o">.</span><span class="n">index</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">2010</span><span class="p">][</span><span class="err">“</span><span class="n">prop_error</span><span class="err">”</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="err">”</span><span class="n">o</span><span class="o">-</span><span class="err">“</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+YEAR_DF[YEAR_DF.index &gt; 2010][“prop_error”].plot(style=”o-“);
+{% endcodeblock %}</p>
 
-<p><img src="/images/mlb/zoom_error_year.png" /></p>
+<p><img src="{{ root_url }}/images/mlb/zoom_error_year.png" /></p>
 
 <p>I explore this statistically in <a href="https://github.com/dvatterott/mlb_errors/blob/master/notebook/PYMC%20-%20Hierarchical%20Beta%20Binomial%20YEAR.ipynb">a jupyter notebook on my github</a>.</p>
 
 <p>Because I don’t want year to confound the analysis, I remove all data before 2015.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="p">[</span><span class="n">DF</span><span class="p">[</span><span class="err">“</span><span class="n">year</span><span class="err">”</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">=</span> <span class="mi">2015</span><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+DF = DF[DF[“year”] &gt;= 2015]
+{% endcodeblock %}</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nb">len</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+len(DF)
+{% endcodeblock %}</p>
 
 <pre><code>3591
 </code></pre>
@@ -1016,13 +716,13 @@ alleg101, Gene Alley, 6, 356, 1970
 
 <p>Next I combine players’ data across years.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="err">“</span><span class="n">playerid</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">player_name</span><span class="err">”</span><span class="p">])</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">})</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+GROUPED_DF = DF.groupby([“playerid”, “player_name”]).agg({“errors”: “sum”, “bip”: “sum”}).reset_index()
+{% endcodeblock %}</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+GROUPED_DF.describe()
+{% endcodeblock %}</p>
 
 <div>
 <style scoped="">
@@ -1093,13 +793,11 @@ alleg101, Gene Alley, 6, 356, 1970
 
 <p>I want an idea for how likely players are to hit into errors.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">TOTALS</span> <span class="o">=</span> <span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">})</span>
-</span><span class='line'><span class="n">ERROR_RATE</span> <span class="o">=</span> <span class="n">TOTALS</span><span class="p">[</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">]</span> <span class="o">/</span> <span class="n">TOTALS</span><span class="p">[</span><span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">]</span>
-</span><span class='line'><span class="n">ERROR_RATE</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+TOTALS = GROUPED_DF.agg({“errors”: “sum”, “bip”: “sum”})
+ERROR_RATE = TOTALS[“errors”] / TOTALS[“bip”]
+ERROR_RATE
+{% endcodeblock %}</p>
 
 <pre><code>0.011801960251664112
 </code></pre>
@@ -1108,26 +806,26 @@ alleg101, Gene Alley, 6, 356, 1970
 
 <p>I’d like the majority of players to have at least 5 errors. I can estimate how many BIP that would require.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="mf">5.</span> <span class="o">/</span><span class="n">ERROR_RATE</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+5. /ERROR_RATE
+{% endcodeblock %}</p>
 
 <pre><code>423.65843413978496
 </code></pre>
 
 <p>Looks like I should require at least 425 BIP for each player. I round this to 500.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span> <span class="o">=</span> <span class="n">GROUPED_DF</span><span class="p">[</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">500</span><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+GROUPED_DF = GROUPED_DF[GROUPED_DF[“bip”] &gt; 500]
+{% endcodeblock %}</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span> <span class="o">=</span> <span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+GROUPED_DF = GROUPED_DF.reset_index(drop=True)
+{% endcodeblock %}</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+GROUPED_DF.head()
+{% endcodeblock %}</p>
 
 <div>
 <style scoped="">
@@ -1193,9 +891,9 @@ alleg101, Gene Alley, 6, 356, 1970
 </table>
 </div>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+GROUPED_DF.describe()
+{% endcodeblock %}</p>
 
 <div>
 <style scoped="">
@@ -1268,17 +966,14 @@ alleg101, Gene Alley, 6, 356, 1970
 
 <p>Below, I plot how the likelihood of hitting into errors is distributed.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">prop_error</span><span class="err">”</span><span class="p">]</span> <span class="o">=</span> <span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">]</span> <span class="o">/</span> <span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">]</span>
-</span><span class='line'><span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">prop_error</span><span class="err">”</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">();</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+%matplotlib inline</p>
 
-<p><img src="/images/mlb/error_dist.png" /></p>
+<p>GROUPED_DF[“prop_error”] = GROUPED_DF[“errors”] / GROUPED_DF[“bip”]
+GROUPED_DF[“prop_error”].hist();
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/mlb/error_dist.png" /></p>
 
 <p>The question is whether someone who has hit into errors in 2% of their BIP is more likely to hit into an error than someone who has hit into errors in 0.5% of their BIP (or is this all just random variation).</p>
 
@@ -1294,43 +989,25 @@ alleg101, Gene Alley, 6, 356, 1970
 
 <p>I largely based my analysis on <a href="https://docs.pymc.io/notebooks/hierarchical_partial_pooling.html">this</a> tutorial. Reference the tutorial for an explanation of how I choose my priors. I ended up using a greater lambda value (because the model sampled better) in the Exponential prior, and while this did lead to more extreme estimates of error likelihood, it didn’t change the basic story.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pymc3</span> <span class="kn">as</span> <span class="nn">pm</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">tt</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">with</span> <span class="n">pm</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span> <span class="k">as</span> <span class="n">model</span><span class="p">:</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">phi</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="s">&#39;phi&#39;</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">kappa_log</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s">&#39;kappa_log&#39;</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mf">25.</span><span class="p">)</span>
-</span><span class='line'><span class="n">kappa</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s">&#39;kappa&#39;</span><span class="p">,</span> <span class="n">tt</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">kappa_log</span><span class="p">))</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">rates</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Beta</span><span class="p">(</span><span class="s">&#39;rates&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">phi</span><span class="o">*</span><span class="n">kappa</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">kappa</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">))</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">trials</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s">&quot;bip&quot;</span><span class="p">])</span>
-</span><span class='line'><span class="n">successes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s">&quot;errors&quot;</span><span class="p">])</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">obs</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Binomial</span><span class="p">(</span><span class="s">&#39;observed_values&#39;</span><span class="p">,</span> <span class="n">trials</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="n">successes</span><span class="p">)</span>
-</span><span class='line'><span class="n">trace</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="n">tune</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">cores</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nuts_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;target_accept&#39;</span><span class="p">:</span> <span class="o">.</span><span class="mi">95</span><span class="p">})</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>{% codeblock lang:python %}
+import pymc3 as pm
+import numpy as np
+import theano.tensor as tt</p>
+
+<p>with pm.Model() as model:</p>
+
+<pre><code>phi = pm.Uniform('phi', lower=0.0, upper=1.0)
+
+kappa_log = pm.Exponential('kappa_log', lam=25.)
+kappa = pm.Deterministic('kappa', tt.exp(kappa_log))
+
+rates = pm.Beta('rates', alpha=phi*kappa, beta=(1.0-phi)*kappa, shape=len(GROUPED_DF))
+
+trials = np.array(GROUPED_DF["bip"])
+successes = np.array(GROUPED_DF["errors"])
+ 
+obs = pm.Binomial('observed_values', trials, rates, observed=successes)
+trace = pm.sample(2000, tune=1000, chains=2, cores=2, nuts_kwargs={'target_accept': .95}) {% endcodeblock %}
 
 Auto-assigning NUTS sampler...
 Initializing NUTS using jitter+adapt_diag...
@@ -1341,28 +1018,26 @@ Sampling 2 chains: 100%|██████████| 6000/6000 [01:47&lt;00:0
 
 <p>Check whether the model converged.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">score</span><span class="p">)</span> <span class="k">for</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">pm</span><span class="o">.</span><span class="n">gelman_rubin</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+max(np.max(score) for score in pm.gelman_rubin(trace).values())
+{% endcodeblock %}</p>
 
 <pre><code>1.0022635936332533
 </code></pre>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">bfmi</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">bfmi</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span>
-</span><span class='line'><span class="n">max_gr</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">gr_stats</span><span class="p">)</span> <span class="k">for</span> <span class="n">gr_stats</span> <span class="ow">in</span> <span class="n">pm</span><span class="o">.</span><span class="n">gelman_rubin</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-</span><span class='line'><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">energyplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="err">“</span><span class="n">BFMI</span> <span class="o">=</span> <span class="p">{}</span>\<span class="n">nGelman</span><span class="o">-</span><span class="n">Rubin</span> <span class="o">=</span> <span class="p">{}</span><span class="err">”</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bfmi</span><span class="p">,</span> <span class="n">max_gr</span><span class="p">)));</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+bfmi = pm.bfmi(trace)
+max_gr = max(np.max(gr_stats) for gr_stats in pm.gelman_rubin(trace).values())
+(pm.energyplot(trace, figsize=(6, 4)).set_title(“BFMI = {}\nGelman-Rubin = {}”.format(bfmi, max_gr)));
+{% endcodeblock %}</p>
 
-<p><img src="/images/mlb/energy.png" /></p>
+<p><img src="{{ root_url }}/images/mlb/energy.png" /></p>
 
 <p>The most challenging parameter to fit is <em>kappa</em> which modulates for the variance in the likelihood to hit into an error. I take a look at it to make sure things look as expected.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">kappa</span><span class="err">”</span><span class="p">])</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+pm.summary(trace, varnames=[“kappa”])
+{% endcodeblock %}</p>
 
 <div>
 <style scoped="">
@@ -1406,75 +1081,58 @@ Sampling 2 chains: 100%|██████████| 6000/6000 [01:47&lt;00:0
 </table>
 </div>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">‘</span><span class="n">kappa</span><span class="err">’</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+pm.traceplot(trace, varnames=[‘kappa’]);
+{% endcodeblock %}</p>
 
-<p><img src="/images/mlb/kappa.png" /></p>
+<p><img src="{{ root_url }}/images/mlb/kappa.png" /></p>
 
 <p>I can also look at <em>phi</em>, the estimated global likelihood to hit into an error.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">‘</span><span class="n">phi</span><span class="err">’</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+pm.traceplot(trace, varnames=[‘phi’]);
+{% endcodeblock %}</p>
 
-<p><img src="/images/mlb/phi.png" /></p>
+<p><img src="{{ root_url }}/images/mlb/phi.png" /></p>
 
 <p>Finally, I can look at how all players vary in their likelihood to hit into an error.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+pm.traceplot(trace, varnames=[‘rates’]);
+{% endcodeblock %}</p>
 
-<p><img src="/images/mlb/rate_trace.png" /></p>
+<p><img src="{{ root_url }}/images/mlb/rate_trace.png" /></p>
 
 <p>Obviously, the above plot is a lot to look at it, so let’s order players by how likely the model believes they are to hit in an error.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rate_means</span> <span class="o">=</span> <span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</span><span class='line'><span class="n">rate_se</span> <span class="o">=</span> <span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">mean_se</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">rate_means</span><span class="p">,</span> <span class="n">rate_se</span><span class="p">)]</span>
-</span><span class='line'><span class="n">sorted_means_se</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mean_se</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span><span class='line'><span class="n">sorted_means</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">]</span>
-</span><span class='line'><span class="n">sorted_se</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sorted_means</span><span class="p">))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sorted_means</span><span class="p">,</span> <span class="err">‘</span><span class="n">o</span><span class="err">’</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">for</span> <span class="n">x_val</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">se</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sorted_means</span><span class="p">,</span> <span class="n">sorted_se</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">x_val</span><span class="p">,</span> <span class="n">x_val</span><span class="p">],</span> <span class="p">[</span><span class="n">m</span><span class="o">-</span><span class="n">se</span><span class="p">,</span> <span class="n">m</span><span class="o">+</span><span class="n">se</span><span class="p">],</span> <span class="err">‘</span><span class="n">b</span><span class="o">-</span><span class="err">‘</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+from matplotlib import pyplot as plt</p>
 
-<p><img src="/images/mlb/players_ranked.png" /></p>
+<p>rate_means = trace[‘rates’, 1000:].mean(axis=0)
+rate_se = trace[‘rates’, 1000:].std(axis=0)</p>
+
+<p>mean_se = [(x, y, i) for i, x, y in zip(GROUPED_DF.index, rate_means, rate_se)]
+sorted_means_se = sorted(mean_se, key=lambda x: x[0])
+sorted_means = [x[0] for x in sorted_means_se]
+sorted_se = [x[1] for x in sorted_means_se]</p>
+
+<p>x = np.arange(len(sorted_means))</p>
+
+<p>plt.plot(x, sorted_means, ‘o’, alpha=0.25);</p>
+
+<p>for x_val, m, se in zip(x, sorted_means, sorted_se):
+    plt.plot([x_val, x_val], [m-se, m+se], ‘b-‘, alpha=0.5)
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/mlb/players_ranked.png" /></p>
 
 <p>Now, the ten players who are most likely to hit into an error.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">estimated_mean</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">rates</span><span class="err">”</span><span class="p">])</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]]][</span><span class="err">“</span><span class="n">mean</span><span class="err">”</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]],</span> <span class="p">:]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">estimated_mean</span><span class="o">=</span><span class="n">estimated_mean</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+estimated_mean = pm.summary(trace, varnames=[“rates”]).iloc[[x[2] for x in sorted_means_se[-10:]]][“mean”]</p>
+
+<p>GROUPED_DF.loc[[x[2] for x in sorted_means_se[-10:]], :].assign(estimated_mean=estimated_mean.values).iloc[::-1]
+{% endcodeblock %}</p>
 
 <div>
 <style scoped="">
@@ -1599,13 +1257,11 @@ Sampling 2 chains: 100%|██████████| 6000/6000 [01:47&lt;00:0
 
 <p>And the 10 players who are least likely to hit in an error.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">estimated_mean</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">rates</span><span class="err">”</span><span class="p">])</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[:</span><span class="mi">10</span><span class="p">]]][</span><span class="err">“</span><span class="n">mean</span><span class="err">”</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[:</span><span class="mi">10</span><span class="p">]],</span> <span class="p">:]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">estimated_mean</span><span class="o">=</span><span class="n">estimated_mean</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+estimated_mean = pm.summary(trace, varnames=[“rates”]).iloc[[x[2] for x in sorted_means_se[:10]]][“mean”]</p>
+
+<p>GROUPED_DF.loc[[x[2] for x in sorted_means_se[:10]], :].assign(estimated_mean=estimated_mean.values)
+{% endcodeblock %}</p>
 
 <div>
 <style scoped="">
@@ -1732,9 +1388,9 @@ Sampling 2 chains: 100%|██████████| 6000/6000 [01:47&lt;00:0
 
 <p>Using the posterior distribution of estimated likelihoods to hit into an error, I can assign a probability to whether Carlos Correa is more likely to hit into an error than Daniel Murphy.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="mi">71</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="mi">226</span><span class="p">])</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+np.mean(trace[‘rates’, 1000:][:, 71] &lt;= trace[‘rates’, 1000:][:, 226])
+{% endcodeblock %}</p>
 
 <pre><code>0.0
 </code></pre>
@@ -1743,29 +1399,24 @@ Sampling 2 chains: 100%|██████████| 6000/6000 [01:47&lt;00:0
 
 <p>I can also plot these players’ posterior distributions.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="mi">226</span><span class="p">],</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="n">Daniel</span> <span class="n">Murphy</span><span class="err">”</span><span class="p">);</span>
-</span><span class='line'><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="mi">71</span><span class="p">],</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="n">Carlos</span> <span class="n">Correa</span><span class="err">”</span><span class="p">);</span>
-</span><span class='line'><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="n">Overall</span><span class="err">”</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+import seaborn as sns</p>
 
-<p><img src="/images/mlb/play_comparison.png" /></p>
+<p>sns.kdeplot(trace[‘rates’, 1000:][:, 226], shade=True, label=”Daniel Murphy”);
+sns.kdeplot(trace[‘rates’, 1000:][:, 71], shade=True, label=”Carlos Correa”);
+sns.kdeplot(trace[‘rates’, 1000:].flatten(), shade=True, label=”Overall”);
+{% endcodeblock %}</p>
+
+<p><img src="{{ root_url }}/images/mlb/play_comparison.png" /></p>
 
 <p>Finally, I can look exclusively at how the posterior distributions of the ten most likely and 10 least likely players to hit into an error compare.</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]]]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="mi">10</span> <span class="n">Least</span> <span class="n">Likely</span><span class="err">”</span><span class="p">);</span>
-</span><span class='line'><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[:</span><span class="mi">10</span><span class="p">]]]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="mi">10</span> <span class="n">Most</span> <span class="n">Likely</span><span class="err">”</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock lang:python %}
+sns.kdeplot(trace[‘rates’, 1000:][:, [x[2] for x in sorted_means_se[-10:]]].flatten(), shade=True, label=”10 Least Likely”);
+sns.kdeplot(trace[‘rates’, 1000:][:, [x[2] for x in sorted_means_se[:10]]].flatten(), shade=True, label=”10 Most Likely”);
+{% endcodeblock %}</p>
 
-<p><img src="/images/mlb/top10.png" /></p>
+<p><img src="{{ root_url }}/images/mlb/top10.png" /></p>
 
 <p>All in all, this analysis makes it obvious that some players are more likely to hit into errors than other players. This is probably driven by how often players hit ground balls.</p>
 ]]></content>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Data-teams | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/data-teams/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2022-01-01T20:11:04-06:00</updated>
+  <updated>2022-02-25T14:33:11-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -24,140 +24,75 @@
 
 <p>I wasn’t able to find existing onboarding checklists so I hope you find this useful!</p>
 
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># Request Email
-</span><span class='line'>  + [ ] Request an email account
-</span><span class='line'># Request Equipment
-</span><span class='line'>  + [ ] Request Laptop
-</span><span class='line'>  + [ ] Request monitor, keyboard, &amp; mouse
-</span><span class='line'># Request Accounts
-</span><span class='line'>  + [ ] Request Cloud Account
-</span><span class='line'>  + [ ] Request Data Warehouse Account
-</span><span class='line'>  + [ ] Request Dashboarding Account
-</span><span class='line'>  + [ ] Request Version Control Account
-</span><span class='line'>  + [ ] Request Workflow Management Account
-</span><span class='line'># Install Software
-</span><span class='line'>  + [ ] Text Editor / IDE
-</span><span class='line'>  + [ ] Code Packaging and Dependency Management Software
-</span><span class='line'>  + [ ] Office Suite
-</span><span class='line'>  + [ ] Communication Platforms (e.g., Zoom, Slack)
-</span><span class='line'>  + [ ] CLIs
-</span><span class='line'>  + [ ] Clone Repos
-</span><span class='line'># Schedule Intro Meetings
-</span><span class='line'>  + [ ] Collaborator A
-</span><span class='line'>  + [ ] Team B
-</span><span class='line'>  + [ ] Etc.
-</span><span class='line'># Add to Meetings/Channels/Distribution Lists
-</span><span class='line'>## Meetings
-</span><span class='line'>  + [ ] Daily Stand-up
-</span><span class='line'>  + [ ] Weekly 1on1
-</span><span class='line'>  + [ ] Weekly Larger Team Meeting
-</span><span class='line'>## Distribution Lists
-</span><span class='line'>  + [ ] Example A
-</span><span class='line'>## Communication Channels
-</span><span class='line'>  + [ ] Example A
-</span><span class='line'># Templates
-</span><span class='line'>  + [ ] Presentations
-</span><span class='line'>  + [ ] Dashboards
-</span><span class='line'>  + [ ] Document Headers
-</span><span class='line'>  + [ ] Spreadsheets
-</span><span class='line'># Data Schemas Intro
-</span><span class='line'>  + [ ] Schema X
-</span><span class='line'>  + [ ] Schema Y
-</span><span class='line'># 7/30/60/90 Day Plans
-</span><span class='line'>## 7 Day
-</span><span class='line'>  + [ ] Set-Up Machine
-</span><span class='line'>  + [ ] Clone Repos
-</span><span class='line'>  + [ ] Run Repo Unit-Tests
-</span><span class='line'>  + [ ] Request Accounts and Software
-</span><span class='line'>  + [ ] Automation Intro
-</span><span class='line'>  + [ ] Cloud Services Intro
-</span><span class='line'>  + [ ] Data Warehouse Intro
-</span><span class='line'>  + [ ] Review Jargon
-</span><span class='line'>## 30 Day
-</span><span class='line'>  + [ ] Discuss Order of Code Repo Reviews
-</span><span class='line'>  + [ ] Discuss 30 Day Project
-</span><span class='line'>  + [ ] Discuss 30 Day Goals
-</span><span class='line'>## 60 Day
-</span><span class='line'>  + [ ] Discuss 60 Day Project
-</span><span class='line'>  + [ ] Discuss 60 Day Goals
-</span><span class='line'>## 90 Day
-</span><span class='line'>  + [ ] Discuss 90 Day Project
-</span><span class='line'>  + [ ] Discuss 90 Day Goals
-</span><span class='line'># Communication/Work Style
-</span><span class='line'>  + [ ] Discuss Work Styles
-</span><span class='line'>  + [ ] Discuss Communication Styles
-</span><span class='line'>  + [ ] Discuss Preferred Feedback Style
-</span><span class='line'>  + [ ] Discuss Preferred Hours
-</span><span class='line'>  + [ ] Discuss a Vision of Success
-</span><span class='line'># Jargon
-</span><span class='line'>  + [ ] Review Company/Business Jargon</span></code></pre></td></tr></table></div></figure></p>
+<p>{% codeblock %}
+# Request Email
+  + [ ] Request an email account
+# Request Equipment
+  + [ ] Request Laptop
+  + [ ] Request monitor, keyboard, &amp; mouse
+# Request Accounts
+  + [ ] Request Cloud Account
+  + [ ] Request Data Warehouse Account
+  + [ ] Request Dashboarding Account
+  + [ ] Request Version Control Account
+  + [ ] Request Workflow Management Account
+# Install Software
+  + [ ] Text Editor / IDE
+  + [ ] Code Packaging and Dependency Management Software
+  + [ ] Office Suite
+  + [ ] Communication Platforms (e.g., Zoom, Slack)
+  + [ ] CLIs
+  + [ ] Clone Repos
+# Schedule Intro Meetings
+  + [ ] Collaborator A
+  + [ ] Team B
+  + [ ] Etc.
+# Add to Meetings/Channels/Distribution Lists
+## Meetings
+  + [ ] Daily Stand-up
+  + [ ] Weekly 1on1
+  + [ ] Weekly Larger Team Meeting
+## Distribution Lists
+  + [ ] Example A
+## Communication Channels
+  + [ ] Example A
+# Templates
+  + [ ] Presentations
+  + [ ] Dashboards
+  + [ ] Document Headers
+  + [ ] Spreadsheets
+# Data Schemas Intro
+  + [ ] Schema X
+  + [ ] Schema Y
+# 7/30/60/90 Day Plans
+## 7 Day
+  + [ ] Set-Up Machine
+  + [ ] Clone Repos
+  + [ ] Run Repo Unit-Tests
+  + [ ] Request Accounts and Software
+  + [ ] Automation Intro
+  + [ ] Cloud Services Intro
+  + [ ] Data Warehouse Intro
+  + [ ] Review Jargon
+## 30 Day
+  + [ ] Discuss Order of Code Repo Reviews
+  + [ ] Discuss 30 Day Project
+  + [ ] Discuss 30 Day Goals
+## 60 Day
+  + [ ] Discuss 60 Day Project
+  + [ ] Discuss 60 Day Goals
+## 90 Day
+  + [ ] Discuss 90 Day Project
+  + [ ] Discuss 90 Day Goals
+# Communication/Work Style
+  + [ ] Discuss Work Styles
+  + [ ] Discuss Communication Styles
+  + [ ] Discuss Preferred Feedback Style
+  + [ ] Discuss Preferred Hours
+  + [ ] Discuss a Vision of Success
+# Jargon
+  + [ ] Review Company/Business Jargon
+{% endcodeblock %}</p>
 ]]></content>
   </entry>
   
