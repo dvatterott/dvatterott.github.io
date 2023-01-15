@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Cognition | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/cognition/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2022-02-25T14:33:11-06:00</updated>
+  <updated>2023-01-14T21:39:23-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -38,159 +38,289 @@ Brad Wyble recently pointed out that I overstated the claim in their paper. They
 
 <p>I’ll start by loading the python libraries that I’ll use throughout analyses.</p>
 
-<p>{% codeblock lang:python %}
-import numpy as np, sys, scipy.stats, pandas as pd, os, os.path, csv #loading useful libraries</p>
-
-<p>import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pylab as pl
-%matplotlib inline
-pd.options.display.mpl_style = ‘default’ #load matplotlib for plotting
-plt.style.use(‘ggplot’) #im addicted to ggplot. so pretty.
-mpl.rcParams[‘font.family’] = [‘Bitstream Vera Sans’]
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">scipy.stats</span><span class="o">,</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">os.path</span><span class="o">,</span> <span class="nn">csv</span> <span class="c">#loading useful libraries&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">pl</span>
+</span><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</span><span class='line'><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">mpl_style</span> <span class="o">=</span> <span class="err">‘</span><span class="n">default</span><span class="err">’</span> <span class="c">#load matplotlib for plotting</span>
+</span><span class='line'><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="err">‘</span><span class="n">ggplot</span><span class="err">’</span><span class="p">)</span> <span class="c">#im addicted to ggplot. so pretty.</span>
+</span><span class='line'><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="err">‘</span><span class="n">font</span><span class="o">.</span><span class="n">family</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Bitstream</span> <span class="n">Vera</span> <span class="n">Sans</span><span class="err">’</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Here are some quick functions I wrote for running different statistical tests and plotting the data. I won’t explain this code, but encourage you to look through it later if you’re wondering how I did any of the analyses.</p>
 
-<p>{% codeblock lang:python %}
-def print_tests(series1, series2): #this function just presents normality and t-tests.
-    import scipy, numpy as np #the function does these tests with arcsin(sqrt(acc)) to help with normality
-    normTest2 = scipy.stats.shapiro(np.arcsin(np.sqrt(series1))-np.arcsin(np.sqrt(series2)))
-    Test2 = scipy.stats.ttest_rel(np.arcsin(np.sqrt(series1)), np.arcsin(np.sqrt(series2)))
-    Test3 = scipy.stats.wilcoxon(np.arcsin(np.sqrt(series1)), y=np.arcsin(np.sqrt(series2)))
-    print ‘\t normality test adj. Test value: %s P-value: %s’ % (str(np.round(normTest2[0],2)),
-                                                                 str(np.round(normTest2[1],4)))
-    if normTest2[1] &gt; 0.1: print ‘\t T-test adj. Test value: %s P-value: %s’ % (str(np.round(Test2[0],2)),
-                                                                                str(np.round(Test2[1],4)))
-    if normTest2[1] &lt;= 0.1: print ‘\t Wilcoxon. Test value: %s P-value: %s’ % (str(np.round(Test3[0],2)),
-                                                                               str(np.round(Test3[1],2)))</p>
-
-<p>def print_tests_ChiSq(series): #this function just presents normality and t-tests.
-    import scipy, numpy as np #the function does these tests with arcsin(sqrt(acc)) to help with normality
-    Test1 = scipy.stats.chisquare(series[1], f_exp = 0.25)
-    Test2 = scipy.stats.chisquare(series[2], f_exp = 0.25)
-    print ‘\t Surprise Test. Comparison to Chance: %s P-value: %s’ % (str(np.round(Test1[0],4)),
-                                                                      str(np.round(Test1[1],4)))
-    print ‘\t After Surprise Test. Comparison to Chance: %s P-value: %s’ % (str(np.round(Test2[0],4)),
-                                                                            str(np.round(Test2[1],4)))
-    x = scipy.stats.chi2_contingency([[sum(series[1]==1),sum(series[2]==1)], [sum(series[1]==0),sum(series[2]==0)]],
-                                     correction=False)
-    print ‘\t Chi-Square Comparison: %s P-value: %s’ % (str(np.round(x[0],4)),str(np.round(x[1],4)))</p>
-
-<p>def Analysis_and_Plot(tableRT2, CIs): #this function plots the data and writes the results, including stats tests
-    PlotFrame = pd.DataFrame([tableRT2.mean()])
-    PlotFrame.columns = [‘Presurprise’, ‘Surprise’, ‘Post surprise’]
-    PlotFrame2 = pd.DataFrame([CIs])
-    PlotFrame2.columns = [‘Presurprise’, ‘Surprise’, ‘Post surprise’]
-    PlotFrame.plot(ylim = [0, 1], yerr=PlotFrame2, kind=’bar’)
-    plt.xticks(range(1), [‘Trial Type’], rotation=0);</p>
-
-<pre><code>print '---------------------------------'
-print 'Mean Presurprise: %s' % (str(round(np.mean(tableRT2[0]),2)))
-print 'Mean Surprise: %s' % (str(round(np.mean(tableRT2[1]),2)))
-print 'Mean Postsurprise: %s' % (str(round(np.mean(tableRT2[2]),2)))
-print 'Presurprise - Surprise: %s' % (str(round(np.mean(tableRT2[0])-np.mean(tableRT2[1]),2)))
-print 'Postsurprise - Surprise: %s' % (str(round(np.mean(tableRT2[2])-np.mean(tableRT2[1]),2)))
-print 'Postsurprise - Presurprise: %s' % (str(round(np.mean(tableRT2[0])-np.mean(tableRT2[1]),2)))
-print '---------------------------------'
-print 'Presurprise vs Surprise'
-print_tests(tableRT2[1],tableRT2[0])
-print 'Postsuprise vs Surprise'
-print_tests(tableRT2[2],tableRT2[1])
-print 'Presurprise vs Postsurprise'
-print_tests(tableRT2[0],tableRT2[2])
-</code></pre>
-
-<p>def Analysis_and_Plot_2(tableRT2, CIs): #this function also plots the data and prints results.
-    PlotFrame = pd.DataFrame([tableRT2.mean()]) #I could probably consolidate these functions, but whatever. This works.
-    PlotFrame.columns = [‘Surprise’, ‘Postsurprise’]
-    PlotFrame.plot(ylim = [0, 1], kind=’bar’)#yerr=PlotFrame2, kind=’bar’)
-    plt.xticks(range(1), [‘Trial Type’], rotation=0);</p>
-
-<pre><code>print '---------------------------------'
-print 'Mean Surprise: %s' % (str(round(np.mean(tableRT2[1]),2)))
-print 'Mean Postsurprise: %s' % (str(round(np.mean(tableRT2[2]),2)))
-print 'Postsurprise - Surprise: %s' % (str(round(np.mean(tableRT2[2])-np.mean(tableRT2[1]),2)))
-print '---------------------------------'
-print 'Postsurprise vs Surprise'
-print_tests_ChiSq(tableRT2)
-</code></pre>
-
-<p>def Analysis_and_Plot_3(tableRT2, CIs): #another plotting function…i should really consolidate these.
-    PlotFrame = pd.DataFrame([tableRT2.mean()])
-    PlotFrame.columns = [‘Match’, ‘Mismatch’]
-    PlotFrame2 = pd.DataFrame()
-    PlotFrame2[‘Match’] = pd.DataFrame([CIs])
-    PlotFrame2[‘Mismatch’] = pd.DataFrame([CIs])
-    PlotFrame.plot(ylim = [0, 1], yerr=PlotFrame2, kind=’bar’)
-    plt.xticks(range(1), [‘Trial Type’], rotation=0);</p>
-
-<pre><code>#disp_tab = np.round(tableRT2,2)
-#disp_tab['Match-Mismatch'] = disp_tab[1] - disp_tab[2]
-#print disp_tab
-
-print '---------------------------------'
-print 'Mean match: %s' % (str(round(np.mean(tableRT2[1]),4)))
-print 'Mean mismatch: %s' % (str(round(np.mean(tableRT2[2]),4)))
-print 'Match - Mismatch: %s' % (str(round(np.mean(tableRT2[1])-np.mean(tableRT2[2]),4)))
-print '---------------------------------'
-print 'Match vs Mismatch'
-print_tests(tableRT2[1],tableRT2[2])
-</code></pre>
-
-<p>def OneWayConfInterval(table): #Calculates confidence intervals for a one way anova, this is Cousineau, Morey ect
-    import scipy.stats, numpy
-    ParticipantsMeans = []
-    STEs = []
-    CIs = []
-    for participant in table.index:
-        mean = []
-        for condition in xrange(numpy.shape(table)[1]): #there’s definitely a better way to do this, but this works…
-            mean.append(np.array(table[table.index==participant][condition]))
-        ParticipantsMeans.append(sum(mean)/len(mean))
-    ConfMeans = numpy.zeros(shape=numpy.shape(table))
-    for counter, participant in enumerate(table.index):
-        for condition in xrange(numpy.shape(table)[1]):
-            ConfMeans[counter][condition] = table[table.index==participant][condition]-\
-            ParticipantsMeans[counter]+numpy.array(ParticipantsMeans).mean()
-    for counter, column in enumerate(ConfMeans.T):
-        STEs.append(numpy.std(column, ddof=1)/numpy.sqrt(len(column)))
-        CIs.append(STEs[counter]*scipy.stats.t.isf(0.025, len(ConfMeans)-1))
-    return CIs</p>
-
-<p>def SimpleComparisonCI(table): #confidence interval for pairwise comparisons - masson &amp; loftus, Baguley (2012)
-    import scipy.stats, math
-    ttest = scipy.stats.ttest_rel(table[1], table[2])
-    MeanDiff_byT = abs((table[1].mean()-table[2].mean())/ttest[0])
-    CI = MeanDiff_byT<em>scipy.stats.t.isf(0.025, len(table)-1)</em>math.pow(2,0.05)/2
-    return CI
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">print_tests</span><span class="p">(</span><span class="n">series1</span><span class="p">,</span> <span class="n">series2</span><span class="p">):</span> <span class="c">#this function just presents normality and t-tests.</span>
+</span><span class='line'>    <span class="kn">import</span> <span class="nn">scipy</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#the function does these tests with arcsin(sqrt(acc)) to help with normality</span>
+</span><span class='line'>    <span class="n">normTest2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">shapiro</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series1</span><span class="p">))</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series2</span><span class="p">)))</span>
+</span><span class='line'>    <span class="n">Test2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_rel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series2</span><span class="p">)))</span>
+</span><span class='line'>    <span class="n">Test3</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">wilcoxon</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series1</span><span class="p">)),</span> <span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">series2</span><span class="p">)))</span>
+</span><span class='line'>    <span class="k">print</span> <span class="err">‘</span>\<span class="n">t</span> <span class="n">normality</span> <span class="n">test</span> <span class="n">adj</span><span class="o">.</span> <span class="n">Test</span> <span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span> <span class="n">P</span><span class="o">-</span><span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span><span class="err">’</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">normTest2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)),</span>
+</span><span class='line'>                                                                 <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">normTest2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">normTest2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mf">0.1</span><span class="p">:</span> <span class="k">print</span> <span class="err">‘</span>\<span class="n">t</span> <span class="n">T</span><span class="o">-</span><span class="n">test</span> <span class="n">adj</span><span class="o">.</span> <span class="n">Test</span> <span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span> <span class="n">P</span><span class="o">-</span><span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span><span class="err">’</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)),</span>
+</span><span class='line'>                                                                                <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">normTest2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="mf">0.1</span><span class="p">:</span> <span class="k">print</span> <span class="err">‘</span>\<span class="n">t</span> <span class="n">Wilcoxon</span><span class="o">.</span> <span class="n">Test</span> <span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span> <span class="n">P</span><span class="o">-</span><span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span><span class="err">’</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)),</span>
+</span><span class='line'>                                                                               <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">)))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">print_tests_ChiSq</span><span class="p">(</span><span class="n">series</span><span class="p">):</span> <span class="c">#this function just presents normality and t-tests.</span>
+</span><span class='line'>    <span class="kn">import</span> <span class="nn">scipy</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> <span class="c">#the function does these tests with arcsin(sqrt(acc)) to help with normality</span>
+</span><span class='line'>    <span class="n">Test1</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">chisquare</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">f_exp</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">Test2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">chisquare</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">f_exp</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">print</span> <span class="err">‘</span>\<span class="n">t</span> <span class="n">Surprise</span> <span class="n">Test</span><span class="o">.</span> <span class="n">Comparison</span> <span class="n">to</span> <span class="n">Chance</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span> <span class="n">P</span><span class="o">-</span><span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span><span class="err">’</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">4</span><span class="p">)),</span>
+</span><span class='line'>                                                                      <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
+</span><span class='line'>    <span class="k">print</span> <span class="err">‘</span>\<span class="n">t</span> <span class="n">After</span> <span class="n">Surprise</span> <span class="n">Test</span><span class="o">.</span> <span class="n">Comparison</span> <span class="n">to</span> <span class="n">Chance</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span> <span class="n">P</span><span class="o">-</span><span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span><span class="err">’</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">4</span><span class="p">)),</span>
+</span><span class='line'>                                                                            <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Test2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span>
+</span><span class='line'>    <span class="n">x</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">chi2_contingency</span><span class="p">([[</span><span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">),</span><span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)],</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">),</span><span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)]],</span>
+</span><span class='line'>                                     <span class="n">correction</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">print</span> <span class="err">‘</span>\<span class="n">t</span> <span class="n">Chi</span><span class="o">-</span><span class="n">Square</span> <span class="n">Comparison</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span> <span class="n">P</span><span class="o">-</span><span class="n">value</span><span class="p">:</span> <span class="o">%</span><span class="n">s</span><span class="err">’</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">4</span><span class="p">)),</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">4</span><span class="p">)))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">Analysis_and_Plot</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">,</span> <span class="n">CIs</span><span class="p">):</span> <span class="c">#this function plots the data and writes the results, including stats tests</span>
+</span><span class='line'>    <span class="n">PlotFrame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">tableRT2</span><span class="o">.</span><span class="n">mean</span><span class="p">()])</span>
+</span><span class='line'>    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Presurprise</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Surprise</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Post</span> <span class="n">surprise</span><span class="err">’</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">PlotFrame2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">CIs</span><span class="p">])</span>
+</span><span class='line'>    <span class="n">PlotFrame2</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Presurprise</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Surprise</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Post</span> <span class="n">surprise</span><span class="err">’</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="n">PlotFrame2</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="err">’</span><span class="n">bar</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="err">‘</span><span class="n">Trial</span> <span class="n">Type</span><span class="err">’</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Mean Presurprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Mean Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Mean Postsurprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Presurprise - Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Postsurprise - Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Postsurprise - Presurprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Presurprise vs Surprise&#39;</span>
+</span><span class='line'><span class="n">print_tests</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Postsuprise vs Surprise&#39;</span>
+</span><span class='line'><span class="n">print_tests</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Presurprise vs Postsurprise&#39;</span>
+</span><span class='line'><span class="n">print_tests</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">Analysis_and_Plot_2</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">,</span> <span class="n">CIs</span><span class="p">):</span> <span class="c">#this function also plots the data and prints results.</span>
+</span><span class='line'>    <span class="n">PlotFrame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">tableRT2</span><span class="o">.</span><span class="n">mean</span><span class="p">()])</span> <span class="c">#I could probably consolidate these functions, but whatever. This works.</span>
+</span><span class='line'>    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Surprise</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Postsurprise</span><span class="err">’</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="err">’</span><span class="n">bar</span><span class="err">’</span><span class="p">)</span><span class="c">#yerr=PlotFrame2, kind=’bar’)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="err">‘</span><span class="n">Trial</span> <span class="n">Type</span><span class="err">’</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Mean Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Mean Postsurprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Postsurprise - Surprise: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">2</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Postsurprise vs Surprise&#39;</span>
+</span><span class='line'><span class="n">print_tests_ChiSq</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">Analysis_and_Plot_3</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">,</span> <span class="n">CIs</span><span class="p">):</span> <span class="c">#another plotting function…i should really consolidate these.</span>
+</span><span class='line'>    <span class="n">PlotFrame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">tableRT2</span><span class="o">.</span><span class="n">mean</span><span class="p">()])</span>
+</span><span class='line'>    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Match</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Mismatch</span><span class="err">’</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">PlotFrame2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">PlotFrame2</span><span class="p">[</span><span class="err">‘</span><span class="n">Match</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">CIs</span><span class="p">])</span>
+</span><span class='line'>    <span class="n">PlotFrame2</span><span class="p">[</span><span class="err">‘</span><span class="n">Mismatch</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">CIs</span><span class="p">])</span>
+</span><span class='line'>    <span class="n">PlotFrame</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="n">PlotFrame2</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="err">’</span><span class="n">bar</span><span class="err">’</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="err">‘</span><span class="n">Trial</span> <span class="n">Type</span><span class="err">’</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c">#disp_tab = np.round(tableRT2,2)</span>
+</span><span class='line'><span class="c">#disp_tab[&#39;Match-Mismatch&#39;] = disp_tab[1] - disp_tab[2]</span>
+</span><span class='line'><span class="c">#print disp_tab</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Mean match: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">4</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Mean mismatch: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="mi">4</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Match - Mismatch: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="mi">4</span><span class="p">)))</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;---------------------------------&#39;</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&#39;Match vs Mismatch&#39;</span>
+</span><span class='line'><span class="n">print_tests</span><span class="p">(</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">tableRT2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">OneWayConfInterval</span><span class="p">(</span><span class="n">table</span><span class="p">):</span> <span class="c">#Calculates confidence intervals for a one way anova, this is Cousineau, Morey ect</span>
+</span><span class='line'>    <span class="kn">import</span> <span class="nn">scipy.stats</span><span class="o">,</span> <span class="nn">numpy</span>
+</span><span class='line'>    <span class="n">ParticipantsMeans</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>    <span class="n">STEs</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>    <span class="n">CIs</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>    <span class="k">for</span> <span class="n">participant</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">mean</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">table</span><span class="p">)[</span><span class="mi">1</span><span class="p">]):</span> <span class="c">#there’s definitely a better way to do this, but this works…</span>
+</span><span class='line'>            <span class="n">mean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">==</span><span class="n">participant</span><span class="p">][</span><span class="n">condition</span><span class="p">]))</span>
+</span><span class='line'>        <span class="n">ParticipantsMeans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">mean</span><span class="p">))</span>
+</span><span class='line'>    <span class="n">ConfMeans</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">for</span> <span class="n">counter</span><span class="p">,</span> <span class="n">participant</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">table</span><span class="p">)[</span><span class="mi">1</span><span class="p">]):</span>
+</span><span class='line'>            <span class="n">ConfMeans</span><span class="p">[</span><span class="n">counter</span><span class="p">][</span><span class="n">condition</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">==</span><span class="n">participant</span><span class="p">][</span><span class="n">condition</span><span class="p">]</span><span class="o">-</span>\
+</span><span class='line'>            <span class="n">ParticipantsMeans</span><span class="p">[</span><span class="n">counter</span><span class="p">]</span><span class="o">+</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ParticipantsMeans</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">for</span> <span class="n">counter</span><span class="p">,</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ConfMeans</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">STEs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)))</span>
+</span><span class='line'>        <span class="n">CIs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">STEs</span><span class="p">[</span><span class="n">counter</span><span class="p">]</span><span class="o">*</span><span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="mf">0.025</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ConfMeans</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">CIs</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">SimpleComparisonCI</span><span class="p">(</span><span class="n">table</span><span class="p">):</span> <span class="c">#confidence interval for pairwise comparisons - masson &amp;amp; loftus, Baguley (2012)</span>
+</span><span class='line'>    <span class="kn">import</span> <span class="nn">scipy.stats</span><span class="o">,</span> <span class="nn">math</span>
+</span><span class='line'>    <span class="n">ttest</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_rel</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span class='line'>    <span class="n">MeanDiff_byT</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">table</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">-</span><span class="n">table</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="o">/</span><span class="n">ttest</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span class='line'>    <span class="n">CI</span> <span class="o">=</span> <span class="n">MeanDiff_byT</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="mf">0.025</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.05</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">CI</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <h4 id="experiment-1">Experiment 1</h4>
 
 <p>Next, load Experiment 1 data</p>
 
-<p>{% codeblock lang:python %}
-filename = ‘Exp1.csv’ #looking at Exp1 data first.</p>
-
-<p>if sys.platform == ‘linux2’: #is this my linux laptop
-    path = ‘/home/dan-laptop/Documents/Databrary/Wyble_PsychSci’
-elif sys.platform == ‘darwin’: #is this my mac work comp  <br />
-    path = ‘/Users/danvatterott/Dropbox Encore/Dropbox/Databrary/Wyble_PsychSci’</p>
-
-<p>os.chdir(path)</p>
-
-<p>df = pd.read_csv(filename)</p>
-
-<p>df.columns = [‘Sub#’, ‘Block’, ‘Trial#’, ‘TarCol’, ‘Tar_Iden’,’Tar_Loc’, ‘Col_Resp’, ‘Iden_Resp’, ‘Loc_Resp’,
-             ‘Col_Acc’, ‘Iden_Acc’, ‘Loc_Acc’] #naming the columns of the data file.
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">filename</span> <span class="o">=</span> <span class="err">‘</span><span class="n">Exp1</span><span class="o">.</span><span class="n">csv</span><span class="err">’</span> <span class="c">#looking at Exp1 data first.&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="err">‘</span><span class="n">linux2</span><span class="err">’</span><span class="p">:</span> <span class="c">#is this my linux laptop</span>
+</span><span class='line'>    <span class="n">path</span> <span class="o">=</span> <span class="err">‘</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">dan</span><span class="o">-</span><span class="n">laptop</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">Databrary</span><span class="o">/</span><span class="n">Wyble_PsychSci</span><span class="err">’</span>
+</span><span class='line'><span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="err">‘</span><span class="n">darwin</span><span class="err">’</span><span class="p">:</span> <span class="c">#is this my mac work comp  &lt;br /&gt;</span>
+</span><span class='line'>    <span class="n">path</span> <span class="o">=</span> <span class="err">‘</span><span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">danvatterott</span><span class="o">/</span><span class="n">Dropbox</span> <span class="n">Encore</span><span class="o">/</span><span class="n">Dropbox</span><span class="o">/</span><span class="n">Databrary</span><span class="o">/</span><span class="n">Wyble_PsychSci</span><span class="err">’</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Sub</span><span class="c">#’, ‘Block’, ‘Trial#’, ‘TarCol’, ‘Tar_Iden’,’Tar_Loc’, ‘Col_Resp’, ‘Iden_Resp’, ‘Loc_Resp’,</span>
+</span><span class='line'>             <span class="err">‘</span><span class="n">Col_Acc</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Iden_Acc</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Loc_Acc</span><span class="err">’</span><span class="p">]</span> <span class="c">#naming the columns of the data file.</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>The data is loaded, lets just take a quick look at the data after loading it in.</p>
 
-<p>{% codeblock lang:python %}
-df[0:5]
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <table>
   <thead>
@@ -301,10 +431,11 @@ df[0:5]
 
 <p>TrialType: 0=Presurprise; 1=Surprise Trial; 2=Postsurprise trials.</p>
 
-<p>{% codeblock lang:python %}
-df[‘TrialType’] = np.where(df[‘Trial#’]&lt;156, 0, np.where(df[‘Trial#’]==156, 1, 2))
-df[‘TrialType2’] = np.where(df[‘Trial#’]&lt;156, 0, np.where(df[‘Trial#’]==156, 1, np.where(df[‘Trial#’]==157, 2, -1)))
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Trial</span><span class="c">#’]&amp;lt;156, 0, np.where(df[‘Trial#’]==156, 1, 2))</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType2</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Trial</span><span class="c">#’]&amp;lt;156, 0, np.where(df[‘Trial#’]==156, 1, np.where(df[‘Trial#’]==157, 2, -1)))</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <h4 id="experiment-1-replicating-chen--wybles-2015-analyses">Experiment 1: Replicating Chen &amp; Wyble’s (2015) analyses</h4>
 
@@ -312,19 +443,29 @@ df[‘TrialType2’] = np.where(df[‘Trial#’]&lt;156, 0, np.where(df[‘Trial
 
 <p>I might have replaced participant 23 since his/her accuracy is easily 2.5 standard deviations below the mean accuracy (I print this value below)…seems like participant 23 was doing something different in this task.</p>
 
-<p>{% codeblock lang:python %}
-tableAcc = df.pivot_table(values=’Loc_Acc’, index=’Sub#’, aggfunc=np.mean)
-#print tableAcc
-print ‘mean accuracy’
-print np.round(np.mean(tableAcc),2)
-print ‘standard deviation of accuracies’
-print np.round(np.std(tableAcc),2)</p>
-
-<p>print ‘2.5 standard deviations below mean accuracy’
-print np.round(np.mean(tableAcc)-2.5*np.std(tableAcc),2)</p>
-
-<p>tableAcc.plot(ylim = [0, 1], kind=’bar’);
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">tableAcc</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="err">’</span><span class="n">Loc_Acc</span><span class="err">’</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="err">’</span><span class="n">Sub</span><span class="c">#’, aggfunc=np.mean)</span>
+</span><span class='line'><span class="c">#print tableAcc</span>
+</span><span class='line'><span class="k">print</span> <span class="err">‘</span><span class="n">mean</span> <span class="n">accuracy</span><span class="err">’</span>
+</span><span class='line'><span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableAcc</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="err">‘</span><span class="n">standard</span> <span class="n">deviation</span> <span class="n">of</span> <span class="n">accuracies</span><span class="err">’</span>
+</span><span class='line'><span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">tableAcc</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">print</span> <span class="err">‘</span><span class="mf">2.5</span> <span class="n">standard</span> <span class="n">deviations</span> <span class="n">below</span> <span class="n">mean</span> <span class="n">accuracy</span><span class="err">’</span>
+</span><span class='line'><span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tableAcc</span><span class="p">)</span><span class="o">-</span><span class="mf">2.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">tableAcc</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">tableAcc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ylim</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="err">’</span><span class="n">bar</span><span class="err">’</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>mean accuracy
 0.89
@@ -334,17 +475,19 @@ standard deviation of accuracies
 0.71
 </code></pre>
 
-<p><img src="{{ root_url }}/images/Wyble1.png" /></p>
+<p><img src="/images/Wyble1.png" /></p>
 
 <p>Lets look at participants’ performance when asked to identify the target’s location. I will plot performance as mean accuracy in the presurprise,surprise, and postsurprose trials.</p>
 
 <p>I will also run some quick statistical tests. For these tests, I take the arcsine of the square root of the accuracies (Rao, 1960) to increase the accuracies’ normality (I use adj. to indiciate that the tested data is transformed). I test whether this worked with a Shapiro-Wilk test of normality. If the p-value of the Shapiro-Wilk test is greater than 0.1, I run a t test to see if the accuracy in the two conditions is significantly different. If the p-value of the Shapiro-Wilk test is less than or equal to 0.1, then I run a Wilcoxon signed rank test since this test does not care about normality.</p>
 
-<p>{% codeblock lang:python %}
-Loc_Acc = df.pivot_table(values=’Loc_Acc’, index=’Sub#’, columns=’TrialType’, aggfunc=np.mean)
-CIs = np.array(OneWayConfInterval(Loc_Acc))
-Analysis_and_Plot(Loc_Acc, CIs)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">Loc_Acc</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="err">’</span><span class="n">Loc_Acc</span><span class="err">’</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="err">’</span><span class="n">Sub</span><span class="c">#’, columns=’TrialType’, aggfunc=np.mean)</span>
+</span><span class='line'><span class="n">CIs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">OneWayConfInterval</span><span class="p">(</span><span class="n">Loc_Acc</span><span class="p">))</span>
+</span><span class='line'><span class="n">Analysis_and_Plot</span><span class="p">(</span><span class="n">Loc_Acc</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>---------------------------------
 Mean Presurprise: 0.89
@@ -365,7 +508,7 @@ Presurprise vs Postsurprise
 	 T-test adj. Test value: 0.92 P-value: 0.3695
 </code></pre>
 
-<p><img src="{{ root_url }}/images/Wyble2.png" /></p>
+<p><img src="/images/Wyble2.png" /></p>
 
 <p>The y-axis represents percent correct. All graphs in this post will have percent correct on the y-axis.</p>
 
@@ -375,12 +518,15 @@ Presurprise vs Postsurprise
 
 <p>Below I plot the percent of participants that correctly identified the target’s color in the surprise and post-surprise trials</p>
 
-<p>{% codeblock lang:python %}
-Trial_Trimmer = df[‘TrialType2’] &gt; 0
-Col_Acc = df[Trial_Trimmer].pivot_table(values=’Col_Acc’, index=’Sub#’, columns=’TrialType2’, aggfunc=np.mean)
-CIs = SimpleComparisonCI(Col_Acc)
-Analysis_and_Plot_2(Col_Acc, CIs)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType2</span><span class="err">’</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">0</span>
+</span><span class='line'><span class="n">Col_Acc</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="err">’</span><span class="n">Col_Acc</span><span class="err">’</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="err">’</span><span class="n">Sub</span><span class="c">#’, columns=’TrialType2’, aggfunc=np.mean)</span>
+</span><span class='line'><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">Col_Acc</span><span class="p">)</span>
+</span><span class='line'><span class="n">Analysis_and_Plot_2</span><span class="p">(</span><span class="n">Col_Acc</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>---------------------------------
 Mean Surprise: 0.3
@@ -393,18 +539,21 @@ Postsurprise vs Surprise
 	 Chi-Square Comparison: 6.4 P-value: 0.0114
 </code></pre>
 
-<p><img src="{{ root_url }}/images/Wyble3.png" /></p>
+<p><img src="/images/Wyble3.png" /></p>
 
 <p>We perfectly replicate Chen and Wyble; participants respond more accurarely in the post-surprise trial than in the surprise trial.</p>
 
 <p>The next cell examines participants’ ability to report the target’s identity on the surprise trial and the trial immediately following the surprise trial. Remember, the participants locate the target based on whether its a letter or number, so they know the broad category of the target. Nonetheless, they cannot report the target’s identity on the surprise trial</p>
 
-<p>{% codeblock lang:python %}
-Trial_Trimmer = df[‘TrialType2’] &gt; 0
-Iden_Acc = df[Trial_Trimmer].pivot_table(values=’Iden_Acc’, index=’Sub#’, columns=’TrialType2’, aggfunc=np.mean)
-CIs = SimpleComparisonCI(Iden_Acc)
-Analysis_and_Plot_2(Iden_Acc, CIs)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType2</span><span class="err">’</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">0</span>
+</span><span class='line'><span class="n">Iden_Acc</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="err">’</span><span class="n">Iden_Acc</span><span class="err">’</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="err">’</span><span class="n">Sub</span><span class="c">#’, columns=’TrialType2’, aggfunc=np.mean)</span>
+</span><span class='line'><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">Iden_Acc</span><span class="p">)</span>
+</span><span class='line'><span class="n">Analysis_and_Plot_2</span><span class="p">(</span><span class="n">Iden_Acc</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>---------------------------------
 Mean Surprise: 0.25
@@ -417,7 +566,7 @@ Postsurprise vs Surprise
 	 Chi-Square Comparison: 10.0 P-value: 0.0016
 </code></pre>
 
-<p><img src="{{ root_url }}/images/Wyble4.png" /></p>
+<p><img src="/images/Wyble4.png" /></p>
 
 <h4 id="experiment-1---intertrial-analyses">Experiment 1 - Intertrial analyses</h4>
 
@@ -427,23 +576,31 @@ Postsurprise vs Surprise
 
 <p>First I want to make some variables representing whether the target’s color and identity repeat across trials.</p>
 
-<p>{% codeblock lang:python %}
-df[‘Prev_TarCol’] = df[‘TarCol’].shift(periods=1)
-df[‘Prev_TarCol_match’] = np.where(df[‘Prev_TarCol’]==df[‘TarCol’], 1, 2)
-df[‘Prev_Iden’] = df[‘Tar_Iden’].shift(periods=1)
-df[‘Prev_Iden_match’] = np.where(df[‘Prev_Iden’]==df[‘Tar_Iden’], 1, 2)
-df[‘Prev_Col+Iden_match’] = np.where((df[‘Prev_Iden_match’]==1) &amp; (df[‘Prev_TarCol_match’]==1), 1, 2)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_TarCol</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TarCol</span><span class="err">’</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_TarCol_match</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_TarCol</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TarCol</span><span class="err">’</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Iden</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Tar_Iden</span><span class="err">’</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Iden_match</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Iden</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Tar_Iden</span><span class="err">’</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Col</span><span class="o">+</span><span class="n">Iden_match</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Iden_match</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_TarCol_match</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Lets see what happens when the target’s color and identity repeat.</p>
 
-<p>{% codeblock lang:python %}
-Trial_Trimmer = df[‘TrialType’] == 0
-ColandIden_Acc1 = df[Trial_Trimmer].pivot_table(values=’Loc_Acc’, index=’Sub#’, columns=’Prev_Col+Iden_match’,
-                                                aggfunc=np.mean)
-CIs = SimpleComparisonCI(ColandIden_Acc1)
-Analysis_and_Plot_3(ColandIden_Acc1, CIs)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType</span><span class="err">’</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+</span><span class='line'><span class="n">ColandIden_Acc1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="err">’</span><span class="n">Loc_Acc</span><span class="err">’</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="err">’</span><span class="n">Sub</span><span class="c">#’, columns=’Prev_Col+Iden_match’,</span>
+</span><span class='line'>                                                <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+</span><span class='line'><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">ColandIden_Acc1</span><span class="p">)</span>
+</span><span class='line'><span class="n">Analysis_and_Plot_3</span><span class="p">(</span><span class="n">ColandIden_Acc1</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>---------------------------------
 Mean match: 0.918
@@ -455,7 +612,7 @@ Match vs Mismatch
 	 Wilcoxon. Test value: 51.0 P-value: 0.04
 </code></pre>
 
-<p><img src="{{ root_url }}/images/Wyble5.png" /></p>
+<p><img src="/images/Wyble5.png" /></p>
 
 <p>Looks like a 2.5% increase in accuracy. Now, this wasn’t really a planned comparison, so please take this result with a grain of salt.</p>
 
@@ -463,17 +620,21 @@ Match vs Mismatch
 
 <p>We have to quickly create a new variable coding target location repetitions</p>
 
-<p>{% codeblock lang:python %}
-df[‘Prev_Loc’] = df[‘Tar_Loc’].shift(periods=1)
-df[‘Prev_Loc_match’] = np.where(df[‘Prev_Loc’]==df[‘Tar_Loc’], 1, 2)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Loc</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Tar_Loc</span><span class="err">’</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Loc_match</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Loc</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Tar_Loc</span><span class="err">’</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>{% codeblock lang:python %}
-Trial_Trimmer = df[‘TrialType’] == 0
-Loc_Acc1 = df[Trial_Trimmer].pivot_table(values=’Loc_Acc’, index=’Sub#’, columns=’Prev_Loc_match’, aggfunc=np.mean)
-CIs = SimpleComparisonCI(Loc_Acc1)
-Analysis_and_Plot_3(Loc_Acc1, CIs)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType</span><span class="err">’</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+</span><span class='line'><span class="n">Loc_Acc1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="err">’</span><span class="n">Loc_Acc</span><span class="err">’</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="err">’</span><span class="n">Sub</span><span class="c">#’, columns=’Prev_Loc_match’, aggfunc=np.mean)</span>
+</span><span class='line'><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">Loc_Acc1</span><span class="p">)</span>
+</span><span class='line'><span class="n">Analysis_and_Plot_3</span><span class="p">(</span><span class="n">Loc_Acc1</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>---------------------------------
 Mean match: 0.9101
@@ -485,7 +646,7 @@ Match vs Mismatch
 	 T-test adj. Test value: 2.62 P-value: 0.0168
 </code></pre>
 
-<p><img src="{{ root_url }}/images/Wyble6.png" /></p>
+<p><img src="/images/Wyble6.png" /></p>
 
 <p>Target location repetitions lead to a 2% increase in performance. Again, this result is robust.</p>
 
@@ -499,30 +660,47 @@ Match vs Mismatch
 
 <p>If participants response more accurately when the target color and identity repeat in Experiment 1b, then we can be a little more confident that participants are unconsciously aware of the target’s color and identity.</p>
 
-<p>{% codeblock lang:python %}
-filename = ‘Exp1b.csv’
-df = pd.read_csv(filename)
-df.columns = [‘Sub#’, ‘Block’, ‘Trial#’, ‘TarCol’, ‘Tar_Iden’,’Tar_Loc’, ‘Col_Resp’, ‘Iden_Resp’, ‘Loc_Resp’,
-             ‘Col_Acc’, ‘Iden_Acc’, ‘Loc_Acc’] #naming the columns of the data file.</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">filename</span> <span class="o">=</span> <span class="err">‘</span><span class="n">Exp1b</span><span class="o">.</span><span class="n">csv</span><span class="err">’</span>
+</span><span class='line'><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="err">‘</span><span class="n">Sub</span><span class="c">#’, ‘Block’, ‘Trial#’, ‘TarCol’, ‘Tar_Iden’,’Tar_Loc’, ‘Col_Resp’, ‘Iden_Resp’, ‘Loc_Resp’,</span>
+</span><span class='line'>             <span class="err">‘</span><span class="n">Col_Acc</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Iden_Acc</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">Loc_Acc</span><span class="err">’</span><span class="p">]</span> <span class="c">#naming the columns of the data file.&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Trial</span><span class="c">#’]&amp;lt;156, 0, np.where(df[‘Trial#’]==156, 1, 2))</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType2</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Trial</span><span class="c">#’]&amp;lt;156, 0, np.where(df[‘Trial#’]==156, 1, np.where(df[‘Trial#’]==157, 2, -1)))&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_TarCol</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TarCol</span><span class="err">’</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_TarCol_match</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_TarCol</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TarCol</span><span class="err">’</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Iden</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Tar_Iden</span><span class="err">’</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Iden_match</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Iden</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Tar_Iden</span><span class="err">’</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Col</span><span class="o">+</span><span class="n">Iden_match</span><span class="err">’</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_Iden_match</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">Prev_TarCol_match</span><span class="err">’</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">Trial_Trimmer</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="err">‘</span><span class="n">TrialType</span><span class="err">’</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="c">#only interested in pre-surprise trials</span>
+</span><span class='line'><span class="n">ColandIden_Acc</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">Trial_Trimmer</span><span class="p">]</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="err">’</span><span class="n">Loc_Acc</span><span class="err">’</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="err">’</span><span class="n">Sub</span><span class="c">#’,</span>
+</span><span class='line'>                                               <span class="n">columns</span><span class="o">=</span><span class="err">’</span><span class="n">Prev_Col</span><span class="o">+</span><span class="n">Iden_match</span><span class="err">’</span><span class="p">,</span> <span class="n">aggfunc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>df[‘TrialType’] = np.where(df[‘Trial#’]&lt;156, 0, np.where(df[‘Trial#’]==156, 1, 2))
-df[‘TrialType2’] = np.where(df[‘Trial#’]&lt;156, 0, np.where(df[‘Trial#’]==156, 1, np.where(df[‘Trial#’]==157, 2, -1)))</p>
-
-<p>df[‘Prev_TarCol’] = df[‘TarCol’].shift(periods=1)
-df[‘Prev_TarCol_match’] = np.where(df[‘Prev_TarCol’]==df[‘TarCol’], 1, 2)
-df[‘Prev_Iden’] = df[‘Tar_Iden’].shift(periods=1)
-df[‘Prev_Iden_match’] = np.where(df[‘Prev_Iden’]==df[‘Tar_Iden’], 1, 2)
-df[‘Prev_Col+Iden_match’] = np.where((df[‘Prev_Iden_match’]==1) &amp; (df[‘Prev_TarCol_match’]==1), 1, 2)</p>
-
-<p>Trial_Trimmer = df[‘TrialType’] == 0 #only interested in pre-surprise trials
-ColandIden_Acc = df[Trial_Trimmer].pivot_table(values=’Loc_Acc’, index=’Sub#’,
-                                               columns=’Prev_Col+Iden_match’, aggfunc=np.mean)
-{% endcodeblock %}</p>
-
-<p>{% codeblock lang:python %}
-CIs = SimpleComparisonCI(ColandIden_Acc)
-Analysis_and_Plot_3(ColandIden_Acc, CIs)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">CIs</span> <span class="o">=</span> <span class="n">SimpleComparisonCI</span><span class="p">(</span><span class="n">ColandIden_Acc</span><span class="p">)</span>
+</span><span class='line'><span class="n">Analysis_and_Plot_3</span><span class="p">(</span><span class="n">ColandIden_Acc</span><span class="p">,</span> <span class="n">CIs</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>---------------------------------
 Mean match: 0.9716
@@ -534,7 +712,7 @@ Match vs Mismatch
 	 T-test adj. Test value: 2.81 P-value: 0.0112
 </code></pre>
 
-<p><img src="{{ root_url }}/images/Wyble7.png" /></p>
+<p><img src="/images/Wyble7.png" /></p>
 
 <p>Wow. Only a 1% change in accuracy, so again not big. Nonetheless, this result is signficant. So, Some evidence that participants perform a little better when the targets’ color and identity repeat.</p>
 

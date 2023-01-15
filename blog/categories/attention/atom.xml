@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Attention | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/attention/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2022-02-25T14:33:11-06:00</updated>
+  <updated>2023-01-14T21:39:23-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -24,7 +24,7 @@
 
 <p>Alexnet’s domination was not only exciting for the machine learning community. It was also exciting for the visual neuroscience community whose descriptions of the visual system closely matched alexnet (e.g., <a href="http://maxlab.neuro.georgetown.edu/hmax">HMAX</a>). <a href="http://mcgovern.mit.edu/principal-investigators/james-dicarlo">Jim DiCarlo</a> gave an awesome talk at the summer course describing his research comparing the output of neurons in the visual system and the output of “neurons” in alexnet (you can find the article <a href="https://physics.ucsd.edu/neurophysics/courses/physics_171/DeCarlo_reprint.pdf">here</a>).</p>
 
-<p><img src="{{ root_url }}/images/BMM_CNN/visual_system_models.png" /></p>
+<p><img src="/images/BMM_CNN/visual_system_models.png" /></p>
 
 <p>I find the similarities between the visual system and convolutional neural networks exciting, but check out the depictions of alexnet and the visual system above. Alexnet is depicted in the upper image. The visual system is depicted in the lower image. Comparing the two images is not fair, but the visual system is obviously vastly more complex than alexnet.</p>
 
@@ -38,7 +38,7 @@
 
 <p>I chose MNIST because its an easy problem, which allows me to use a small network. A small network is both easy to train and easy to understand, which is good for an exploratory project like this one.</p>
 
-<p><img src="{{ root_url }}/images/BMM_CNN/att_model2.png" /></p>
+<p><img src="/images/BMM_CNN/att_model2.png" /></p>
 
 <p>Above, I depict my model. This model has two <a href="http://cs231n.github.io/convolutional-networks/">convolutional layers</a>. Following the convolutional layers is a feature averaging layer which borrows methods from a <a href="http://cnnlocalization.csail.mit.edu/">recent paper out of the Torralba lab</a> and computes the average activity of units covering each location. The output of this feature averaging layer is then passed along to a fully connected layer. The fully connected layer “guesses” what the most likely digit is. My goal when I first created this network was to use this “guess” to guide where the model focused processing (i.e., attention), but I found guided models are irratic during training.</p>
 
@@ -50,13 +50,13 @@
 
 <p>I depict the results of my attentional and comparison models below. On the X-axis is the test phase (10k trials) following each training epoch (60k trials). On the Y-axis is percent accuracy during the test phase. I did 3 training runs with both sets of models. All models gave fairly similar results, which led to small error bars (these depict standard error). The results are … dissapointing. As you can see both the model with attention and the comparison model perform similarly. There might be an initial impact of attention, but this impact is slight.</p>
 
-<p><img src="{{ root_url }}/images/BMM_CNN/model_performance_nonoise.png" /></p>
+<p><img src="/images/BMM_CNN/model_performance_nonoise.png" /></p>
 
 <p>This result was a little dissapointing (since I’m an attention researcher and consider attention an important part of cognition), but it might not be so surprising given the task. If I gave you the task of naming digits, this task would be virtually effortless; probably so effortless that you would not have to pay very much attention to the task. You could probably talk on the phone or text while doing this task. Basically, I might have failed to find an effect of attention because this task is so easy that it does not require attention.</p>
 
 <p>I decided to try my network when the task was a little more difficult. To make the task more difficult, I added random noise to each image (thank you to Nancy Kanwisher for the suggestion). This trick of adding noise to images is one that’s frequently done in psychophysical attention expeirments, so it would be fitting if it worked here.</p>
 
-<p><img src="{{ root_url }}/images/BMM_CNN/model_performance_noise.png" /></p>
+<p><img src="/images/BMM_CNN/model_performance_noise.png" /></p>
 
 <p>The figure above depicts model performance on noisy images. The models are the as before, but this time the model with attention is far superior to the comparison model. Good news for attention researchers! This work suggests that visual attentional mechanisms similar to those in the brain may be beneficial in convolutional neural networks, and this effect is particularly strong with the images are noisy.</p>
 

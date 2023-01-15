@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Open Source | Dan Vatterott]]></title>
   <link href="https://danvatterott.com/blog/categories/open-source/atom.xml" rel="self"/>
   <link href="https://danvatterott.com/"/>
-  <updated>2022-02-25T14:33:11-06:00</updated>
+  <updated>2023-01-14T21:39:23-06:00</updated>
   <id>https://danvatterott.com/</id>
   <author>
     <name><![CDATA[Dan Vatterott]]></name>
@@ -26,27 +26,39 @@
 
 <p>This data enables me to use data from multiple years for each player, giving me more data when estimating how likely a particular player is to hit into an error.</p>
 
-<p>{% codeblock lang:bash %}
-%%bash</p>
-
-<p>for i in {1970..2018}; do
-    echo “YEAR: $i”
-    ../scripts/get_data.sh ${i};
-done</p>
-
-<p>find processed_data/* -type f -name ‘errors_bip.out’ | \
-    xargs awk ‘{print $0”, “FILENAME}’ | \
-    sed s1processed_data/11g1 | \
-    sed s1/errors_bip.out11g1 &gt; \
-        processed_data/all_errors_bip.out
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>%%bash&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;for i in <span class="o">{</span>1970..2018<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
+</span><span class='line'>    <span class="nb">echo</span> “YEAR: <span class="nv">$i</span>”
+</span><span class='line'>    ../scripts/get_data.sh <span class="k">${</span><span class="nv">i</span><span class="k">}</span><span class="p">;</span>
+</span><span class='line'><span class="k">done</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;find processed_data/* -type f -name ‘errors_bip.out’ <span class="p">|</span> <span class="se">\</span>
+</span><span class='line'>    xargs awk ‘<span class="o">{</span>print <span class="nv">$0</span>”, “FILENAME<span class="o">}</span>’ <span class="p">|</span> <span class="se">\</span>
+</span><span class='line'>    sed s1processed_data/11g1 <span class="p">|</span> <span class="se">\</span>
+</span><span class='line'>    sed s1/errors_bip.out11g1 <span class="p">&amp;</span>gt<span class="p">;</span> <span class="se">\</span>
+</span><span class='line'>        processed_data/all_errors_bip.out
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>The data has 5 columns: playerid, playername, errors hit into, balls hit into play (BIP), and year. The file does not have a header.</p>
 
-<p>{% codeblock lang:bash %}
-%%bash
-head ../processed_data/all_errors_bip.out
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>%%bash
+</span><span class='line'>head ../processed_data/all_errors_bip.out
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>aaroh101, Hank Aaron, 8, 453, 1970
 aarot101, Tommie Aaron, 0, 53, 1970
@@ -62,17 +74,21 @@ alleg101, Gene Alley, 6, 356, 1970
 
 <p>I can load the data into pandas using the following command.</p>
 
-<p>{% codeblock lang:python %}
-import pandas as pd</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">DF</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="err">‘</span><span class="o">../</span><span class="n">processed_data</span><span class="o">/</span><span class="n">all_errors_bip</span><span class="o">.</span><span class="n">out</span><span class="err">’</span><span class="p">,</span>
+</span><span class='line'>                 <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+</span><span class='line'>                 <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="err">‘</span><span class="n">playerid</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">player_name</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">errors</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">bip</span><span class="err">’</span><span class="p">,</span> <span class="err">‘</span><span class="n">year</span><span class="err">’</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>DF = pd.read_csv(‘../processed_data/all_errors_bip.out’,
-                 header=None,
-                 names=[‘playerid’, ‘player_name’, ‘errors’, ‘bip’, ‘year’])
-{% endcodeblock %}</p>
-
-<p>{% codeblock lang:python %}
-DF.head()
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">DF</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <div>
 <style scoped="">
@@ -144,9 +160,9 @@ DF.head()
 </table>
 </div>
 
-<p>{% codeblock lang:python %}
-len(DF)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nb">len</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>38870
 </code></pre>
@@ -155,42 +171,53 @@ len(DF)
 
 <p>While exploring the data, I noticed that players hit into errors less frequently now than they used to. Let’s see how the probability that a player hits into an error has changed across the years.</p>
 
-<p>{% codeblock lang:python %}
-%matplotlib inline</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">YEAR_DF</span> <span class="o">=</span> <span class="p">(</span><span class="n">DF</span>
+</span><span class='line'>           <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="err">“</span><span class="n">year</span><span class="err">”</span><span class="p">)</span>
+</span><span class='line'>           <span class="o">.</span><span class="n">agg</span><span class="p">({</span>
+</span><span class='line'>               <span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">,</span>
+</span><span class='line'>               <span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span>
+</span><span class='line'>           <span class="p">})</span>
+</span><span class='line'>           <span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">prop_error</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">])</span>
+</span><span class='line'>          <span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">YEAR_DF</span><span class="p">[</span><span class="err">“</span><span class="n">prop_error</span><span class="err">”</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="err">”</span><span class="n">o</span><span class="o">-</span><span class="err">“</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>YEAR_DF = (DF
-           .groupby(“year”)
-           .agg({
-               “errors”: “sum”,
-               “bip”: “sum”
-           })
-           .assign(prop_error=lambda x: x[“errors”] / x[“bip”])
-          )</p>
-
-<p>YEAR_DF[“prop_error”].plot(style=”o-“);
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/mlb/error_year.png" /></p>
+<p><img src="/images/mlb/error_year.png" /></p>
 
 <p>Interestingly, the proportion of errors per BIP <a href="https://www.pinstripealley.com/2013/8/16/4623050/mlb-errors-trends-statistics">has been dropping over time</a>. I am not sure if this is a conscious effort by MLB score keepers, a change in how hitters hit, or improved fielding (but I suspect it’s the score keepers). It looks like this drop in errors per BIP leveled off around 2015. Zooming in.</p>
 
-<p>{% codeblock lang:python %}
-YEAR_DF[YEAR_DF.index &gt; 2010][“prop_error”].plot(style=”o-“);
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">YEAR_DF</span><span class="p">[</span><span class="n">YEAR_DF</span><span class="o">.</span><span class="n">index</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">2010</span><span class="p">][</span><span class="err">“</span><span class="n">prop_error</span><span class="err">”</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="err">”</span><span class="n">o</span><span class="o">-</span><span class="err">“</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p><img src="{{ root_url }}/images/mlb/zoom_error_year.png" /></p>
+<p><img src="/images/mlb/zoom_error_year.png" /></p>
 
 <p>I explore this statistically in <a href="https://github.com/dvatterott/mlb_errors/blob/master/notebook/PYMC%20-%20Hierarchical%20Beta%20Binomial%20YEAR.ipynb">a jupyter notebook on my github</a>.</p>
 
 <p>Because I don’t want year to confound the analysis, I remove all data before 2015.</p>
 
-<p>{% codeblock lang:python %}
-DF = DF[DF[“year”] &gt;= 2015]
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">DF</span> <span class="o">=</span> <span class="n">DF</span><span class="p">[</span><span class="n">DF</span><span class="p">[</span><span class="err">“</span><span class="n">year</span><span class="err">”</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">=</span> <span class="mi">2015</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>{% codeblock lang:python %}
-len(DF)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nb">len</span><span class="p">(</span><span class="n">DF</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>3591
 </code></pre>
@@ -199,13 +226,13 @@ len(DF)
 
 <p>Next I combine players’ data across years.</p>
 
-<p>{% codeblock lang:python %}
-GROUPED_DF = DF.groupby([“playerid”, “player_name”]).agg({“errors”: “sum”, “bip”: “sum”}).reset_index()
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span> <span class="o">=</span> <span class="n">DF</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="err">“</span><span class="n">playerid</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">player_name</span><span class="err">”</span><span class="p">])</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">})</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>{% codeblock lang:python %}
-GROUPED_DF.describe()
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <div>
 <style scoped="">
@@ -276,11 +303,13 @@ GROUPED_DF.describe()
 
 <p>I want an idea for how likely players are to hit into errors.</p>
 
-<p>{% codeblock lang:python %}
-TOTALS = GROUPED_DF.agg({“errors”: “sum”, “bip”: “sum”})
-ERROR_RATE = TOTALS[“errors”] / TOTALS[“bip”]
-ERROR_RATE
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">TOTALS</span> <span class="o">=</span> <span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">,</span> <span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">:</span> <span class="err">“</span><span class="nb">sum</span><span class="err">”</span><span class="p">})</span>
+</span><span class='line'><span class="n">ERROR_RATE</span> <span class="o">=</span> <span class="n">TOTALS</span><span class="p">[</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">]</span> <span class="o">/</span> <span class="n">TOTALS</span><span class="p">[</span><span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">]</span>
+</span><span class='line'><span class="n">ERROR_RATE</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>0.011801960251664112
 </code></pre>
@@ -289,26 +318,26 @@ ERROR_RATE
 
 <p>I’d like the majority of players to have at least 5 errors. I can estimate how many BIP that would require.</p>
 
-<p>{% codeblock lang:python %}
-5. /ERROR_RATE
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="mf">5.</span> <span class="o">/</span><span class="n">ERROR_RATE</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>423.65843413978496
 </code></pre>
 
 <p>Looks like I should require at least 425 BIP for each player. I round this to 500.</p>
 
-<p>{% codeblock lang:python %}
-GROUPED_DF = GROUPED_DF[GROUPED_DF[“bip”] &gt; 500]
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span> <span class="o">=</span> <span class="n">GROUPED_DF</span><span class="p">[</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">500</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>{% codeblock lang:python %}
-GROUPED_DF = GROUPED_DF.reset_index(drop=True)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span> <span class="o">=</span> <span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>{% codeblock lang:python %}
-GROUPED_DF.head()
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <div>
 <style scoped="">
@@ -374,9 +403,9 @@ GROUPED_DF.head()
 </table>
 </div>
 
-<p>{% codeblock lang:python %}
-GROUPED_DF.describe()
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <div>
 <style scoped="">
@@ -449,14 +478,17 @@ GROUPED_DF.describe()
 
 <p>Below, I plot how the likelihood of hitting into errors is distributed.</p>
 
-<p>{% codeblock lang:python %}
-%matplotlib inline</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">prop_error</span><span class="err">”</span><span class="p">]</span> <span class="o">=</span> <span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">errors</span><span class="err">”</span><span class="p">]</span> <span class="o">/</span> <span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">bip</span><span class="err">”</span><span class="p">]</span>
+</span><span class='line'><span class="n">GROUPED_DF</span><span class="p">[</span><span class="err">“</span><span class="n">prop_error</span><span class="err">”</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>GROUPED_DF[“prop_error”] = GROUPED_DF[“errors”] / GROUPED_DF[“bip”]
-GROUPED_DF[“prop_error”].hist();
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/mlb/error_dist.png" /></p>
+<p><img src="/images/mlb/error_dist.png" /></p>
 
 <p>The question is whether someone who has hit into errors in 2% of their BIP is more likely to hit into an error than someone who has hit into errors in 0.5% of their BIP (or is this all just random variation).</p>
 
@@ -472,25 +504,43 @@ GROUPED_DF[“prop_error”].hist();
 
 <p>I largely based my analysis on <a href="https://docs.pymc.io/notebooks/hierarchical_partial_pooling.html">this</a> tutorial. Reference the tutorial for an explanation of how I choose my priors. I ended up using a greater lambda value (because the model sampled better) in the Exponential prior, and while this did lead to more extreme estimates of error likelihood, it didn’t change the basic story.</p>
 
-<p>{% codeblock lang:python %}
-import pymc3 as pm
-import numpy as np
-import theano.tensor as tt</p>
-
-<p>with pm.Model() as model:</p>
-
-<pre><code>phi = pm.Uniform('phi', lower=0.0, upper=1.0)
-
-kappa_log = pm.Exponential('kappa_log', lam=25.)
-kappa = pm.Deterministic('kappa', tt.exp(kappa_log))
-
-rates = pm.Beta('rates', alpha=phi*kappa, beta=(1.0-phi)*kappa, shape=len(GROUPED_DF))
-
-trials = np.array(GROUPED_DF["bip"])
-successes = np.array(GROUPED_DF["errors"])
- 
-obs = pm.Binomial('observed_values', trials, rates, observed=successes)
-trace = pm.sample(2000, tune=1000, chains=2, cores=2, nuts_kwargs={'target_accept': .95}) {% endcodeblock %}
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">pymc3</span> <span class="kn">as</span> <span class="nn">pm</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">tt</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">with</span> <span class="n">pm</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span> <span class="k">as</span> <span class="n">model</span><span class="p">:</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">phi</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="s">&#39;phi&#39;</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">kappa_log</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s">&#39;kappa_log&#39;</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mf">25.</span><span class="p">)</span>
+</span><span class='line'><span class="n">kappa</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s">&#39;kappa&#39;</span><span class="p">,</span> <span class="n">tt</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">kappa_log</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">rates</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Beta</span><span class="p">(</span><span class="s">&#39;rates&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">phi</span><span class="o">*</span><span class="n">kappa</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">kappa</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">trials</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s">&quot;bip&quot;</span><span class="p">])</span>
+</span><span class='line'><span class="n">successes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s">&quot;errors&quot;</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">obs</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Binomial</span><span class="p">(</span><span class="s">&#39;observed_values&#39;</span><span class="p">,</span> <span class="n">trials</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="n">successes</span><span class="p">)</span>
+</span><span class='line'><span class="n">trace</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="n">tune</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">cores</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nuts_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;target_accept&#39;</span><span class="p">:</span> <span class="o">.</span><span class="mi">95</span><span class="p">})</span>
+</span></code></pre></td></tr></table></div></figure>
 
 Auto-assigning NUTS sampler...
 Initializing NUTS using jitter+adapt_diag...
@@ -501,26 +551,28 @@ Sampling 2 chains: 100%|██████████| 6000/6000 [01:47&lt;00:0
 
 <p>Check whether the model converged.</p>
 
-<p>{% codeblock lang:python %}
-max(np.max(score) for score in pm.gelman_rubin(trace).values())
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">score</span><span class="p">)</span> <span class="k">for</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">pm</span><span class="o">.</span><span class="n">gelman_rubin</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>1.0022635936332533
 </code></pre>
 
-<p>{% codeblock lang:python %}
-bfmi = pm.bfmi(trace)
-max_gr = max(np.max(gr_stats) for gr_stats in pm.gelman_rubin(trace).values())
-(pm.energyplot(trace, figsize=(6, 4)).set_title(“BFMI = {}\nGelman-Rubin = {}”.format(bfmi, max_gr)));
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">bfmi</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">bfmi</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span>
+</span><span class='line'><span class="n">max_gr</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">gr_stats</span><span class="p">)</span> <span class="k">for</span> <span class="n">gr_stats</span> <span class="ow">in</span> <span class="n">pm</span><span class="o">.</span><span class="n">gelman_rubin</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</span><span class='line'><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">energyplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="err">“</span><span class="n">BFMI</span> <span class="o">=</span> <span class="p">{}</span>\<span class="n">nGelman</span><span class="o">-</span><span class="n">Rubin</span> <span class="o">=</span> <span class="p">{}</span><span class="err">”</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bfmi</span><span class="p">,</span> <span class="n">max_gr</span><span class="p">)));</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p><img src="{{ root_url }}/images/mlb/energy.png" /></p>
+<p><img src="/images/mlb/energy.png" /></p>
 
 <p>The most challenging parameter to fit is <em>kappa</em> which modulates for the variance in the likelihood to hit into an error. I take a look at it to make sure things look as expected.</p>
 
-<p>{% codeblock lang:python %}
-pm.summary(trace, varnames=[“kappa”])
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">kappa</span><span class="err">”</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <div>
 <style scoped="">
@@ -564,58 +616,75 @@ pm.summary(trace, varnames=[“kappa”])
 </table>
 </div>
 
-<p>{% codeblock lang:python %}
-pm.traceplot(trace, varnames=[‘kappa’]);
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">‘</span><span class="n">kappa</span><span class="err">’</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p><img src="{{ root_url }}/images/mlb/kappa.png" /></p>
+<p><img src="/images/mlb/kappa.png" /></p>
 
 <p>I can also look at <em>phi</em>, the estimated global likelihood to hit into an error.</p>
 
-<p>{% codeblock lang:python %}
-pm.traceplot(trace, varnames=[‘phi’]);
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">‘</span><span class="n">phi</span><span class="err">’</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p><img src="{{ root_url }}/images/mlb/phi.png" /></p>
+<p><img src="/images/mlb/phi.png" /></p>
 
 <p>Finally, I can look at how all players vary in their likelihood to hit into an error.</p>
 
-<p>{% codeblock lang:python %}
-pm.traceplot(trace, varnames=[‘rates’]);
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p><img src="{{ root_url }}/images/mlb/rate_trace.png" /></p>
+<p><img src="/images/mlb/rate_trace.png" /></p>
 
 <p>Obviously, the above plot is a lot to look at it, so let’s order players by how likely the model believes they are to hit in an error.</p>
 
-<p>{% codeblock lang:python %}
-from matplotlib import pyplot as plt</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rate_means</span> <span class="o">=</span> <span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="n">rate_se</span> <span class="o">=</span> <span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">mean_se</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">rate_means</span><span class="p">,</span> <span class="n">rate_se</span><span class="p">)]</span>
+</span><span class='line'><span class="n">sorted_means_se</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mean_se</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span class='line'><span class="n">sorted_means</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">]</span>
+</span><span class='line'><span class="n">sorted_se</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sorted_means</span><span class="p">))</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sorted_means</span><span class="p">,</span> <span class="err">‘</span><span class="n">o</span><span class="err">’</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">for</span> <span class="n">x_val</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">se</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sorted_means</span><span class="p">,</span> <span class="n">sorted_se</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">x_val</span><span class="p">,</span> <span class="n">x_val</span><span class="p">],</span> <span class="p">[</span><span class="n">m</span><span class="o">-</span><span class="n">se</span><span class="p">,</span> <span class="n">m</span><span class="o">+</span><span class="n">se</span><span class="p">],</span> <span class="err">‘</span><span class="n">b</span><span class="o">-</span><span class="err">‘</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>rate_means = trace[‘rates’, 1000:].mean(axis=0)
-rate_se = trace[‘rates’, 1000:].std(axis=0)</p>
-
-<p>mean_se = [(x, y, i) for i, x, y in zip(GROUPED_DF.index, rate_means, rate_se)]
-sorted_means_se = sorted(mean_se, key=lambda x: x[0])
-sorted_means = [x[0] for x in sorted_means_se]
-sorted_se = [x[1] for x in sorted_means_se]</p>
-
-<p>x = np.arange(len(sorted_means))</p>
-
-<p>plt.plot(x, sorted_means, ‘o’, alpha=0.25);</p>
-
-<p>for x_val, m, se in zip(x, sorted_means, sorted_se):
-    plt.plot([x_val, x_val], [m-se, m+se], ‘b-‘, alpha=0.5)
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/mlb/players_ranked.png" /></p>
+<p><img src="/images/mlb/players_ranked.png" /></p>
 
 <p>Now, the ten players who are most likely to hit into an error.</p>
 
-<p>{% codeblock lang:python %}
-estimated_mean = pm.summary(trace, varnames=[“rates”]).iloc[[x[2] for x in sorted_means_se[-10:]]][“mean”]</p>
-
-<p>GROUPED_DF.loc[[x[2] for x in sorted_means_se[-10:]], :].assign(estimated_mean=estimated_mean.values).iloc[::-1]
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">estimated_mean</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">rates</span><span class="err">”</span><span class="p">])</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]]][</span><span class="err">“</span><span class="n">mean</span><span class="err">”</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]],</span> <span class="p">:]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">estimated_mean</span><span class="o">=</span><span class="n">estimated_mean</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <div>
 <style scoped="">
@@ -740,11 +809,13 @@ estimated_mean = pm.summary(trace, varnames=[“rates”]).iloc[[x[2] for x in s
 
 <p>And the 10 players who are least likely to hit in an error.</p>
 
-<p>{% codeblock lang:python %}
-estimated_mean = pm.summary(trace, varnames=[“rates”]).iloc[[x[2] for x in sorted_means_se[:10]]][“mean”]</p>
-
-<p>GROUPED_DF.loc[[x[2] for x in sorted_means_se[:10]], :].assign(estimated_mean=estimated_mean.values)
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">estimated_mean</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="err">“</span><span class="n">rates</span><span class="err">”</span><span class="p">])</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[:</span><span class="mi">10</span><span class="p">]]][</span><span class="err">“</span><span class="n">mean</span><span class="err">”</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[:</span><span class="mi">10</span><span class="p">]],</span> <span class="p">:]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">estimated_mean</span><span class="o">=</span><span class="n">estimated_mean</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <div>
 <style scoped="">
@@ -871,9 +942,9 @@ estimated_mean = pm.summary(trace, varnames=[“rates”]).iloc[[x[2] for x in s
 
 <p>Using the posterior distribution of estimated likelihoods to hit into an error, I can assign a probability to whether Carlos Correa is more likely to hit into an error than Daniel Murphy.</p>
 
-<p>{% codeblock lang:python %}
-np.mean(trace[‘rates’, 1000:][:, 71] &lt;= trace[‘rates’, 1000:][:, 226])
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="mi">71</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="mi">226</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <pre><code>0.0
 </code></pre>
@@ -882,24 +953,29 @@ np.mean(trace[‘rates’, 1000:][:, 71] &lt;= trace[‘rates’, 1000:][:, 226]
 
 <p>I can also plot these players’ posterior distributions.</p>
 
-<p>{% codeblock lang:python %}
-import seaborn as sns</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="mi">226</span><span class="p">],</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="n">Daniel</span> <span class="n">Murphy</span><span class="err">”</span><span class="p">);</span>
+</span><span class='line'><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="mi">71</span><span class="p">],</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="n">Carlos</span> <span class="n">Correa</span><span class="err">”</span><span class="p">);</span>
+</span><span class='line'><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="n">Overall</span><span class="err">”</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>sns.kdeplot(trace[‘rates’, 1000:][:, 226], shade=True, label=”Daniel Murphy”);
-sns.kdeplot(trace[‘rates’, 1000:][:, 71], shade=True, label=”Carlos Correa”);
-sns.kdeplot(trace[‘rates’, 1000:].flatten(), shade=True, label=”Overall”);
-{% endcodeblock %}</p>
-
-<p><img src="{{ root_url }}/images/mlb/play_comparison.png" /></p>
+<p><img src="/images/mlb/play_comparison.png" /></p>
 
 <p>Finally, I can look exclusively at how the posterior distributions of the ten most likely and 10 least likely players to hit into an error compare.</p>
 
-<p>{% codeblock lang:python %}
-sns.kdeplot(trace[‘rates’, 1000:][:, [x[2] for x in sorted_means_se[-10:]]].flatten(), shade=True, label=”10 Least Likely”);
-sns.kdeplot(trace[‘rates’, 1000:][:, [x[2] for x in sorted_means_se[:10]]].flatten(), shade=True, label=”10 Most Likely”);
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]]]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="mi">10</span> <span class="n">Least</span> <span class="n">Likely</span><span class="err">”</span><span class="p">);</span>
+</span><span class='line'><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="err">‘</span><span class="n">rates</span><span class="err">’</span><span class="p">,</span> <span class="mi">1000</span><span class="p">:][:,</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_means_se</span><span class="p">[:</span><span class="mi">10</span><span class="p">]]]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">shade</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="err">”</span><span class="mi">10</span> <span class="n">Most</span> <span class="n">Likely</span><span class="err">”</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p><img src="{{ root_url }}/images/mlb/top10.png" /></p>
+<p><img src="/images/mlb/top10.png" /></p>
 
 <p>All in all, this analysis makes it obvious that some players are more likely to hit into errors than other players. This is probably driven by how often players hit ground balls.</p>
 ]]></content>
@@ -947,25 +1023,25 @@ sns.kdeplot(trace[‘rates’, 1000:][:, [x[2] for x in sorted_means_se[:10]]].f
 
 <p>Our existing machine-learning workflows might look a little like the following (please forgive the drastic oversimplification of a purely sequential progression across stages!).</p>
 
-<p><img src="{{ root_url }}/presentations/automation_presentation/slides/data_science_pipeline/ds_pipeline.png" style="background-color:white;" /></p>
+<p><img src="/presentations/automation_presentation/slides/data_science_pipeline/ds_pipeline.png" style="background-color:white;" /></p>
 
 <p>Where does automation exist in this workflow? Where can automation improve this workflow?</p>
 
 <p>Not all these stages are within the scope of machine-learning. For instance, while you should automate gathering data, I view this as a data engineering problem. In the image below, I depict the stages that I consider ripe for automation, and the stages I consider wrong for automation. For example, data cleaning is too idiosyncratic to each dataset for true automation. I “X” out model evaluation as wrong for automation. In retrospect, I believe this is a great place for automation, but I don’t know of any existing python packages handling it.</p>
 
-<p><img src="{{ root_url }}/presentations/automation_presentation/slides/libraries_pipeline/tpot_pipeline.png" style="background-color:white;" /></p>
+<p><img src="/presentations/automation_presentation/slides/libraries_pipeline/tpot_pipeline.png" style="background-color:white;" /></p>
 
 <p>I depict feature engineering and model selection as the most promising areas for automation. I consider feature engineering as the stage where advances in automation can have the largest impact on your model performance. In the presentation, I include a <a href="https://www.quora.com/What-generally-improves-a-models-score-more-on-average-feature-engineering-or-hyperparameter-tuning">strong quote</a> from a Quora user saying that <a href="https://en.wikipedia.org/wiki/Hyperparameter_optimization">hyper-parameter tuning</a> (a part of model selection) “hardly matters at all.” I agree with the sentiment of this quote, but it’s not true. Choosing roughly the correct hyper-parameter values is <em>VERY</em> important, and choosing the very best hyper-parameter values can be equally important depending on how your model is used. I highlight feature engineering over model selection because automated model selection is largely solved. For example <a href="http://scikit-learn.org/stable/modules/grid_search.html">grid-search</a> automates model selection. It’s not a fast solution, but given infinite time, it will find the best hyper-parameter values!</p>
 
 <p>There are many python libraries automating these parts of the workflow. I highlight three libraries that automate feature engineering.</p>
 
-<p><img src="{{ root_url }}/presentations/automation_presentation/slides/feature_automation/tpot-logo.jpg" width="200" style="background-color:white;" /></p>
+<p><img src="/presentations/automation_presentation/slides/feature_automation/tpot-logo.jpg" width="200" style="background-color:white;" /></p>
 
 <p>The first is <a href="https://github.com/EpistasisLab/tpot">teapot</a>. Teapot (more or less) takes all the different operations and models available in <a href="http://scikit-learn.org/stable/">scikit-learn</a>, and allows you to assemble these operations into a pipeline. Many of these operations (e.g., <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a>) are forms of feature engineering. Teapot measures which operations lead to the best model performance. Because Teapot enables users to assemble <em>SO MANY</em> different operations, it utilizes a <a href="https://en.wikipedia.org/wiki/Genetic_algorithm">genetic search algorithm</a> to search through the different possibilities more efficiently than grid-search would.</p>
 
 <p>The second is <a href="https://github.com/ClimbsRocks/auto_ml">auto_ml</a>. In auto_ml users simply pass a dataset to the software and it will do model selection and hyper-parameter tuning for you. Users can also <a href="https://auto-ml.readthedocs.io/en/latest/deep_learning.html#feature-learning">ask the software to train a deep learning model that will learn new features</a> from your dataset. The authors claim this approach can improve model accuracy by 5%.</p>
 
-<p><img src="{{ root_url }}/presentations/automation_presentation/slides/feature_automation/featuretools.png" width="400" style="background-color:white;" /></p>
+<p><img src="/presentations/automation_presentation/slides/feature_automation/featuretools.png" width="400" style="background-color:white;" /></p>
 
 <p>The third is <a href="https://github.com/Featuretools/featuretools">feature tools</a>. Feature Tools is the piece of automation software whose future I am most excited about. I find this software exciting because users can feed it pre-aggregated data. Most machine-learning models expect that for each value of the <a href="https://www.quora.com/What-is-a-response-variable-in-statistics">response variable</a>, you supply a vector of explanatory variables. This is an example of aggregated data. Teapot and auto_ml both expect users to supply aggregated data. Lots of important information is lost in the aggregation process, and allowing automation to thoroughly explore different aggregations will lead to predictive features that we would not have created otherwise (any many believe this is why deep learning is so effective). Feature tools explores different aggregations all while creating easily interpreted variables (in contrast to deep learning). While I am excited about the future of feature tools, it is a new piece of software and has a ways to go before I use it in my workflows. Like most automation machine-learning software it’s very slow/resource intensive. Also, the software is not very intuitive. That said, I created a <a href="https://mybinder.org/v2/gh/dvatterott/explore_feature_automation/master">binder notebook</a> demoing feature tools, so check it out yourself!</p>
 
@@ -986,26 +1062,45 @@ sns.kdeplot(trace[‘rates’, 1000:][:, [x[2] for x in sorted_means_se[:10]]].f
 
 <p>First, I set <code>email_on_failure</code> to <code>False</code> and use the operators’s <code>on_failure_callback</code>. I give <code>on_failure_callback</code> the function described below.</p>
 
-<p>{% codeblock lang:python %}
-from airflow.utils.email import send_email</p>
-
-<p>def notify_email(contextDict, **kwargs):
-    “"”Send custom email alerts.”””</p>
-
-<pre><code># email title.
-title = "Airflow alert: {task_name} Failed".format(**contextDict)
-
-# email contents
-body = """
-Hi Everyone, &lt;br&gt;
-&lt;br&gt;
-There's been an error in the {task_name} job.&lt;br&gt;
-&lt;br&gt;
-Forever yours,&lt;br&gt;
-Airflow bot &lt;br&gt;
-""".format(**contextDict)
-
-send_email('you_email@address.com', title, body) {% endcodeblock %}
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">airflow.utils.email</span> <span class="kn">import</span> <span class="n">send_email</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">notify_email</span><span class="p">(</span><span class="n">contextDict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>    <span class="err">“</span><span class="s">&quot;”Send custom email alerts.”””&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c"># email title.</span>
+</span><span class='line'><span class="n">title</span> <span class="o">=</span> <span class="s">&quot;Airflow alert: {task_name} Failed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">contextDict</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># email contents</span>
+</span><span class='line'><span class="n">body</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="s">Hi Everyone, &amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">&amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">There&#39;s been an error in the {task_name} job.&amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">&amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">Forever yours,&amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">Airflow bot &amp;lt;br&amp;gt;</span>
+</span><span class='line'><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">contextDict</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">send_email</span><span class="p">(</span><span class="s">&#39;you_email@address.com&#39;</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
 </code></pre>
 
 <p><code>send_email</code> is a function imported from Airflow. <code>contextDict</code> is a dictionary given to the callback function on error. Importantly, <code>contextDict</code> contains lots of relevant information. This includes the Task Instance (key=’ti’) and Operator Instance (key=’task’) associated with your error. I was able to use the Operator Instance, to grab the relevant cluster’s address and I included this address in my email (this exact code is not present here).</p>
@@ -1014,30 +1109,51 @@ send_email('you_email@address.com', title, body) {% endcodeblock %}
 
 <p>I write out a short example airflow dag below.</p>
 
-<p>{% codeblock lang:python %}
-from airflow.models import DAG
-from airflow.operators import PythonOperator
-from airflow.utils.dates import days_ago</p>
-
-<p>args = {
-  ‘owner’: ‘me’,
-  ‘description’: ‘my_example’,
-  ‘start_date’: days_ago(1)
-}</p>
-
-<h1 id="run-every-day-at-1205-utc">run every day at 12:05 UTC</h1>
-<p>dag = DAG(dag_id=’example_dag’, default_args=args, schedule_interval=’0 5 * * *’)</p>
-
-<p>def print_hello():
-  return ‘hello!’</p>
-
-<p>py_task = PythonOperator(task_id=’example’,
-                         python_callable=print_hello,
-                         on_failure_callback=notify_email,
-                         dag=dag)</p>
-
-<p>py_task
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">airflow.models</span> <span class="kn">import</span> <span class="n">DAG</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">airflow.operators</span> <span class="kn">import</span> <span class="n">PythonOperator</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="err">‘</span><span class="n">owner</span><span class="err">’</span><span class="p">:</span> <span class="err">‘</span><span class="n">me</span><span class="err">’</span><span class="p">,</span>
+</span><span class='line'>  <span class="err">‘</span><span class="n">description</span><span class="err">’</span><span class="p">:</span> <span class="err">‘</span><span class="n">my_example</span><span class="err">’</span><span class="p">,</span>
+</span><span class='line'>  <span class="err">‘</span><span class="n">start_date</span><span class="err">’</span><span class="p">:</span> <span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;run-every-day-at-1205-utc&quot;</span><span class="o">&gt;</span><span class="n">run</span> <span class="n">every</span> <span class="n">day</span> <span class="n">at</span> <span class="mi">12</span><span class="p">:</span><span class="mo">05</span> <span class="n">UTC</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">dag_id</span><span class="o">=</span><span class="err">’</span><span class="n">example_dag</span><span class="err">’</span><span class="p">,</span> <span class="n">default_args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">schedule_interval</span><span class="o">=</span><span class="err">’</span><span class="mi">0</span> <span class="mi">5</span> <span class="o">*</span> <span class="o">*</span> <span class="o">*</span><span class="err">’</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">print_hello</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="err">‘</span><span class="n">hello</span><span class="err">!’</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">py_task</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span><span class="n">task_id</span><span class="o">=</span><span class="err">’</span><span class="n">example</span><span class="err">’</span><span class="p">,</span>
+</span><span class='line'>                         <span class="n">python_callable</span><span class="o">=</span><span class="n">print_hello</span><span class="p">,</span>
+</span><span class='line'>                         <span class="n">on_failure_callback</span><span class="o">=</span><span class="n">notify_email</span><span class="p">,</span>
+</span><span class='line'>                         <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">py_task</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Note where set <code>on_failure_callback</code> equal to <code>notify_email</code> in the <code>PythonOperator</code>.</p>
 
@@ -1058,17 +1174,15 @@ from airflow.utils.dates import days_ago</p>
 
 <p>Airflow 1.9 uses Celery version &gt;= 4.0 (I ended up using Celery version 4.1.1). Airflow 1.8 requires Celery &lt; 4.0. In fact, the A-R-G-O tutorial notes that using Celery &gt;= 4.0 will result in the error:</p>
 
-<p>{% codeblock %}
-airflow worker: Received and deleted unknown message. Wrong destination?!?
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>airflow worker: Received and deleted unknown message. Wrong destination?!?</span></code></pre></td></tr></table></div></figure></p>
 
 <p>I can attest that this is true! If you use airflow 1.9 with Celery &lt; 4.0, everything might appear to work, but airflow will randomly stop scheduling jobs after awhile (check the airflow-scheduler logs if you run into this). You need to use Celery &gt;= 4.0! Preventing the Wrong destination error is easy, but the fix is hard to find (hence why I wrote this post).</p>
 
 <p>After much ado, here’s the fix! If you follow the A-R-G-O tutorial, install airflow 1.9, celery &gt;=4.0 AND set broker_url in airflow.cfg as follows:</p>
 
-<p>{% codeblock %}
-broker_url = pyamqp://guest:guest@localhost:5672//
-{% endcodeblock %}</p>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>broker_url = pyamqp://guest:guest@localhost:5672//</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Note that compared to the A-R-G-O tutorial, I am just adding “py” in front of amqp. Easy!</p>
 ]]></content>
