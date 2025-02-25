@@ -9,12 +9,20 @@ footer: false
 
 ### Check out the links below to see what books I've read in the linked years.
 
- [2017](./2017.html)
+ [2025](./2025.html)
  <br>
- [2018](./2018.html)
+ [2024](./2024.html)
  <br>
- [2019](./2019.html)
+ [2023](./2023.html)
+ <br>
+ [2022](./2022.html)
+ <br>
+ [2021](./2021.html)
  <br>
  [2020](./2020.html)
  <br>
- [2021](./2021.html)
+ [2019](./2019.html)
+ <br>
+ [2018](./2018.html)
+ <br>
+ [2017](./2017.html)

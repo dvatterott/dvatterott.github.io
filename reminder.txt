@@ -1,3 +1,5 @@
+The files in the source directory are the ones to edit if you want to make changes.
+
 1. use codeblock syntax for code. The new interpreter (kramdown) doesn't like '''python - http://octopress.org/docs/plugins/codeblock/
   sed -i 's/```python/{% codeblock lang:python %}/g' test.md
   sed -i 's/```/{% endcodeblock %}/g' test.md
@@ -13,6 +15,10 @@ sudo env PATH=$PATH
 rake new_post['title']
 rake generate
 #rake preview?? Then call the location in another terminal. I have a bookmark for this
+
+make sure to run in terminal (not emacs terminal)
+ruby --version (make sure 2.3.0)
+rvm use 2.3.0
 
 mkdir ~/octopress/public/_posts;
 cp -r source/_includes/ public/_includes;
@@ -34,7 +40,7 @@ image example
 sed -i 's/!\[png\](/<img src="{{ root_url }}\/images\/roc_post\//g' 2018-03-17-exploring-roc-curves.markdown
 sed -i 's/\(.png\))/\1" \/>/g' 2018-03-17-exploring-roc-curves.markdown
 
-To start using RVM you need to run `source /home/dan-laptop/.rvm/scripts/rvm`
+To start using RVM you need to run `source /home/dan-laptop/.rvm/scripts/rvm` or `source /etc/profile.d/rvm.sh`
     in all your open shell windows, in rare cases you need to reopen all shell windows.
 
 In 10/2016 I installed kde neon. Not sure how much of this is true with the new install (I installed ruby with rvm... and this was easy, but still need more testing)
@@ -45,3 +51,13 @@ It seems that I have to copy the posts folder into the public file. Not sure why
 rake preview
 netstat -tanp|grep 4000
 http://127.0.0.1:4000
+
+HOW TO INSTALL OCTOPRESS
++ http://octopress.org/docs/setup/
++ Google how to install RVM on ubuntu
++ Install ruby 2.3.0 NOT 1.9.3 (might have to install in root user). Note command to make rvm avail to use (source /etc/profile.d/rvm.sh)
++ Make sure using ruby 2.3.0 (ruby --version; rvm use 2.3.0 if not)
++ source /etc/profile.d/rvm.sh
++ gem install octopress (will require modifying the version of many gems... just do what the terminal says)
++ gem install bundler
++ bundle install (have to do in root even though it hates it)
