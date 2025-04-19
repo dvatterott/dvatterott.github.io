@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Aggregating Sparse and Dense Vectors in PySpark &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Aggregating Sparse and Dense Vectors in PySpark</h1>
+    <p class="meta">
+<time datetime="2018-07-08T19:24:04-05:00" pubdate>Sun 08 July 2018</time>    </p>
+</header>
+
+  <div class="entry-content"><p>Many (if not all of) PySpark's machine learning algorithms require the input data is concatenated into a single column (using the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.ml.html#pyspark.ml.feature.VectorAssembler">vector assembler</a> command). This is all well and good, but applying non-machine learning algorithms (e.g., any aggregations) to data in this format can be a real pain. Here, I describe how to aggregate (average in this case) data in sparse and dense vectors.</p>
+<p>I start by importing the necessary libraries and creating a spark dataframe, which includes a column of sparse vectors. Note that I am using ml.linalg SparseVector and not the SparseVector from mllib. This makes a big difference!</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">functions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">F</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">types</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">T</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.ml.linalg</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">SparseVector</span><span class="p">,</span><span class="w"> </span><span class="n">DenseVector</span>
+<span class="w"> </span><span class="c1"># note that using Sparse and Dense Vectors from ml.linalg. There are other Sparse/Dense vectors in spark.</span>
+
+<span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([</span>
+<span class="w">   </span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">:</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">:</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
+<span class="w">   </span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">9</span><span class="p">:</span><span class="w"> </span><span class="mf">100.0</span><span class="p">})),</span>
+<span class="w">   </span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">SparseVector</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">})),</span>
+<span class="w"> </span><span class="p">])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s2">&quot;row_num&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;features&quot;</span><span class="p">])</span>
+
+<span class="w"> </span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>(10,[1,2,3,4,5],[1.0, 1.0, 2.0, 1.0, 3.0])</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>(10,[9],[100.0])</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>(10,[1],[1.0])</td>
+ </tr>
+</table>
+
+<p>Next, I write a <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.functions.udf">udf</a>, which changes the sparse vector into a dense vector and then changes the dense vector into a python list. The python list is then turned into a spark array when it comes out of the udf.  </p>
+<div class="highlight"><pre><span></span><code> def sparse_to_array(v):
+   v = DenseVector(v)
+   new_array = list([float(x) for x in v])
+   return new_array
+
+ sparse_to_array_udf = F.udf(sparse_to_array, T.ArrayType(T.FloatType()))
+
+ df = df.withColumn(&#39;features_array&#39;, sparse_to_array_udf(&#39;features&#39;))
+ df.show()
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+   <th>features_array</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>(10,[1,2,3,4,5],[1.0, 1.0, 2.0, 1.0, 3.0])</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>(10,[9],[100.0])</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>(10,[1],[1.0])</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Now that the data is in a PySpark array, we can apply the desired PySpark aggregation to each item in the array.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">df_agg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="p">.</span><span class="k">array</span><span class="p">(</span><span class="o">*[</span><span class="n">F.avg(F.col(&#39;features_array&#39;)[i</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="err">]</span><span class="p">).</span><span class="k">alias</span><span class="p">(</span><span class="ss">&quot;averages&quot;</span><span class="p">))</span>
+<span class="w"> </span><span class="n">df_agg</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>averages</th>
+ </tr>
+ <tr>
+   <td>[0.0, 0.66667, 0.33333, 0.66667, 0.33333, 1.0, 0.0, 0.0, 0.0, 33.33333]</td>
+ </tr>
+</table>
+
+<p>Now, let's run through the same exercise with dense vectors. We start by creating a spark dataframe with a column of dense vectors.</p>
+<div class="highlight"><pre><span></span><code> df = sc.parallelize([
+   (1, DenseVector([0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0])),
+   (2, DenseVector([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0])),
+   (3, DenseVector([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])),
+ ]).toDF([&quot;row_num&quot;, &quot;features&quot;])
+
+ df.show()
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Next, we create another PySpark udf which changes the dense vector into a PySpark array.</p>
+<div class="highlight"><pre><span></span><code> def dense_to_array(v):
+   new_array = list([float(x) for x in v])
+   return new_array
+
+ dense_to_array_udf = F.udf(dense_to_array, T.ArrayType(T.FloatType()))
+
+ df = df.withColumn(&#39;features_array&#39;, dense_to_array_udf(&#39;features&#39;))
+ df.show()
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>row_num</th>
+   <th>features</th>
+   <th>features_array</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+   <td>[0.0, 1.0, 1.0, 2.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+   <td>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+   <td>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</td>
+ </tr>
+</table>
+
+<p>Finally, we can use our standard PySpark aggregators to each item in the PySpark array.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">df_agg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="p">.</span><span class="k">array</span><span class="p">(</span><span class="o">*[</span><span class="n">F.avg(F.col(&#39;features_array&#39;)[i</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="err">]</span><span class="p">).</span><span class="k">alias</span><span class="p">(</span><span class="ss">&quot;averages&quot;</span><span class="p">))</span>
+<span class="w"> </span><span class="n">df_agg</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>averages</th>
+ </tr>
+ <tr>
+   <td>[0.0, 0.66667, 0.33333, 0.66667, 0.33333, 1.0, 0.0, 0.0, 0.0, 33.33333]</td>
+ </tr>
+</table>
+
+<p>There we go! Hope you find this info helpful!</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2018-07-08T19:24:04-05:00" pubdate>Sun 08 July 2018</time>  <span class="categories">
+    <a class='category' href='/category/pyspark.html'>pyspark</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/aggregating-sparse-and-dense-vectors-in-pyspark.html';
+    var disqus_url = '/aggregating-sparse-and-dense-vectors-in-pyspark.html';
+    var disqus_title = 'Aggregating Sparse and Dense Vectors in PySpark';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

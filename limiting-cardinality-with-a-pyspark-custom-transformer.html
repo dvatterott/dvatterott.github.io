@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Limiting Cardinality with a PySpark Custom Transformer &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Limiting Cardinality with a PySpark Custom Transformer</h1>
+    <p class="meta">
+<time datetime="2019-07-12T06:30:28-05:00" pubdate>Fri 12 July 2019</time>    </p>
+</header>
+
+  <div class="entry-content"><p>When onehot-encoding columns in pyspark, <a href="https://livebook.datascienceheroes.com/data-preparation.html#high_cardinality_descriptive_stats">column cardinality</a> can become a problem. The size of the data often leads to an enourmous number of unique values. If a minority of the values are common and the majority of the values are rare, you might want to represent the rare values as a single group. Note that this might not be appropriate for your problem. <a href="https://livebook.datascienceheroes.com/data-preparation.html#analysis-for-predictive-modeling">Here's</a> some nice text describing the costs and benefits of this approach. In the following blog post I describe how to implement this solution.</p>
+<p>I begin by importing the necessary libraries and creating a spark session.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">SparkSession</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">SparkContext</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">functions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">F</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">keyword_only</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.ml.pipeline</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">Transformer</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.ml.param.shared</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">HasInputCol</span><span class="p">,</span><span class="w"> </span><span class="n">HasOutputCol</span><span class="p">,</span><span class="w"> </span><span class="n">Param</span>
+
+<span class="w"> </span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="w"> </span><span class="n">sc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SparkContext</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Example&quot;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">spark</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Next create the custom transformer. This class inherits from the <code>Transformer</code>, <code>HasInputCol</code>, and <code>HasOutputCol</code> classes. I also call an additional parameter <code>n</code> which controls the maximum cardinality allowed in the tranformed column. Because I have the additional parameter, I need some methods for calling and setting this paramter (<code>setN</code> and <code>getN</code>). Finally, there's <code>_tranform</code> which limits the cardinality of the desired column (set by <code>inputCol</code> parameter). This tranformation method simply takes the desired column and changes all values greater than <code>n</code> to <code>n</code>. It outputs a column named by the <code>outputCol</code> parameter.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="n">LimitCardinality</span><span class="p">(</span><span class="n">Transformer</span><span class="p">,</span><span class="w"> </span><span class="n">HasInputCol</span><span class="p">,</span><span class="w"> </span><span class="n">HasOutputCol</span><span class="p">)</span><span class="err">:</span>
+<span class="w">     </span><span class="ss">&quot;&quot;&quot;Limit Cardinality of a column.&quot;&quot;&quot;</span>
+
+<span class="w">     </span><span class="nv">@keyword_only</span>
+<span class="w">     </span><span class="n">def</span><span class="w"> </span><span class="n">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">inputCol</span><span class="o">=</span><span class="k">None</span><span class="p">,</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="k">None</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="o">=</span><span class="k">None</span><span class="p">)</span><span class="err">:</span><span class="w">  </span>
+<span class="w">         </span><span class="ss">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="n">super</span><span class="p">(</span><span class="n">LimitCardinality</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">).</span><span class="n">__init__</span><span class="p">()</span>
+<span class="w">         </span><span class="n">self</span><span class="p">.</span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Param</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;n&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;Cardinality upper limit.&quot;</span><span class="p">)</span><span class="w">  </span>
+<span class="w">         </span><span class="n">self</span><span class="p">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+<span class="w">         </span><span class="n">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">_input_kwargs</span>
+<span class="w">         </span><span class="n">self</span><span class="p">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="w">     </span><span class="nv">@keyword_only</span>
+<span class="w">     </span><span class="n">def</span><span class="w"> </span><span class="n">setParams</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">inputCol</span><span class="o">=</span><span class="k">None</span><span class="p">,</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="k">None</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="o">=</span><span class="k">None</span><span class="p">)</span><span class="err">:</span><span class="w">  </span>
+<span class="w">         </span><span class="ss">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="n">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">_input_kwargs</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="w">     </span><span class="n">def</span><span class="w"> </span><span class="n">setN</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">value</span><span class="p">)</span><span class="err">:</span><span class="w">  </span>
+<span class="w">         </span><span class="ss">&quot;&quot;&quot;Set cardinality limit.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">_set</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="k">value</span><span class="p">)</span>
+
+<span class="w">     </span><span class="n">def</span><span class="w"> </span><span class="n">getN</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="err">:</span><span class="w">  </span>
+<span class="w">         </span><span class="ss">&quot;&quot;&quot;Get cardinality limit.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">n</span><span class="p">)</span>
+
+<span class="w">     </span><span class="n">def</span><span class="w"> </span><span class="n">_transform</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">dataframe</span><span class="p">)</span><span class="err">:</span>
+<span class="w">         </span><span class="ss">&quot;&quot;&quot;Do transformation.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="n">out_col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">getOutputCol</span><span class="p">()</span>
+<span class="w">         </span><span class="n">in_col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataframe</span><span class="o">[</span><span class="n">self.getInputCol()</span><span class="o">]</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">dataframe</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">out_col</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">F</span><span class="p">.</span><span class="k">when</span><span class="p">(</span><span class="n">in_col</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">getN</span><span class="p">(),</span><span class="w"> </span><span class="n">self</span><span class="p">.</span><span class="n">getN</span><span class="p">())</span>
+<span class="w">                                       </span><span class="p">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">in_col</span><span class="p">))))</span>
+</code></pre></div>
+
+<p>Now that we have the tranformer, I will create some data and apply the transformer to it. I want categorical data, so I will randomly draw letters of the alphabet. The only trick is I've made some letters of the alphabet much more common than other ones.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">letter_pool</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kt">string</span><span class="p">.</span><span class="nx">ascii_letters</span><span class="p">[:</span><span class="mi">26</span><span class="p">]</span>
+<span class="w"> </span><span class="nx">letter_pool</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="err">&#39;&#39;</span><span class="p">.</span><span class="nx">join</span><span class="p">([</span><span class="nx">x</span><span class="o">*</span><span class="nx">y</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">x</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">zip</span><span class="p">(</span><span class="nx">letter_pool</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="nx">range</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">10</span><span class="p">))])</span>
+
+<span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">sc</span><span class="p">.</span><span class="nx">parallelize</span><span class="p">([[</span><span class="nx">x</span><span class="p">,</span><span class="w"> </span><span class="nx">random</span><span class="p">.</span><span class="kd">choice</span><span class="p">(</span><span class="nx">letter_pool</span><span class="p">)]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)]).</span><span class="nx">toDF</span><span class="p">([</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;category&quot;</span><span class="p">])</span>
+<span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">+---+--------+</span><span class="w">                                                                  </span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nx">id</span><span class="o">|</span><span class="nx">category</span><span class="o">|</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">+---+--------+</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">|</span><span class="w">  </span><span class="mi">0</span><span class="o">|</span><span class="w">       </span><span class="nx">a</span><span class="o">|</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">|</span><span class="w">  </span><span class="mi">1</span><span class="o">|</span><span class="w">       </span><span class="nx">c</span><span class="o">|</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">|</span><span class="w">  </span><span class="mi">2</span><span class="o">|</span><span class="w">       </span><span class="nx">e</span><span class="o">|</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">|</span><span class="w">  </span><span class="mi">3</span><span class="o">|</span><span class="w">       </span><span class="nx">e</span><span class="o">|</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">|</span><span class="w">  </span><span class="mi">4</span><span class="o">|</span><span class="w">       </span><span class="nx">a</span><span class="o">|</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="o">+---+--------+</span>
+</code></pre></div>
+
+<p>Take a look at the data.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="sx">(a</span>
+<span class="w">  </span><span class="sx">.groupBy(&quot;category&quot;)</span>
+<span class="w">  </span><span class="sx">.agg(F.count(&quot;*&quot;).alias(&quot;category_count&quot;))</span>
+<span class="w">  </span><span class="sx">.orderBy(F.col(&quot;category_count&quot;).desc())</span>
+<span class="w">  </span><span class="sx">.limit(20)</span>
+<span class="w">  </span><span class="sx">.show())</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">+--------+--------------+</span><span class="w">                                                       </span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|category|category_count|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">+--------+--------------+</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">b|</span><span class="w">           </span><span class="sx">221|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">a|</span><span class="w">           </span><span class="sx">217|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">c|</span><span class="w">           </span><span class="sx">197|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">d|</span><span class="w">           </span><span class="sx">162|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">e|</span><span class="w">           </span><span class="sx">149|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">k|</span><span class="w">             </span><span class="sx">5|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">p|</span><span class="w">             </span><span class="sx">5|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">u|</span><span class="w">             </span><span class="sx">5|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">f|</span><span class="w">             </span><span class="sx">4|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">l|</span><span class="w">             </span><span class="sx">3|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">g|</span><span class="w">             </span><span class="sx">3|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">m|</span><span class="w">             </span><span class="sx">3|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">o|</span><span class="w">             </span><span class="sx">3|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">y|</span><span class="w">             </span><span class="sx">3|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">j|</span><span class="w">             </span><span class="sx">3|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">x|</span><span class="w">             </span><span class="sx">2|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">n|</span><span class="w">             </span><span class="sx">2|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">h|</span><span class="w">             </span><span class="sx">2|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">i|</span><span class="w">             </span><span class="sx">2|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">|</span><span class="w">       </span><span class="sx">q|</span><span class="w">             </span><span class="sx">2|</span>
+<span class="w"> </span><span class="sx">#</span><span class="w"> </span><span class="sx">+--------+--------------+</span>
+</code></pre></div>
+
+<p>Now to apply the new class <code>LimitCardinality</code> after <code>StringIndexer</code> which maps each category (starting with the most common category) to numbers. This means the most common letter will be 1. <code>LimitCardinality</code> then sets the max value of <code>StringIndexer</code>'s output to <code>n</code>. <code>OneHotEncoderEstimator</code> one-hot encodes <code>LimitCardinality</code>'s output. I wrap <code>StringIndexer</code>, <code>LimitCardinality</code>, and <code>OneHotEncoderEstimator</code> into a single pipeline so that I can fit/transform the dataset at one time.</p>
+<p>Note that <code>LimitCardinality</code> needs additional code in order to be saved to disk.</p>
+<div class="highlight"><pre><span></span><code><span class="c"> from pyspark</span><span class="nt">.</span><span class="c">ml</span><span class="nt">.</span><span class="c">feature import OneHotEncoderEstimator</span><span class="nt">,</span><span class="c"> StringIndexer</span>
+<span class="c"> from pyspark</span><span class="nt">.</span><span class="c">ml import Pipeline</span>
+
+<span class="c"> string_to_num = StringIndexer(inputCol=&quot;category&quot;</span><span class="nt">,</span><span class="c"> outputCol=&quot;category_index&quot;</span><span class="nt">,</span><span class="c"> stringOrderType=&quot;frequencyDesc&quot;)</span>
+<span class="c"> censor_category = LimitCardinality(inputCol=&quot;category_index&quot;</span><span class="nt">,</span><span class="c"> outputCol=&quot;censored_category_index&quot;</span><span class="nt">,</span><span class="c"> n=10)</span>
+<span class="c"> onehot_category = OneHotEncoderEstimator(inputCols=</span><span class="k">[</span><span class="c">&quot;category_index&quot;</span><span class="nt">,</span><span class="c"> &quot;censored_category_index&quot;</span><span class="k">]</span><span class="nt">,</span>
+<span class="c">                                      outputCols=</span><span class="k">[</span><span class="c">&quot;onehot_category&quot;</span><span class="nt">,</span><span class="c"> &quot;onehot_censored_category&quot;</span><span class="k">]</span><span class="c">)</span>
+<span class="c"> onehot_pipeline = Pipeline(stages=</span><span class="k">[</span><span class="c">string_to_num</span><span class="nt">,</span><span class="c"> censor_category</span><span class="nt">,</span><span class="c"> onehot_category</span><span class="k">]</span><span class="c">)</span>
+<span class="c"> fit_pipeline = onehot_pipeline</span><span class="nt">.</span><span class="c">fit(a)</span>
+
+<span class="c"> fit_pipeline</span><span class="nt">.</span><span class="c">transform(a)</span><span class="nt">.</span><span class="c">limit(5)</span><span class="nt">.</span><span class="c">show()</span>
+<span class="c"> # </span><span class="nb">+---+--------+--------------+-----------------------+---------------+------------------------+</span>
+<span class="c"> # | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
+<span class="c"> # </span><span class="nb">+---+--------+--------------+-----------------------+---------------+------------------------+</span>
+<span class="c"> # |  0|       a|           1</span><span class="nt">.</span><span class="c">0|                    1</span><span class="nt">.</span><span class="c">0| (25</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|          (10</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|</span>
+<span class="c"> # |  1|       c|           2</span><span class="nt">.</span><span class="c">0|                    2</span><span class="nt">.</span><span class="c">0| (25</span><span class="nt">,</span><span class="k">[</span><span class="c">2</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|          (10</span><span class="nt">,</span><span class="k">[</span><span class="c">2</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|</span>
+<span class="c"> # |  2|       e|           4</span><span class="nt">.</span><span class="c">0|                    4</span><span class="nt">.</span><span class="c">0| (25</span><span class="nt">,</span><span class="k">[</span><span class="c">4</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|          (10</span><span class="nt">,</span><span class="k">[</span><span class="c">4</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|</span>
+<span class="c"> # |  3|       e|           4</span><span class="nt">.</span><span class="c">0|                    4</span><span class="nt">.</span><span class="c">0| (25</span><span class="nt">,</span><span class="k">[</span><span class="c">4</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|          (10</span><span class="nt">,</span><span class="k">[</span><span class="c">4</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|</span>
+<span class="c"> # |  4|       a|           1</span><span class="nt">.</span><span class="c">0|                    1</span><span class="nt">.</span><span class="c">0| (25</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|          (10</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|</span>
+<span class="c"> # </span><span class="nb">+---+--------+--------------+-----------------------+---------------+------------------------+</span>
+
+<span class="c"> fit_pipeline</span><span class="nt">.</span><span class="c">transform(a)</span><span class="nt">.</span><span class="c">limit(5)</span><span class="nt">.</span><span class="c">filter(F</span><span class="nt">.</span><span class="c">col(&quot;category&quot;) == &quot;n&quot;)</span><span class="nt">.</span><span class="c">show()</span>
+<span class="c"> # </span><span class="nb">+---+--------+--------------+-----------------------+---------------+------------------------+</span>
+<span class="c"> # | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
+<span class="c"> # </span><span class="nb">+---+--------+--------------+-----------------------+---------------+------------------------+</span>
+<span class="c"> # | 35|       n|          16</span><span class="nt">.</span><span class="c">0|                   10</span><span class="nt">.</span><span class="c">0|(25</span><span class="nt">,</span><span class="k">[</span><span class="c">16</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|              (10</span><span class="nt">,</span><span class="k">[]</span><span class="nt">,</span><span class="k">[]</span><span class="c">)|</span>
+<span class="c"> # |458|       n|          16</span><span class="nt">.</span><span class="c">0|                   10</span><span class="nt">.</span><span class="c">0|(25</span><span class="nt">,</span><span class="k">[</span><span class="c">16</span><span class="k">]</span><span class="nt">,</span><span class="k">[</span><span class="c">1</span><span class="nt">.</span><span class="c">0</span><span class="k">]</span><span class="c">)|              (10</span><span class="nt">,</span><span class="k">[]</span><span class="nt">,</span><span class="k">[]</span><span class="c">)|</span>
+<span class="c"> # </span><span class="nb">+---+--------+--------------+-----------------------+---------------+------------------------+</span>
+</code></pre></div>
+
+<p>A quick improvement to <code>LimitCardinality</code> would be to set a column's cardinality so that X% of rows retain their category values and 100-X% receive the default value (rather than arbitrarily selecting a cardinality limit). I implement this below. Note that <code>LimitCardinalityModel</code> is identical to the original <code>LimitCardinality</code>. The new <code>LimitCardinality</code> has a <code>_fit</code> method rather than <code>_transform</code> and this method determines a column's cardinality.</p>
+<p>In the <code>_fit</code> method I find the proportion of columns that are required to describe the requested amount of data. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.ml.pipeline</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">Estimator</span><span class="p">,</span><span class="w"> </span><span class="n">Model</span>
+
+<span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">LimitCardinality</span><span class="p">(</span><span class="n">Estimator</span><span class="p">,</span><span class="w"> </span><span class="n">HasInputCol</span><span class="p">,</span><span class="w"> </span><span class="n">HasOutputCol</span><span class="p">):</span>
+<span class="w">     </span><span class="s2">&quot;&quot;&quot;Limit Cardinality of a column.&quot;&quot;&quot;</span>
+
+<span class="w">     </span><span class="nd">@keyword_only</span>
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">inputCol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="w"> </span><span class="n">proportion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="nb">super</span><span class="p">(</span><span class="n">LimitCardinality</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+<span class="w">         </span><span class="bp">self</span><span class="o">.</span><span class="n">proportion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;proportion&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cardinality upper limit as a proportion of data.&quot;</span><span class="p">)</span>
+<span class="w">         </span><span class="bp">self</span><span class="o">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">proportion</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="w">         </span><span class="n">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+<span class="w">         </span><span class="bp">self</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="w">     </span><span class="nd">@keyword_only</span>
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">inputCol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="w"> </span><span class="n">proportion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="n">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="nf">setProportion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Set cardinality limit as proportion of data.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">proportion</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="nf">getProportion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Get cardinality limit as proportion of data.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proportion</span><span class="p">)</span>
+
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">dataframe</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Fit transformer.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="n">pandas_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataframe</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">())</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;my_count&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+<span class="w">         </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sum</span><span class="p">((</span><span class="n">pandas_df</span>
+<span class="w">                  </span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;my_count&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="w">                  </span><span class="o">.</span><span class="n">cumsum</span><span class="p">()[</span><span class="s2">&quot;my_count&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">sum</span><span class="p">(</span><span class="n">pandas_df</span><span class="p">[</span><span class="s2">&quot;my_count&quot;</span><span class="p">])</span>
+<span class="w">                 </span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">getProportion</span><span class="p">())</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="n">LimitCardinalityModel</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">(),</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getOutputCol</span><span class="p">(),</span><span class="w"> </span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+<span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">LimitCardinalityModel</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span><span class="w"> </span><span class="n">HasInputCol</span><span class="p">,</span><span class="w"> </span><span class="n">HasOutputCol</span><span class="p">):</span>
+<span class="w">     </span><span class="s2">&quot;&quot;&quot;Limit Cardinality of a column.&quot;&quot;&quot;</span>
+
+<span class="w">     </span><span class="nd">@keyword_only</span>
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">inputCol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Initialize.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="nb">super</span><span class="p">(</span><span class="n">LimitCardinalityModel</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+<span class="w">         </span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;n&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cardinality upper limit.&quot;</span><span class="p">)</span>
+<span class="w">         </span><span class="bp">self</span><span class="o">.</span><span class="n">_setDefault</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+<span class="w">         </span><span class="n">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+<span class="w">         </span><span class="bp">self</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="w">     </span><span class="nd">@keyword_only</span>
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">inputCol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Get params.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="n">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_input_kwargs</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="nf">setN</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Set cardinality limit.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="nf">getN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Get cardinality limit.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">getOrDefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+<span class="w">     </span><span class="k">def</span><span class="w"> </span><span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">dataframe</span><span class="p">):</span>
+<span class="w">         </span><span class="s2">&quot;&quot;&quot;Do transformation.&quot;&quot;&quot;</span>
+<span class="w">         </span><span class="n">out_col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">getOutputCol</span><span class="p">()</span>
+<span class="w">         </span><span class="n">in_col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">()]</span>
+<span class="w">         </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">dataframe</span>
+<span class="w">                 </span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">out_col</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">in_col</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">(),</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">getN</span><span class="p">())</span>
+<span class="w">                                       </span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">in_col</span><span class="p">))))</span>
+
+<span class="w"> </span><span class="n">string_to_num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">StringIndexer</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="s2">&quot;category_index&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">handleInvalid</span><span class="o">=</span><span class="s2">&quot;skip&quot;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">censor_category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LimitCardinality</span><span class="p">(</span><span class="n">inputCol</span><span class="o">=</span><span class="s2">&quot;category_index&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">outputCol</span><span class="o">=</span><span class="s2">&quot;censored_category_index&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">proportion</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="w"> </span><span class="n">onehot_category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OneHotEncoderEstimator</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;category_index&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;censored_category_index&quot;</span><span class="p">],</span>
+<span class="w">                                      </span><span class="n">outputCols</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;onehot_category&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;onehot_censored_category&quot;</span><span class="p">])</span>
+<span class="w"> </span><span class="n">onehot_pipeline</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">string_to_num</span><span class="p">,</span><span class="w"> </span><span class="n">censor_category</span><span class="p">,</span><span class="w"> </span><span class="n">onehot_category</span><span class="p">])</span>
+<span class="w"> </span><span class="n">fit_pipeline</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">onehot_pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+<span class="w"> </span><span class="n">fit_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="w"> </span><span class="c1"># +---+--------+--------------+-----------------------+---------------+------------------------+</span>
+<span class="w"> </span><span class="c1"># | id|category|category_index|censored_category_index|onehot_category|onehot_censored_category|</span>
+<span class="w"> </span><span class="c1"># +---+--------+--------------+-----------------------+---------------+------------------------+</span>
+<span class="w"> </span><span class="c1"># |  0|       a|           1.0|                    1.0| (25,[1],[1.0])|           (3,[1],[1.0])|</span>
+<span class="w"> </span><span class="c1"># |  1|       c|           2.0|                    2.0| (25,[2],[1.0])|           (3,[2],[1.0])|</span>
+<span class="w"> </span><span class="c1"># |  2|       e|           4.0|                    3.0| (25,[4],[1.0])|               (3,[],[])|</span>
+<span class="w"> </span><span class="c1"># |  3|       e|           4.0|                    3.0| (25,[4],[1.0])|               (3,[],[])|</span>
+<span class="w"> </span><span class="c1"># |  4|       a|           1.0|                    1.0| (25,[1],[1.0])|           (3,[1],[1.0])|</span>
+<span class="w"> </span><span class="c1"># +---+--------+--------------+-----------------------+---------------+------------------------+</span>
+</code></pre></div>
+
+<p>There are <a href="https://towardsdatascience.com/smarter-ways-to-encode-categorical-data-for-machine-learning-part-1-of-3-6dca2f71b159">other options</a> for dealing with high cardinality columns such as using a clustering or a <a href="https://tech.instacart.com/predicting-real-time-availability-of-200-million-grocery-items-in-us-canada-stores-61f43a16eafe">mean encoding</a> scheme.</p>
+<p>Hope you find this useful and reach out if you have any questions.</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2019-07-12T06:30:28-05:00" pubdate>Fri 12 July 2019</time>  <span class="categories">
+    <a class='category' href='/category/pyspark.html'>pyspark</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/limiting-cardinality-with-a-pyspark-custom-transformer.html';
+    var disqus_url = '/limiting-cardinality-with-a-pyspark-custom-transformer.html';
+    var disqus_title = 'Limiting Cardinality with a PySpark Custom Transformer';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

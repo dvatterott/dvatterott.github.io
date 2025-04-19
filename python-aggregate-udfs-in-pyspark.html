@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Python Aggregate UDFs in PySpark &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Python Aggregate UDFs in PySpark</h1>
+    <p class="meta">
+<time datetime="2018-09-06T16:04:43-05:00" pubdate>Thu 06 September 2018</time>    </p>
+</header>
+
+  <div class="entry-content"><p>PySpark has a great set of <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.DataFrame.agg">aggregate</a> functions (e.g., <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.GroupedData">count, countDistinct, min, max, avg, sum</a>), but these are not enough for all cases (particularly if you're trying to avoid costly Shuffle operations).</p>
+<p>PySpark currently has <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.pandas_udf">pandas_udfs</a>, which can create custom aggregators, but you can only "apply" one pandas_udf at a time. If you want to use more than one, you'll have to preform multiple groupBys...and there goes avoiding those shuffles.</p>
+<p>In this post I describe a little hack which enables you to create simple python UDFs which act on aggregated data (this functionality is only supposed to exist in Scala!).</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">functions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">F</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">types</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">T</span>
+
+<span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;a&#39;</span><span class="p">],</span>
+<span class="w">                     </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b&#39;</span><span class="p">],</span>
+<span class="w">                     </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b&#39;</span><span class="p">],</span>
+<span class="w">                     </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+<span class="w"> </span><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>'c'</td>
+ </tr>
+</table>
+
+<p>I use <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.collect_list">collect_list</a> to bring all data from a given group into a single row. I print the output of this operation below.</p>
+<div class="highlight"><pre><span></span><code> a.groupBy(&#39;id&#39;).agg(F.collect_list(&#39;value&#39;).alias(&#39;value_list&#39;)).show()
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value_list</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>['a', 'b', 'b']</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>['c']</td>
+ </tr>
+</table>
+
+<p>I then create a <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.udf">UDF</a> which will count all the occurences of the letter 'a' in these lists (this can be easily done without a UDF but you get the point). This UDF wraps around collect_list, so it acts on the output of collect_list.</p>
+<div class="highlight"><pre><span></span><code> def find_a(x):
+   &quot;&quot;&quot;Count &#39;a&#39;s in list.&quot;&quot;&quot;
+   output_count = 0
+   for i in x:
+     if i == &#39;a&#39;:
+       output_count += 1
+   return output_count
+
+ find_a_udf = F.udf(find_a, T.IntegerType())
+
+ a.groupBy(&#39;id&#39;).agg(find_a_udf(F.collect_list(&#39;value&#39;)).alias(&#39;a_count&#39;)).show()
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>a_count</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>There we go! A UDF that acts on aggregated data! Next, I show the power of this approach when combined with <a href="http://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.functions.when">when</a> which let's us control which data enters F.collect_list.</p>
+<p>First, let's create a dataframe with an extra column.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">functions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">F</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">types</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">T</span>
+
+<span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;a&#39;</span><span class="p">],</span>
+<span class="w">                     </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;a&#39;</span><span class="p">],</span>
+<span class="w">                     </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b&#39;</span><span class="p">],</span>
+<span class="w">                     </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b&#39;</span><span class="p">],</span>
+<span class="w">                     </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;value1&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;value2&#39;</span><span class="p">])</span>
+<span class="w"> </span><span class="n">a</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>value1</th>
+   <th>value2</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2</td>
+   <td>'a'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>2</td>
+   <td>'b'</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>1</td>
+   <td>'c'</td>
+ </tr>
+</table>
+
+<p>Notice, how I included a when in the collect_list. Note that the UDF still wraps around collect_list.</p>
+<div class="highlight"><pre><span></span><code> a.groupBy(&#39;id&#39;).agg(find_a_udf( F.collect_list(F.when(F.col(&#39;value1&#39;) == 1, F.col(&#39;value2&#39;)))).alias(&#39;a_count&#39;)).show()
+</code></pre></div>
+
+<table style="width:100%">
+ <tr>
+   <th>id</th>
+   <th>a_count</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>0</td>
+ </tr>
+</table>
+
+<p>There we go! Hope you find this info helpful!</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2018-09-06T16:04:43-05:00" pubdate>Thu 06 September 2018</time>  <span class="categories">
+    <a class='category' href='/category/pyspark.html'>pyspark</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/python-aggregate-udfs-in-pyspark.html';
+    var disqus_url = '/python-aggregate-udfs-in-pyspark.html';
+    var disqus_title = 'Python Aggregate UDFs in PySpark';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

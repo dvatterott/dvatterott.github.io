@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>An Introduction to Neural Networks: Part 1 &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">An Introduction to Neural Networks: Part 1</h1>
+    <p class="meta">
+<time datetime="2016-04-29T19:17:07-04:00" pubdate>Fri 29 April 2016</time>    </p>
+</header>
+
+  <div class="entry-content"><p>We use our most advanced technologies as metaphors for the brain: The industrial revolution inspired descriptions of the brain as mechanical. The telephone inspired descriptions of the brain as a telephone switchboard. The computer inspired descriptions of the brain as a computer. Recently, we have reached a point where our most advanced technologies - such as AI (e.g., <a href="https://en.wikipedia.org/wiki/AlphaGo">Alpha Go</a>), and our current understanding of the brain inform each other in an awesome synergy. Neural networks exemplify this synergy. Neural networks offer a relatively advanced description of the brain and are the software underlying some of our most advanced technology. As our understanding of the brain increases, neural networks become more sophisticated. As our understanding of neural networks increases, our understanding of the brain becomes more sophisticated.</p>
+<p>With the recent success of neural networks, I thought it would be useful to write a few posts describing the basics of neural networks.</p>
+<p>First, what are <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural networks</a> - neural networks are a family of machine learning algorithms that can learn data's underlying structure. Neural networks are composed of many <em>neurons</em> that perform simple computations. By performing many simple computations, neural networks can answer even the most complicated problems.</p>
+<p>Lets get started.</p>
+<p>As usual, I will post this code as a jupyter notebook on <a href="https://github.com/dvatterott/jupyter_notebooks">my github</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="w"> </span><span class="c1">#import important libraries.</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">plt</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="w"> </span><span class="o">%</span><span class="n">matplotlib</span><span class="w"> </span><span class="n">inline</span>
+</code></pre></div>
+
+<p>When talking about neural networks, it's nice to visualize the network with a figure. For drawing the neural networks, I forked a <a href="https://github.com/miloharper/visualise-neural-network">repository from miloharper</a> and made some changes so that this repository could be imported into python and so that I could label the network. <a href="https://github.com/dvatterott/visualise_neural_network">Here</a> is my forked repository.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">visualise_neural_network</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">NeuralNetwork</span>
+
+<span class="w"> </span><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">NeuralNetwork</span><span class="p">()</span><span class="w"> </span><span class="c1">#create neural network object</span>
+<span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">2</span><span class="p">,[</span><span class="s1">&#39;Input A&#39;</span><span class="p">,</span><span class="s1">&#39;Input B&#39;</span><span class="p">],[</span><span class="s1">&#39;Weight A&#39;</span><span class="p">,</span><span class="s1">&#39;Weight B&#39;</span><span class="p">])</span><span class="w"> </span><span class="c1">#create the input layer which has two neurons.</span>
+<span class="w"> </span><span class="c1">#Each input neuron has a single line extending to the next layer up</span>
+<span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="mi">1</span><span class="p">,[</span><span class="s1">&#39;Output&#39;</span><span class="p">])</span><span class="w"> </span><span class="c1">#create output layer - a single output neuron</span>
+<span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span><span class="w"> </span><span class="c1">#draw the network</span>
+</code></pre></div>
+
+<p><img src="/images/neural_net/example1.png" /></p>
+<p>Above is our neural network. It has two input neurons and a single output neuron. In this example, I'll give the network an input of [0 1]. This means Input A will receive an input value of 0 and Input B will have an input value of 1.</p>
+<p>The input is the input unit's <em>activity.</em> This activity is sent to the Output unit, but the activity changes when traveling to the Output unit. The <em>weights</em> between the input and output units change the activity. A large positive weight between the input and output units causes the input unit to send a large positive (excitatory) signal. A large negative weight between the input and output units causes the input unit to send a large negative (inhibitory) signal. A weight near zero means the input unit does not influence the output unit.</p>
+<p>In order to know the Output unit's activity, we need to know its input. I will refer to the output unit's input as $$net_{Output}$$. Here is how we can calculate $$net_{Output}$$</p>
+<p>$$
+net_{Output} = Input_A * Weight_A + Input_B * Weight_B
+$$</p>
+<p>a more general way of writing this is</p>
+<p>$$
+net = \displaystyle\sum_{i=1}^{Inputs}Input_i * Weight_i
+$$</p>
+<p>Let's pretend the inputs are [0 1] and the Weights are [0.25 0.5]. Here is the input to the output neuron -</p>
+<p>$$
+net_{Output} = 0 * 0.25 + 1 * 0.5
+$$</p>
+<p>Thus, the input to the output neuron is 0.5. A quick way of programming this is through the function numpy.dot which finds the <a href="https://en.wikipedia.org/wiki/Dot_product">dot product</a> of two vectors (or matrices). This might sound a little scary, but in this case its just multiplying the items by each other and then summing everything up - like we did above.</p>
+<div class="highlight"><pre><span></span><code> Inputs = np.array([0, 1])
+ Weights = np.array([0.25, 0.5])
+
+ net_Output = np.dot(Inputs,Weights)
+ print net_Output
+
+0.5
+</code></pre></div>
+
+<p>All this is good, but we haven't actually calculated the output unit's activity we have only calculated its input. What makes neural networks able to solve complex problems is they include a non-linearity when translating the input into activity. In this case we will translate the input into activity by putting the input through a <a href="https://en.wikipedia.org/wiki/Logistic_function">logistic function</a>.</p>
+<p>$$
+Logistic = \frac{1}{1+e^{-x}}
+$$</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nv">def</span><span class="w"> </span><span class="nv">logistic</span><span class="ss">(</span><span class="nv">x</span><span class="ss">)</span>:<span class="w"> </span>#<span class="nv">each</span><span class="w"> </span><span class="nv">neuron</span><span class="w"> </span><span class="nv">has</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">logistic</span><span class="w"> </span><span class="nv">activation</span><span class="w"> </span><span class="nv">function</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span>.<span class="mi">0</span><span class="o">/</span><span class="ss">(</span><span class="mi">1</span><span class="o">+</span><span class="nv">np</span>.<span class="nv">exp</span><span class="ss">(</span><span class="o">-</span><span class="nv">x</span><span class="ss">))</span>
+</code></pre></div>
+
+<p>Lets take a look at a logistic function.</p>
+<div class="highlight"><pre><span></span><code> x = np.arange(-5,5,0.1) #create vector of numbers between -5 and 5
+ plt.plot(x,logistic(x))
+ plt.ylabel(&#39;Activation&#39;)
+ plt.xlabel(&#39;Input&#39;);
+</code></pre></div>
+
+<p><img src="/images/neural_net/logistic1.png" /></p>
+<p>As you can see above, the logistic used here transforms negative values into values near 0 and positive values into values near 1. Thus, when a unit receives a negative input it has activity near zero and when a unit receives a postitive input it has activity near 1. The most important aspect of this activation function is that its non-linear - it's not a straight line.</p>
+<p>Now lets see the activity of our output neuron. Remember, the net input is 0.5</p>
+<div class="highlight"><pre><span></span><code> Output_neuron = logistic(net_Output)
+ print Output_neuron
+ plt.plot(x,logistic(x));
+ plt.ylabel(&#39;Activation&#39;)
+ plt.xlabel(&#39;Input&#39;)
+ plt.plot(net_Output,Output_neuron,&#39;ro&#39;);
+
+0.622459331202
+</code></pre></div>
+
+<p><img src="/images/neural_net/logistic2.png" /></p>
+<p>The activity of our output neuron is depicted as the red dot.</p>
+<p>So far I've described how to find a unit's activity, but I haven't described how to find the weights of connections between units. In the example above, I chose the weights to be 0.25 and 0.5, but I can't arbitrarily decide weights unless I already know the solution to the problem. If I want the network to find a solution for me, I need the network to find the weights itself.</p>
+<p>In order to find the weights of connections between neurons, I will use an algorithm called <a href="https://en.wikipedia.org/wiki/Backpropagation">backpropogation</a>. In backpropogation, we have the neural network guess the answer to a problem and adjust the weights so that this guess gets closer and closer to the correct answer. Backpropogation is the method by which we reduce the distance between guesses and the correct answer. After many iterations of guesses by the neural network and weight adjustments through backpropogation, the network can learn an answer to a problem.</p>
+<p>Lets say we want our neural network to give an answer of 0 when the left input unit is active and an answer of 1 when the right unit is active. In this case the inputs I will use are [1,0] and [0,1]. The corresponding correct answers will be [0] and [1].</p>
+<p>Lets see how close our network is to the correct answer. I am using the weights from above ([0.25, 0.5]).</p>
+<div class="highlight"><pre><span></span><code> Inputs = [[1,0],[0,1]]
+ Answers = [0,1,]
+
+ Guesses = [logistic(np.dot(x,Weights)) for x in Inputs] #loop through inputs and find logistic(sum(input*weights))
+ plt.plot(Guesses,&#39;bo&#39;)
+ plt.plot(Answers,&#39;ro&#39;)
+ plt.axis([-0.5,1.5,-0.5,1.5])
+ plt.ylabel(&#39;Activation&#39;)
+ plt.xlabel(&#39;Input #&#39;)
+ plt.legend([&#39;Guesses&#39;,&#39;Answers&#39;]);
+ print Guesses
+
+[0.56217650088579807, 0.62245933120185459]
+</code></pre></div>
+
+<p><img src="/images/neural_net/net_guess1.png" /></p>
+<p>The guesses are in blue and the answers are in red. As you can tell, the guesses and the answers look almost nothing alike. Our network likes to guess around 0.6 while the correct answer is 0 in the first example and 1 in the second.</p>
+<p>Lets look at how backpropogation reduces the distance between our guesses and the correct answers.</p>
+<p>First, we want to know how the amount of error changes with an adjustment to a given weight. We can write this as</p>
+<p>$$
+\partial Error \over \partial Weight_{Input_{1}\to.Output}
+$$</p>
+<p>This change in error with changes in the weights has a number of different sub components.</p>
+<ul>
+<li>Changes in error with changes in the output unit's activity: $$\partial Error \over \partial Output$$</li>
+<li>Changes in the output unit's activity with changes in this unit's input: $$\partial Output \over \partial net_{Output}$$</li>
+<li>Changes in the output unit's input with changes in the weight: $$\partial net_{Output} \over \partial Weight_{Input_{1}\to.Output}$$</li>
+</ul>
+<p>Through the <a href="https://en.wikipedia.org/wiki/Chain_rule">chain rule</a> we know</p>
+<p>$$\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = \frac{\partial Error}{\partial Output} * \frac{\partial Output}{\partial net_{Output}} * \frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}}$$</p>
+<p>This might look scary, but with a little thought it should make sense: (starting with the final term and moving left) When we change the weight of a connection to a unit, we change the input to that unit. When we change the input to a unit, we change its activity (written Output above). When we change a units activity, we change the amount of error.</p>
+<p>Let's break this down using our example. During this portion, I am going to gloss over some details about how exactly to derive the partial derivatives. <a href="https://en.wikipedia.org/wiki/Delta_rule">Wikipedia has a more complete derivation</a>.  </p>
+<p>In the first example, the input is [1,0] and the correct answer is [0]. Our network's guess in this example was about 0.56.</p>
+<p>$$\frac{\partial Error}{\partial Output} = -(target-Output) = -(0-0.56)$$</p>
+<p>$$\frac{\partial Output}{\partial net_{Output}} = Output(1-Output) = 0.56*(1-0.56)$$</p>
+<p>Please note that this is specific to our example with a logistic activation function</p>
+<p>$$\frac{\partial net_{Output}}{\partial Weight_{Input_{1}\to.Output}} = Input_{1} = 1$$</p>
+<p>To summarize:</p>
+<p>$$
+\begin{multline}
+\frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}} = -(target-Output) * Output(1-Output) * Input_{1} \
+= -(0-0.56) * 0.56(1-0.56) * 1 = 0.14
+\end{multline}
+$$</p>
+<p>This is the direction we want to move in, but taking large steps in this direction can prevent us from finding the optimal weights. For this reason, we reduce our step size. We will reduce our step size with a parameter called the <em>learning rate</em> ($$\alpha$$). $$\alpha$$ is bound between 0 and 1.</p>
+<p>Here is how we can write our change in weights</p>
+<p>$$\Delta Weight_{Input_{1}\to.Output} = \alpha * \frac{\partial Error}{\partial Weight_{Input_{1}\to.Output}}$$</p>
+<p>This is known as the <a href="https://en.wikipedia.org/wiki/Delta_rule">delta rule</a>.</p>
+<p>We will set $$\alpha$$ to be 0.5. Here is how we will calculate the new $$Weight_{Input_{1}\to.Output}$$.</p>
+<p>$$Weight_{Input_{1}\to.Output}^{\prime} = Weight_{Input_{1}\to.Output} - 0.5 * 0.14 = 0.25 - 0.5 * 0.14 = 0.18$$</p>
+<p>Thus, $$Weight_{Input_{1}\to.Output}$$ is shrinking which will move the output towards 0. Below I write the code to implement our backpropogation.</p>
+<div class="highlight"><pre><span></span><code> alpha = 0.5
+
+ def delta_Output(target,Output):
+     return -(target-Output)*Output*(1-Output) #find the amount of error and derivative of activation function
+
+ def update_weights(alpha,delta,unit_input):
+     return alpha*np.outer(delta,unit_input) #multiply delta output by all the inputs and then multiply these by the learning rate
+</code></pre></div>
+
+<p>Above I use the <a href="https://en.wikipedia.org/wiki/Outer_product">outer product</a> of our delta function and the input in order to spread the weight changes to all lines connecting to the output unit.</p>
+<p>Okay, hopefully you made it through that. I promise thats as bad as it gets. Now that we've gotten through the nasty stuff, lets use backpropogation to find an answer to our problem.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">network_guess</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights</span><span class="p">):</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">logistic</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights</span><span class="o">.</span><span class="n">T</span><span class="p">))</span><span class="w"> </span><span class="c1">#input by weights then through a logistic</span>
+
+<span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">back_prop</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Output</span><span class="p">,</span><span class="n">target</span><span class="p">,</span><span class="n">Weights</span><span class="p">):</span>
+<span class="w">     </span><span class="n">delta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">delta_Output</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">Output</span><span class="p">)</span><span class="w"> </span><span class="c1">#find delta portion</span>
+<span class="w">     </span><span class="n">delta_weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">update_weights</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">delta</span><span class="p">,</span><span class="n">Input</span><span class="p">)</span><span class="w"> </span><span class="c1">#find amount to update weights</span>
+<span class="w">     </span><span class="n">Weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">Weights</span><span class="p">)</span><span class="w"> </span><span class="c1">#convert weights to array</span>
+<span class="w">     </span><span class="n">Weights</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="o">-</span><span class="n">delta_weight</span><span class="w"> </span><span class="c1">#update weights</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">Weights</span>
+
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="n">seed</span>
+<span class="w"> </span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="c1">#seed random number generator so that these results can be replicated</span>
+
+<span class="w"> </span><span class="n">Weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">])</span>
+
+<span class="w"> </span><span class="nb">Error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+<span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="kc">True</span><span class="p">:</span>
+
+<span class="w">     </span><span class="n">Trial_Type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">choice</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="c1">#generate random number to choose between the two inputs</span>
+
+<span class="w">     </span><span class="n">Input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">Inputs</span><span class="p">[</span><span class="n">Trial_Type</span><span class="p">])</span><span class="w"> </span><span class="c1">#choose input and convert to array</span>
+<span class="w">     </span><span class="n">Answer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Answers</span><span class="p">[</span><span class="n">Trial_Type</span><span class="p">]</span><span class="w"> </span><span class="c1">#get the correct answer</span>
+
+<span class="w">     </span><span class="n">Output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network_guess</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Weights</span><span class="p">)</span><span class="w"> </span><span class="c1">#compute the networks guess</span>
+<span class="w">     </span><span class="n">Weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">back_prop</span><span class="p">(</span><span class="n">Input</span><span class="p">,</span><span class="n">Output</span><span class="p">,</span><span class="n">Answer</span><span class="p">,</span><span class="n">Weights</span><span class="p">)</span><span class="w"> </span><span class="c1">#change the weights based on the error</span>
+
+<span class="w">     </span><span class="nb">Error</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Output</span><span class="o">-</span><span class="n">Answer</span><span class="p">))</span><span class="w"> </span><span class="c1">#record error</span>
+
+<span class="w">     </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nb">Error</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="nb">Error</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:])</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.05</span><span class="p">:</span><span class="w"> </span><span class="k">break</span><span class="w"> </span><span class="c1">#tell the code to stop iterating when mean error is &lt; 0.05 in the last 5 guesses</span>
+</code></pre></div>
+
+<p>It seems our code has found an answer, so lets see how the amount of error changed as the code progressed.</p>
+<div class="highlight"><pre><span></span><code> Error_vec = np.array(Error)[:,0]
+ plt.plot(Error_vec)
+ plt.ylabel(&#39;Error&#39;)
+ plt.xlabel(&#39;Iteration #&#39;);
+</code></pre></div>
+
+<p><img src="/images/neural_net/net_learn1.png" /></p>
+<p>It looks like the while loop excecuted about 1000 iterations before converging. As you can see the error decreases. Quickly at first then slowly as the weights zone in on the correct answer. lets see how our guesses compare to the correct answers.</p>
+<div class="highlight"><pre><span></span><code> Inputs = [[1,0],[0,1]]
+ Answers = [0,1,]
+
+ Guesses = [logistic(np.dot(x,Weights.T)) for x in Inputs] #loop through inputs and find logistic(sum(input*weights))
+ plt.plot(Guesses,&#39;bo&#39;)
+ plt.plot(Answers,&#39;ro&#39;)
+ plt.axis([-0.5,1.5,-0.5,1.5])
+ plt.ylabel(&#39;Activation&#39;)
+ plt.xlabel(&#39;Input #&#39;)
+ plt.legend([&#39;Guesses&#39;,&#39;Answers&#39;]);
+ print Guesses
+
+[array([ 0.05420561]), array([ 0.95020512])]
+</code></pre></div>
+
+<p><img src="/images/neural_net/net_guess2.png" /></p>
+<p>Not bad! Our guesses are much closer to the correct answers than before we started running the backpropogation procedure! Now, you might say, "HEY! But you haven't reached the <em>correct</em> answers." That's true, but note that acheiving the values of 0 and 1 with a logistic function are only possible at -$$\infty$$ and $$\infty$$, respectively. Because of this, we treat 0.05 as 0 and 0.95 as 1.</p>
+<p>Okay, all this is great, but that was a really simple problem, and I said that neural networks could solve interesting problems!</p>
+<p>Well... this post is already longer than I anticipated. I will follow-up this post with another post explaining how we can expand neural networks to solve more interesting problems.</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2016-04-29T19:17:07-04:00" pubdate>Fri 29 April 2016</time>  <span class="categories">
+    <a class='category' href='/category/python.html'>python</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/an-introduction-to-neural-networks-part-1.html';
+    var disqus_url = '/an-introduction-to-neural-networks-part-1.html';
+    var disqus_title = 'An Introduction to Neural Networks: Part 1';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

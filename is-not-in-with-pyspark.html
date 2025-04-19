@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>'Is Not In' with PySpark &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">'Is Not In' with PySpark</h1>
+    <p class="meta">
+<time datetime="2018-02-06T21:10:32-06:00" pubdate>Tue 06 February 2018</time>    </p>
+</header>
+
+  <div class="entry-content"><p>In SQL it's easy to find people in one list who are not in a second list (i.e., the "not in" command), but there is no similar command in PySpark. Well, at least not <a href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.Column.isin">a command</a> that doesn't involve collecting the second list onto the master instance.</p>
+<p><strong>EDIT</strong><br>
+Check the note at the bottom regarding "anti joins". Using an anti join is much cleaner than the code described here.</p>
+<p>Here is a tidbit of code which replicates SQL's "not in" command, while keeping your data with the workers (it will require a shuffle).</p>
+<p>I start by creating some small dataframes.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">pyspark</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">functions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">F</span>
+<span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;a&#39;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b&#39;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;valueA&#39;</span><span class="p">])</span>
+<span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;a&#39;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;d&#39;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;e&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toDF</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;valueB&#39;</span><span class="p">])</span>
+</code></pre></div>
+
+<p>Take a quick look at dataframe <em>a</em>.
+     a.show()</p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>a</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>b</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>c</td>
+ </tr>
+</table>
+
+<p>And dataframe <em>b</em>.
+     b.show()</p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>a</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>d</td>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>e</td>
+ </tr>
+</table>
+
+<p>I create a new column in <em>a</em> that is all ones. I could have used an existing column, but this way I know the column is never null.
+     a = a.withColumn('inA', F.lit(1))
+     a.show()</p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+   <th>inA</th>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>a</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>2</td>
+   <td>b</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>3</td>
+   <td>c</td>
+   <td>1</td>
+ </tr>
+</table>
+
+<p>I join <em>a</em> and <em>b</em> with a left join. This way all values in <em>b</em> which are not in <em>a</em> have null values in the column "inA".
+     b.join(a, 'id', 'left').show()</p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+   <th>valueB</th>
+   <th>inA</th>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>e</td>
+   <td>null</td>
+   <td>null</td>
+ </tr>
+ <tr>
+   <td>1</td>
+   <td>a</td>
+   <td>a</td>
+   <td>1</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>d</td>
+   <td>null</td>
+   <td>null</td>
+ </tr>
+</table>
+
+<p>By filtering out rows in the new dataframe <em>c</em>, which are not null, I remove all values of <em>b</em>, which were also in <em>a</em>.
+     c = b.join(a, 'id', 'left').filter(F.col('inA').isNull())
+     c.show()</p>
+<table style="width:5%">
+ <tr>
+   <th>id</th>
+   <th>valueA</th>
+   <th>valueB</th>
+   <th>inA</th>
+ </tr>
+ <tr>
+   <td>5</td>
+   <td>e</td>
+   <td>null</td>
+   <td>null</td>
+ </tr>
+ <tr>
+   <td>4</td>
+   <td>d</td>
+   <td>null</td>
+   <td>null</td>
+ </tr>
+</table>
+
+<p><strong>EDIT</strong><br>
+I recently gave the <a href="https://spark.apache.org/docs/2.3.0/api/python/pyspark.sql.html#pyspark.sql.DataFrame.join">PySpark documentation</a> a more thorough reading and realized that PySpark's join command has a left_anti option. The left_anti option produces the same functionality as described above, but in a single join command (no need to create a dummy column and filter).</p>
+<p>For example, the following code will produce rows in b where the id value is not present in a.</p>
+<div class="highlight"><pre><span></span><code> c = b.join(a, &#39;id&#39;, &#39;left_anti&#39;)
+</code></pre></div></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2018-02-06T21:10:32-06:00" pubdate>Tue 06 February 2018</time>  <span class="categories">
+    <a class='category' href='/category/pyspark.html'>pyspark</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/is-not-in-with-pyspark.html';
+    var disqus_url = '/is-not-in-with-pyspark.html';
+    var disqus_title = '\'Is Not In\' with PySpark';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

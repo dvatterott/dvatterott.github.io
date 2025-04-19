@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Grouping NBA Players &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Grouping NBA Players</h1>
+    <p class="meta">
+<time datetime="2016-02-21T15:14:23-05:00" pubdate>Sun 21 February 2016</time>    </p>
+</header>
+
+  <div class="entry-content"><p>In basketball, we typically talk about 5 positions: point guard, shooting guard, small forward, power forward, and center. Based on this, one might expect NBA players to fall into 5 distinct groups- Point guards perform similar to other point guards, shooting guards perform similar to other shooting guards, etc. Is this the case? Do NBA players fall neatly into position groups?</p>
+<p>To answer this question, I will look at how NBA players "group" together. For example, there might be a group of players who collect lots of rebounds, shoot poorly from behind the 3 point line, and block lots of shots. I might call these players forwards. If we allow player performance to create groups, what will these groups look like?</p>
+<p>To group players, I will use k-means clustering (https://en.wikipedia.org/wiki/K-means_clustering).</p>
+<p>When choosing a clustering algorithm, its important to think about how the clustering algorithm defines clusters. k-means minimizes the distance between data points (players in my case) and the center of K different points. Because distance is between the cluster center and a given point, k-means assumes clusters are spherical. When thinking about clusters of NBA players, do I think these clusters will be spherical? If not, then I might want try a different clustering algorithm.</p>
+<p>For now, I will assume generally spherical clusters and use k-means. At the end of this post, I will comment on whether this assumption seems valid.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="c1">#import libraries and tell ipython we want inline figures rather than interactive figures.</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span><span class="o">,</span><span class="w"> </span><span class="nn">requests</span><span class="o">,</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="w"> </span><span class="o">%</span><span class="n">matplotlib</span><span class="w"> </span><span class="n">inline</span>
+<span class="w"> </span><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">mpl_style</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;default&#39;</span><span class="w"> </span><span class="c1">#load matplotlib for plotting</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;ggplot&#39;</span><span class="p">)</span><span class="w"> </span><span class="c1">#im addicted to ggplot. so pretty.</span>
+<span class="w"> </span><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;font.family&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Bitstream Vera Sans&#39;</span><span class="p">]</span>
+</code></pre></div>
+
+<p>We need data. Collecting the data will require a couple steps. First, I will create a matrix of all players who ever played in the NBA (via the NBA.com API).</p>
+<div class="highlight"><pre><span></span><code> url = &#39;http://stats.nba.com/stats/commonallplayers?IsOnlyCurrentSeason=0&amp;LeagueID=00&amp;Season=2015-16&#39;
+ # the critical part of the URL is IsOnlyCurrentSeason=0. The 0 means all seasons.
+ response = requests.get(url) #get data
+ headers = response.json()[&#39;resultSets&#39;][0]
+ players = response.json()[&#39;resultSets&#39;][0][&#39;rowSet&#39;]
+ players_df = pd.DataFrame(players, columns=headers[&#39;headers&#39;]) #turn data into dataframe
+</code></pre></div>
+
+<p>In the 1979-1980 season, the NBA started using the 3-point line. The 3-point has dramatically changed basketball, so players performed different before it. While this change in play was not instantaneous, it does not make sense to include players before the 3-point line.</p>
+<div class="highlight"><pre><span></span><code> players_df[&#39;TO_YEAR&#39;] = players_df[&#39;TO_YEAR&#39;].apply(lambda x:int(x)) #change data in the TO_YEAR column from strings to numbers
+ players_df = players_df[players_df[&#39;TO_YEAR&#39;]&gt;1979] #only use players after 3 pt line
+</code></pre></div>
+
+<p>I have a list of all the players after 1979, but I want data about all these players. When grouping the players, I am not interested in how much a player played. Instead, I want to know HOW a player played. To remove variability associated with playing time, I will gather data that is standardized for 36 minutes of play. For example, if a player averages 4 points and 12 minutes a game, this player averages 12 points per 36 minutes.</p>
+<p>Below, I have written a function that will collect every player's performance per 36 minutes. The function collects data one player at a time, so its VERY slow. If you want the data, it can be found on my github (https://github.com/dvatterott/nba_project).</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">def</span><span class="w"> </span><span class="nx">careerPer36</span><span class="p">(</span><span class="nx">playerID</span><span class="p">):</span>
+<span class="w">     </span><span class="nx">url</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">http</span><span class="p">:</span><span class="c1">//stats.nba.com/stats/playercareerstats?LeagueID=00&amp;PerMode=Per36&amp;PlayerID=&#39;+str(playerID)</span>
+<span class="w">     </span><span class="nx">header_data</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">#</span><span class="nx">I</span><span class="w"> </span><span class="nx">pulled</span><span class="w"> </span><span class="nx">this</span><span class="w"> </span><span class="nx">header</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">py</span><span class="w"> </span><span class="nx">goldsberry</span><span class="w"> </span><span class="kn">library</span>
+<span class="w">             </span><span class="err">&#39;</span><span class="nx">Accept</span><span class="o">-</span><span class="nx">Encoding</span><span class="err">&#39;</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">gzip</span><span class="p">,</span><span class="w"> </span><span class="nx">deflate</span><span class="p">,</span><span class="w"> </span><span class="nx">sdch</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">             </span><span class="err">&#39;</span><span class="nx">Accept</span><span class="o">-</span><span class="nx">Language</span><span class="err">&#39;</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">en</span><span class="o">-</span><span class="nx">US</span><span class="p">,</span><span class="nx">en</span><span class="p">;</span><span class="nx">q</span><span class="p">=</span><span class="m m-Double">0.8</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">             </span><span class="err">&#39;</span><span class="nx">Upgrade</span><span class="o">-</span><span class="nx">Insecure</span><span class="o">-</span><span class="nx">Requests</span><span class="err">&#39;</span><span class="p">:</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="p">,</span>
+<span class="w">             </span><span class="err">&#39;</span><span class="nx">User</span><span class="o">-</span><span class="nx">Agent</span><span class="err">&#39;</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">Mozilla</span><span class="o">/</span><span class="m m-Double">5.0</span><span class="w"> </span><span class="p">(</span><span class="nx">Windows</span><span class="w"> </span><span class="nx">NT</span><span class="w"> </span><span class="m m-Double">10.0</span><span class="p">;</span><span class="w"> </span><span class="nx">WOW64</span><span class="p">)</span><span class="err">&#39;</span>\
+<span class="w">             </span><span class="err">&#39;</span><span class="w"> </span><span class="nx">AppleWebKit</span><span class="o">/</span><span class="m m-Double">537.36</span><span class="w"> </span><span class="p">(</span><span class="nx">KHTML</span><span class="p">,</span><span class="w"> </span><span class="k">like</span><span class="w"> </span><span class="nx">Gecko</span><span class="p">)</span><span class="w"> </span><span class="nx">Chrome</span><span class="o">/</span><span class="m m-Double">48.0.2564.82</span><span class="w"> </span><span class="err">&#39;</span>\
+<span class="w">             </span><span class="err">&#39;</span><span class="nx">Safari</span><span class="o">/</span><span class="m m-Double">537.36</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">             </span><span class="err">&#39;</span><span class="nx">Accept</span><span class="err">&#39;</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">text</span><span class="o">/</span><span class="nx">html</span><span class="p">,</span><span class="nx">application</span><span class="o">/</span><span class="nx">xhtml</span><span class="o">+</span><span class="nx">xml</span><span class="p">,</span><span class="nx">application</span><span class="o">/</span><span class="nx">xml</span><span class="p">;</span><span class="nx">q</span><span class="p">=</span><span class="m m-Double">0.9</span><span class="err">&#39;</span>\
+<span class="w">             </span><span class="err">&#39;</span><span class="p">,</span><span class="nx">image</span><span class="o">/</span><span class="nx">webp</span><span class="p">,</span><span class="o">*/*</span><span class="p">;</span><span class="nx">q</span><span class="p">=</span><span class="m m-Double">0.8</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">             </span><span class="err">&#39;</span><span class="nx">Cache</span><span class="o">-</span><span class="nx">Control</span><span class="err">&#39;</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">max</span><span class="o">-</span><span class="nx">age</span><span class="p">=</span><span class="mi">0</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">             </span><span class="err">&#39;</span><span class="nx">Connection</span><span class="err">&#39;</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">keep</span><span class="o">-</span><span class="nx">alive</span><span class="err">&#39;</span>
+<span class="w">         </span><span class="p">}</span>
+<span class="w">     </span><span class="nx">try</span><span class="p">:</span>
+<span class="w">         </span><span class="nx">response</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">requests</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="nx">headers</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">header_data</span><span class="p">)</span><span class="w"> </span><span class="err">#</span><span class="nx">get</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">data</span>
+<span class="w">         </span><span class="err">#</span><span class="nx">print</span><span class="w"> </span><span class="nx">playerID</span><span class="w"> </span><span class="err">#</span><span class="nx">testing</span><span class="w"> </span><span class="nx">purposes</span>
+<span class="w">     </span><span class="nx">except</span><span class="p">:</span>
+<span class="w">         </span><span class="nx">time</span><span class="p">.</span><span class="nx">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="err">#</span><span class="nx">sometime</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">nba</span><span class="w"> </span><span class="kn">api</span><span class="w"> </span><span class="nx">gets</span><span class="w"> </span><span class="nx">mad</span><span class="w"> </span><span class="nx">about</span><span class="w"> </span><span class="nx">all</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">requests</span><span class="p">,</span><span class="w"> </span><span class="nx">so</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="nx">take</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">quick</span><span class="w"> </span><span class="k">break</span>
+<span class="w">         </span><span class="nx">response</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">requests</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="nx">headers</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">header_data</span><span class="p">)</span>
+<span class="w">     </span><span class="nx">headers</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">()[</span><span class="err">&#39;</span><span class="nx">resultSets</span><span class="err">&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="err">#</span><span class="nx">find</span><span class="w"> </span><span class="nx">headers</span>
+<span class="w">     </span><span class="nx">players</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">()[</span><span class="err">&#39;</span><span class="nx">resultSets</span><span class="err">&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="err">&#39;</span><span class="nx">rowSet</span><span class="err">&#39;</span><span class="p">]</span><span class="w"> </span><span class="err">#</span><span class="nx">actual</span><span class="w"> </span><span class="nx">data</span>
+<span class="w">     </span><span class="nx">players_df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">pd</span><span class="p">.</span><span class="nx">DataFrame</span><span class="p">(</span><span class="nx">players</span><span class="p">,</span><span class="w"> </span><span class="nx">columns</span><span class="p">=</span><span class="nx">headers</span><span class="p">[</span><span class="err">&#39;</span><span class="nx">headers</span><span class="err">&#39;</span><span class="p">])</span><span class="w"> </span><span class="err">#</span><span class="nx">create</span><span class="w"> </span><span class="nx">dataframe</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="nx">players_df</span>
+
+<span class="w"> </span><span class="err">#</span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">pd</span><span class="p">.</span><span class="nx">DataFrame</span><span class="p">()</span>
+<span class="w"> </span><span class="err">#</span><span class="nx">player_list</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">players_df</span><span class="p">[</span><span class="err">&#39;</span><span class="nx">PERSON_ID</span><span class="err">&#39;</span><span class="p">]</span>
+<span class="w"> </span><span class="err">#</span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">df</span><span class="p">.</span><span class="nx">append</span><span class="p">([</span><span class="nx">careerPer36</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">player_list</span><span class="p">])</span><span class="w"> </span><span class="err">#</span><span class="nx">BEWARE</span><span class="p">.</span><span class="w"> </span><span class="nx">this</span><span class="w"> </span><span class="nx">takes</span><span class="w"> </span><span class="nx">forever</span><span class="p">.</span>
+<span class="w"> </span><span class="err">#</span><span class="nx">df</span><span class="p">.</span><span class="nx">index</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">range</span><span class="p">(</span><span class="nx">np</span><span class="p">.</span><span class="nx">size</span><span class="p">(</span><span class="nx">df</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+<span class="w"> </span><span class="err">#</span><span class="nx">df</span><span class="p">.</span><span class="nx">to_pickle</span><span class="p">(</span><span class="err">&#39;</span><span class="nx">nba_career_stats_</span><span class="err">&#39;</span><span class="o">+</span><span class="nx">time</span><span class="p">.</span><span class="nx">strftime</span><span class="p">(</span><span class="s">&quot;%Y_%b_%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">gmtime</span><span class="p">())</span><span class="o">+</span><span class="err">&#39;</span><span class="p">.</span><span class="nx">pkl</span><span class="err">&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">pd</span><span class="p">.</span><span class="nx">read_pickle</span><span class="p">(</span><span class="err">&#39;</span><span class="nx">nba_career_stats_2016_Feb_14</span><span class="p">.</span><span class="nx">pkl</span><span class="err">&#39;</span><span class="p">)</span>
+
+<span class="w"> </span><span class="nx">df</span><span class="p">.</span><span class="nx">columns</span>
+
+
+<span class="nx">Index</span><span class="p">([</span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">PLAYER_ID</span><span class="err">&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">LEAGUE_ID</span><span class="err">&#39;</span><span class="p">,</span><span class="w">   </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">TEAM_ID</span><span class="err">&#39;</span><span class="p">,</span><span class="w">        </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">GP</span><span class="err">&#39;</span><span class="p">,</span><span class="w">        </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">GS</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">             </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">MIN</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FGM</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FGA</span><span class="err">&#39;</span><span class="p">,</span><span class="w">    </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FG_PCT</span><span class="err">&#39;</span><span class="p">,</span><span class="w">      </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FG3M</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FG3A</span><span class="err">&#39;</span><span class="p">,</span><span class="w">   </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FG3_PCT</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FTM</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FTA</span><span class="err">&#39;</span><span class="p">,</span><span class="w">    </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">FT_PCT</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">OREB</span><span class="err">&#39;</span><span class="p">,</span><span class="w">      </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">DREB</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">REB</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">AST</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">STL</span><span class="err">&#39;</span><span class="p">,</span>
+<span class="w">             </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">BLK</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">TOV</span><span class="err">&#39;</span><span class="p">,</span><span class="w">        </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">PF</span><span class="err">&#39;</span><span class="p">,</span><span class="w">       </span><span class="nx">u</span><span class="err">&#39;</span><span class="nx">PTS</span><span class="err">&#39;</span><span class="p">],</span>
+<span class="w">      </span><span class="nx">dtype</span><span class="p">=</span><span class="err">&#39;</span><span class="nx">object</span><span class="err">&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Great! Now we have data that is scaled for 36 minutes of play (per36 data) from every player between 1979 and 2016. Above, I printed out the columns. I don't want all this data. For instance, I do not care about how many minutes a player played. Also, some of the data is redundant. For instance, if I know a player's field goal attempts (FGA) and field goal percentage (FG_PCT), I can calculate the number of made field goals (FGM). I removed the data columns that seem redundant. I do this because I do not want redundant data exercising too much influence on the grouping process.</p>
+<p>Below, I create new data columns for 2 point field goal attempts and 2 point field goal percentage. I also remove all players who played less than 50 games. I do this because these players have not had the opportunity to establish consistent performance.</p>
+<div class="highlight"><pre><span></span><code> df = df[df[&#39;GP&#39;]&gt;50] #only players with more than 50 games.
+ df = df.fillna(0) #some players have &quot;None&quot; in some cells. Turn these into 0s
+ df[&#39;FG2M&#39;] = df[&#39;FGM&#39;]-df[&#39;FG3M&#39;] #find number of 2pt field goals
+ df[&#39;FG2A&#39;] = df[&#39;FGA&#39;]-df[&#39;FG3A&#39;] #2 point field goal attempts
+ df[&#39;FG2_PCT&#39;] = df[&#39;FG2M&#39;]/df[&#39;FG2A&#39;] #2 point field goal percentage
+ saveIDs = df[&#39;PLAYER_ID&#39;] #save player IDs for later
+ df = df.drop([&#39;PLAYER_ID&#39;,&#39;LEAGUE_ID&#39;,&#39;TEAM_ID&#39;,&#39;GP&#39;,&#39;GS&#39;,&#39;MIN&#39;,&#39;FGM&#39;,&#39;FGA&#39;,&#39;FG_PCT&#39;,&#39;FG3M&#39;,&#39;FTM&#39;,&#39;REB&#39;,&#39;PTS&#39;,&#39;FG2M&#39;],1) #pull out unncessary columns
+</code></pre></div>
+
+<p>It's always important to visualize the data, so lets get an idea what we're working with!</p>
+<p>The plot below is called a scatter matrix. This type of plot will appear again, so lets go through it carefully. Each subplot has the feature (stat) labeled on its row which serves as its y-axis. The column feature serves as the x-axis. For example the subplot in the second column of the first row plots 3-point field goal attempts by 3-point field goal percentage. As you can see, players that have higher 3-point percentages tend to take more 3-pointers... makes sense.</p>
+<p>On the diagonals, I plot the Kernel Density Estimation for the sample histogram. More players fall into areas where where the line is higher on the y-axis. For instance, no players shoot better than ~45% from behind the 3 point line.</p>
+<p>One interesting part about scatter matrices is the plots below the diagonal are a reflection of the plots above the diagonal. For example, the data in the second column of the first row and the first column of the second row are the same. The only difference is the axes have switched.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">axs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pd</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">scatter_matrix</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">),</span><span class="w"> </span><span class="n">diagonal</span><span class="o">=</span><span class="s1">&#39;kde&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">#the diagonal will show kernel density</span>
+<span class="w"> </span><span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">ax</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">axs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]]</span><span class="w"> </span><span class="c1">#turn off the ticks that take up way too much space in such a crammed figure</span>
+<span class="w"> </span><span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">ax</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">axs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]];</span>
+</code></pre></div>
+
+<p><img src="/images/scatter_mat1_nba.png" /></p>
+<p>There are a couple things to note in the graph above. First, there's a TON of information there. Second, it looks like there are some strong correlations. For example, look at the subplots depicting offensive rebounds by defensive rebounds.</p>
+<p>While I tried to throw out redundant data, I clearly did not throw out all redundant data. For example, players that are good 3-point shooters are probably also good free throw shooters. These players are simply good shooters, and being a good shooter contributes to multiple data columns above.</p>
+<p>When I group the data, I do not want an ability such as shooting to contribute too much. I want to group players equally according to all their abilities. Below I use a PCA to seperate variance associated with the different "components" (e.g., shooting ability) of basketball performance.</p>
+<p>For an explanation of PCA I recommend this link - https://georgemdallas.wordpress.com/2013/10/30/principal-component-analysis-4-dummies-eigenvectors-eigenvalues-and-dimension-reduction/.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">PCA</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">scale</span>
+
+<span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span><span class="w"> </span><span class="c1">#take data out of dataframe</span>
+<span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scale</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="c1">#standardize the data before giving it to the PCA.</span>
+<span class="w"> </span><span class="c1">#I standardize the data because some features such as PF or steals have lower magnitudes than other features such as FG2A</span>
+<span class="w"> </span><span class="c1">#I want both to contribute equally to the PCA, so I make sure they&#39;re on the same scale.</span>
+
+<span class="w"> </span><span class="n">pca</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PCA</span><span class="p">()</span><span class="w"> </span><span class="c1">#great PCA object</span>
+<span class="w"> </span><span class="n">pca</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="c1">#pull out principle components</span>
+<span class="w"> </span><span class="n">var_expl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pca</span><span class="o">.</span><span class="n">explained_variance_ratio_</span><span class="w"> </span><span class="c1">#find amount of variance explained by each component</span>
+<span class="w"> </span><span class="n">tot_var_expl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">sum</span><span class="p">(</span><span class="n">var_expl</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">enumerate</span><span class="p">(</span><span class="n">var_expl</span><span class="p">)])</span><span class="w"> </span><span class="c1">#create vector with cumulative variance</span>
+
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span><span class="w"> </span><span class="c1">#create cumulative proportion of variance plot</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">tot_var_expl</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">tot_var_expl</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="s1">&#39;o-&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">tot_var_expl</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">])</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Number of PCA Components Included&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Percentage of variance explained (%)&#39;</span><span class="p">)</span>
+
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="c1">#create scree plot</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">var_expl</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">var_expl</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="s1">&#39;o-&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">var_expl</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">])</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;PCA Component&#39;</span><span class="p">);</span>
+</code></pre></div>
+
+<p><img src="/images/PCA_nba.png" /></p>
+<p>On the left, I plot the amount of variance explained after including each additional PCA component. Using all the components explains all the variability, but notice how little the last few components contribute. It doesn't make sense to include a component that only explains 1% of the variability...but how many components to include!?</p>
+<p>I chose to include the first 5 components because no component after the 5th explained more than 5% of the data. This part of the analysis is admittedly arbitrary, but 5% is a relatively conservative cut-off.</p>
+<p>Below is the fun part of the data. We get to look at what features contribute to the different principle components.</p>
+<ul>
+<li>Assists and 3-point shooting contribute to the first component. I will call this the <strong>Outside Skills</strong> component.</li>
+<li>Free throw attempts, assists, turnovers and 2-point field goals contribute to the second component. I will call this the <strong>Rim Scoring</strong> component.</li>
+<li>Free throw percentage and 2-point field goal percentage  contribute to the third component. I will call this the <strong>Pure Points</strong> component.</li>
+<li>2-point field goal percentage and steals contribute to the fourth component. I will call this the <strong>Defensive Big Man</strong> component.</li>
+<li>3-point shooting and free throws contribute to the fifth component. I will call this the <strong>Dead Eye</strong> component.</li>
+</ul>
+<p>One thing to keep in mind here is that each component explains less variance than the last. So while 3 point shooting contributes to both the 1st and 5th component, more 3 point shooting variability is probably explained by the 1st component.</p>
+<p>It would be great if we had a PCA component that was only shooting and another that was only rebounding since we typically conceive these to be different skills. Yet, there are multiple aspects of each skill. For example, a 3-point shooter not only has to be a dead-eye shooter, but also has to find ways to get open. Additionally, being good at "getting open" might be something akin to basketball IQ which would also contribute to assists and steals!</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">factor_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Outside Skills&#39;</span><span class="p">,</span><span class="s1">&#39;Rim Scoring&#39;</span><span class="p">,</span><span class="s1">&#39;Pure Points&#39;</span><span class="p">,</span><span class="s1">&#39;Defensive Big Man&#39;</span><span class="p">,</span><span class="s1">&#39;Dead Eye&#39;</span><span class="p">]</span><span class="w"> </span><span class="c1">#my component names</span>
+<span class="w"> </span><span class="n">loadings_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pca</span><span class="o">.</span><span class="n">components_</span><span class="p">,</span><span class="w"> </span><span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+<span class="w"> </span><span class="c1">#loadings_df[0:5] #all the factor loadings appear below.</span>
+</code></pre></div>
+
+<p>Cool, we have our 5 PCA components. Now lets transform the data into our 5 component PCA space (from our 13 feature space - e.g., FG3A, FG3_PCT, ect.). To do this, we give each player a score on each of the 5 PCA components.</p>
+<p>Next, I want to see how players cluster together based on their scores on these components. First, let's investigate how using more or less clusters (i.e., groups) explains different amounts of variance.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial.distance</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">cdist</span><span class="p">,</span><span class="w"> </span><span class="n">pdist</span><span class="p">,</span><span class="w"> </span><span class="n">euclidean</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.cluster</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">KMeans</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">metrics</span>
+
+
+<span class="w"> </span><span class="c1">#http://stackoverflow.com/questions/6645895/calculating-the-percentage-of-variance-measure-for-k-means</span>
+<span class="w"> </span><span class="c1">#The above link was helpful when writing this code.</span>
+
+<span class="w"> </span><span class="n">reduced_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="n">whiten</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="c1">#transform data into the 5 PCA components space</span>
+<span class="w"> </span><span class="c1">#kmeans assumes clusters have equal variance, and whitening helps keep this assumption.</span>
+
+<span class="w"> </span><span class="n">k_range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">31</span><span class="p">)</span><span class="w"> </span><span class="c1">#looking amount of variance explained by 1 through 30 cluster</span>
+<span class="w"> </span><span class="n">k_means_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">k_range</span><span class="p">]</span><span class="w"> </span><span class="c1">#fit kmeans with 1 cluster to 30 clusters</span>
+
+<span class="w"> </span><span class="c1">#get labels and calculate silhouette score</span>
+<span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">labels_</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">k_means_var</span><span class="p">]</span>
+<span class="w"> </span><span class="n">sil_score</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">metrics</span><span class="o">.</span><span class="n">silhouette_score</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">labels</span><span class="p">]</span>
+
+<span class="w"> </span><span class="n">centroids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">k_means_var</span><span class="p">]</span><span class="w"> </span><span class="c1">#get the center of each cluster</span>
+<span class="w"> </span><span class="n">k_euclid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">cdist</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">,</span><span class="n">cent</span><span class="p">,</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">cent</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">centroids</span><span class="p">]</span><span class="w"> </span><span class="c1">#calculate distance between each item and each cluster center</span>
+<span class="w"> </span><span class="n">dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ke</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">ke</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">k_euclid</span><span class="p">]</span><span class="w"> </span><span class="c1">#get the distance between each item and its cluster</span>
+
+<span class="w"> </span><span class="n">wcss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">dist</span><span class="p">]</span><span class="w"> </span><span class="c1">#within cluster sum of squares</span>
+<span class="w"> </span><span class="n">tss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sum</span><span class="p">(</span><span class="n">pdist</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">reduced_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="c1">#total sum of squares</span>
+<span class="w"> </span><span class="n">bss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tss</span><span class="o">-</span><span class="n">wcss</span><span class="w"> </span><span class="c1">#between cluster sum of squares</span>
+
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span><span class="w"> </span><span class="c1">#create cumulative proportion of variance plot</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_range</span><span class="p">,</span><span class="w"> </span><span class="n">bss</span><span class="o">/</span><span class="n">tss</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="s1">&#39;o-&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">k_range</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">])</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Number of Clusters&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Percentage of variance explained (%)&#39;</span><span class="p">);</span>
+
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="c1">#create scree plot</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_range</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">sil_score</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="s1">&#39;o-&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">k_range</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">])</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Number of Clusters&#39;</span><span class="p">);</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Average Silhouette Score*100&#39;</span><span class="p">);</span>
+</code></pre></div>
+
+<p><img src="/images/cluster_eval_nba.png" /></p>
+<p>As you can in the left hand plot, adding more clusters explains more of the variance, but there are diminishing returns. Each additional cluster explains a little less data than the last (much like each PCA component explained less variance than the previous component).</p>
+<p>The particularly intersting point here is the point where the second derivative is greatest, when the amount of change changes the most (the elbow). The elbow occurs at the 6th cluster.</p>
+<p>Perhaps not coincidently, 6 clusters also has the highest silhouette score (right hand plot). The silhouette score computes the average distance between a player and all other players in this player's cluster. It then divides this distance by the distance between this player and all players in the next nearest cluster. Silhouette scores range between -1 and 1 (where negative one means the player is in the wrong cluster, 0 means the clusters completely overlap, and 1 means the clusters are extermely well separated).</p>
+<p>Six clusters has the highest silhouette score at 0.19. 0.19 is not great, and suggests a different clustering algorithm might be better. More on this later.</p>
+<p>Because 6 clusters is the elbow and has the highest silhouette score, I will use 6 clusters in my grouping analysis. Okay, now that I decided on 6 clusters lets see what players fall into what clusters!</p>
+<div class="highlight"><pre><span></span><code> final_fit = KMeans(n_clusters=6).fit(reduced_data) #fit 6 clusters
+ df[&#39;kmeans_label&#39;] = final_fit.labels_ #label each data point with its clusters
+ df[&#39;PLAYER_ID&#39;] = saveIDs #of course we want to know what players are in what cluster
+ player_names = [pd.DataFrame(players_df[players_df[&#39;PERSON_ID&#39;]==x][&#39;DISPLAY_LAST_COMMA_FIRST&#39;]).to_string(header=False,index=False) for x in df[&#39;PLAYER_ID&#39;]]
+ # because playerID #s mean nothing to me, lets get the names too
+ df[&#39;Name&#39;] = player_names
+
+ #lets also create a dataframe with data about where the clusters occur in the 5 component PCA space.
+ cluster_locs = pd.DataFrame(final_fit.cluster_centers_,columns=[&#39;component %s&#39;% str(s) for s in range(np.size(final_fit.cluster_centers_,1))])
+ cluster_locs.columns = factor_names
+</code></pre></div>
+
+<p>Awesome. Now lets see how all the clusters look. These clusters were created in 5 dimensional space, which is not easy to visualize. Below I plot another scatter matrix. The scatter matrix allows us to visualize the clusters in different 2D combinations of the 5D space.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">gaussian_kde</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+
+<span class="w"> </span><span class="n">centroids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">final_fit</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="w"> </span><span class="c1">#find centroids so we can plot them</span>
+<span class="w"> </span><span class="n">colors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="s1">&#39;g&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;m&#39;</span><span class="p">]</span><span class="w"> </span><span class="c1">#cluster colors</span>
+<span class="w"> </span><span class="n">Clusters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Cluster 0&#39;</span><span class="p">,</span><span class="s1">&#39;Cluster 1&#39;</span><span class="p">,</span><span class="s1">&#39;Cluster 2&#39;</span><span class="p">,</span><span class="s1">&#39;Cluster 3&#39;</span><span class="p">,</span><span class="s1">&#39;Cluster 4&#39;</span><span class="p">,</span><span class="s1">&#39;Cluster 5&#39;</span><span class="p">]</span><span class="w"> </span><span class="c1">#cluster...names</span>
+
+<span class="w"> </span><span class="n">numdata</span><span class="p">,</span><span class="w"> </span><span class="n">numvars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reduced_data</span><span class="o">.</span><span class="n">shape</span><span class="w"> </span><span class="c1">#players by PCA components</span>
+<span class="w"> </span><span class="n">fig</span><span class="p">,</span><span class="w"> </span><span class="n">axes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="n">numvars</span><span class="p">,</span><span class="w"> </span><span class="n">ncols</span><span class="o">=</span><span class="n">numvars</span><span class="p">,</span><span class="w"> </span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span><span class="w"> </span><span class="c1">#create a scatter matrix with 5**2 cells</span>
+<span class="w"> </span><span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+
+<span class="w"> </span><span class="n">recs</span><span class="o">=</span><span class="p">[]</span>
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">colors</span><span class="p">:</span><span class="w"> </span><span class="c1">#make some patches for the legend</span>
+<span class="w">     </span><span class="n">recs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">fc</span><span class="o">=</span><span class="n">col</span><span class="p">))</span>
+
+<span class="w"> </span><span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span><span class="n">Clusters</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="n">ncol</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="c1">#create legend with patches above</span>
+
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="n">ax</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">enumerate</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">):</span>
+<span class="w">     </span><span class="c1"># Hide all ticks and labels</span>
+<span class="w">     </span><span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">(),</span><span class="w"> </span><span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="w"> </span><span class="c1">#tick labels are too much with this many subplots</span>
+<span class="w">     </span><span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span><span class="w"> </span><span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="w">     </span><span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span><span class="w"> </span><span class="c1">#again, too much</span>
+<span class="w">     </span><span class="k">if</span><span class="w"> </span><span class="n">i</span><span class="o">%</span><span class="mi">5</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">factor_names</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">5</span><span class="p">])</span><span class="w"> </span><span class="c1">#label outer y axes</span>
+<span class="w">     </span><span class="k">if</span><span class="w"> </span><span class="n">i</span><span class="o">&gt;</span><span class="mi">19</span><span class="p">:</span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">factor_names</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">20</span><span class="p">])</span><span class="w"> </span><span class="c1">#label outer x axes</span>
+
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">triu_indices_from</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
+<span class="w">     </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="p">[(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">)]:</span>
+<span class="w">         </span><span class="c1">#plot individual data points and cluster centers</span>
+<span class="w">         </span><span class="n">axes</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">[:,</span><span class="w"> </span><span class="n">x</span><span class="p">],</span><span class="w"> </span><span class="n">reduced_data</span><span class="p">[:,</span><span class="w"> </span><span class="n">y</span><span class="p">],</span><span class="w"> </span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">markersize</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="w">         </span><span class="n">axes</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">centroids</span><span class="p">[:,</span><span class="n">x</span><span class="p">],</span><span class="w"> </span><span class="n">centroids</span><span class="p">[:,</span><span class="n">y</span><span class="p">],</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">169</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span><span class="w"> </span><span class="n">zorder</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="w"> </span><span class="c1">#create kernel density estimation for each PCA factor on the diagonals</span>
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">enumerate</span><span class="p">(</span><span class="n">factor_names</span><span class="p">):</span>
+<span class="w">     </span><span class="n">density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gaussian_kde</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">[:,</span><span class="n">i</span><span class="p">])</span>
+<span class="w">     </span><span class="n">density</span><span class="o">.</span><span class="n">covariance_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">lambda</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">.25</span>
+<span class="w">     </span><span class="n">density</span><span class="o">.</span><span class="n">_compute_covariance</span><span class="p">()</span>
+<span class="w">     </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">[:,</span><span class="n">i</span><span class="p">]),</span><span class="nb">max</span><span class="p">(</span><span class="n">reduced_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]))</span>
+<span class="w">     </span><span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">density</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</code></pre></div>
+
+<p><img src="/images/scatter_mat2_nba.png" /></p>
+<p>In this plot above. I mark the center of a given cluster with an X. For example, Cluster 0 and Cluster 5 are both high in outside skills. Cluster 5 is also high in rim scoring, but low in pure points.</p>
+<p>Below I look at the players in each cluster. The first thing I do is identify the player closest to the cluster's center. I call this player the prototype. It is the player that most exemplifies a cluster.</p>
+<p>I then show a picture of this player because... well I wanted to see who these players were.
+I print out this player's stats and the cluster's centroid location.
+Finally, I print out the first ten players in this cluster. This is the first ten players alphabetically. Not the ten players closest to cluster center.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">display</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">Image</span>
+
+<span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">player_names</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">([</span><span class="n">euclidean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">final_fit</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">reduced_data</span><span class="p">])]</span><span class="w"> </span><span class="c1">#find cluster prototype</span>
+<span class="w"> </span><span class="n">PlayerID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;PLAYER_ID&#39;</span><span class="p">]))</span><span class="w"> </span><span class="c1">#get players ID number</span>
+<span class="w"> </span><span class="c1">#player = Image(url = &quot;http://stats.nba.com/media/players/230x185/&quot;+PlayerID+&quot;.png&quot;)</span>
+<span class="w"> </span><span class="n">player</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Image</span><span class="p">(</span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;http://4.bp.blogspot.com/_RaOrchOImw8/S3mNk3exLeI/AAAAAAAAdZk/Hs-81mnXO_E/s400/Lloyd+Daniels.jpg&#39;</span><span class="p">,</span><span class="n">width</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="w"> </span><span class="n">display</span><span class="p">(</span><span class="n">player</span><span class="p">)</span>
+<span class="w"> </span><span class="c1">#display(df[df[&#39;Name&#39;]==name]) #prototype&#39;s stats</span>
+<span class="w"> </span><span class="n">display</span><span class="p">(</span><span class="n">cluster_locs</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="c1">#cluster centroid location</span>
+<span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Name&#39;</span><span class="p">][:</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="c1">#first ten players in the cluster (alphabetically)</span>
+</code></pre></div>
+
+<p><img src="http://4.bp.blogspot.com/_RaOrchOImw8/S3mNk3exLeI/AAAAAAAAdZk/Hs-81mnXO_E/s400/Lloyd+Daniels.jpg" width="100"/></p>
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Outside Skills</th>
+      <th>Rim Scoring</th>
+      <th>Pure Points</th>
+      <th>Defensive Big Man</th>
+      <th>Dead Eye</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.830457</td>
+      <td>-0.930833</td>
+      <td>0.28203</td>
+      <td>-0.054093</td>
+      <td>0.43606</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code><span class="mf">16</span><span class="w">       </span><span class="n">Afflalo</span><span class="p">,</span><span class="w"> </span><span class="n">Arron</span>
+<span class="mf">20</span><span class="w">         </span><span class="n">Ainge</span><span class="p">,</span><span class="w"> </span><span class="n">Danny</span>
+<span class="mf">40</span><span class="w">           </span><span class="n">Allen</span><span class="p">,</span><span class="w"> </span><span class="n">Ray</span>
+<span class="mf">46</span><span class="w">        </span><span class="n">Alston</span><span class="p">,</span><span class="w"> </span><span class="n">Rafer</span>
+<span class="mf">50</span><span class="w">     </span><span class="n">Aminu</span><span class="p">,</span><span class="w"> </span><span class="n">Al</span><span class="o">-</span><span class="n">Farouq</span>
+<span class="mf">53</span><span class="w">      </span><span class="ow">And</span><span class="n">ersen</span><span class="p">,</span><span class="w"> </span><span class="n">David</span>
+<span class="mf">54</span><span class="w">       </span><span class="ow">And</span><span class="n">erson</span><span class="p">,</span><span class="w"> </span><span class="n">Alan</span>
+<span class="mf">56</span><span class="w">      </span><span class="ow">And</span><span class="n">erson</span><span class="p">,</span><span class="w"> </span><span class="n">Derek</span>
+<span class="mf">60</span><span class="w">      </span><span class="ow">And</span><span class="n">erson</span><span class="p">,</span><span class="w"> </span><span class="n">James</span>
+<span class="mf">63</span><span class="w">       </span><span class="ow">And</span><span class="n">erson</span><span class="p">,</span><span class="w"> </span><span class="n">Kyle</span>
+<span class="n">Name</span><span class="p">:</span><span class="w"> </span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="p">:</span><span class="w"> </span><span class="n">object</span>
+</code></pre></div>
+
+<p>First, let me mention that cluster number is a purely categorical variable. Not ordinal. If you run this analysis, you will likely create clusters with similar players, but in a different order. For example, your cluster 1 might be my cluster 0.</p>
+<p>Cluster 0 has the most players (25%; about 490 of the 1965 in this cluster analysis) and is red in the scatter matrix above.</p>
+<p>Cluster 0 players are second highest in outside shooting (in the table above you can see their average score on the outside skills component is 0.83). These players are lowest in rim scoring (-0.93), so they do not draw many fouls - they are basically the snipers from the outside.</p>
+<p>The prototype is Lloyd Daniels who takes a fair number of 3s. I wouldn't call 31% a dominant 3-point percentage, but its certainly not bad. Notably, Lloyd Daniels doesn't seem to do much but shoot threes, as 55% of his shots come from the great beyond.</p>
+<p>Cluster 0 notable players include Andrea Bargnani, JJ Barea, Danilo Gallinari, and Brandon Jennings. Some forwards. Some Guards. Mostly good shooters.</p>
+<p>On to Cluster 1... I probably should have made a function from this code, but I enjoyed picking the players pictures too much.</p>
+<div class="highlight"><pre><span></span><code> name = player_names[np.argmin([euclidean(x,final_fit.cluster_centers_[1]) for x in reduced_data])]
+ PlayerID = str(int(df[df[&#39;Name&#39;]==name][&#39;PLAYER_ID&#39;]))
+ #player = Image(url = &quot;http://stats.nba.com/media/players/230x185/&quot;+PlayerID+&quot;.png&quot;)
+ player = Image(url = &#39;https://allshookdown.files.wordpress.com/2009/06/laettner_200_921121.jpg?w=200&amp;h=300&#39;,width=100)
+ display(player)
+ #display(df[df[&#39;Name&#39;]==name])
+ display(cluster_locs[1:2])
+ df[df[&#39;kmeans_label&#39;]==1][&#39;Name&#39;][:10]
+</code></pre></div>
+
+<p><img src="https://allshookdown.files.wordpress.com/2009/06/laettner_200_921121.jpg?w=200&h=300" width="100"/></p>
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Outside Skills</th>
+      <th>Rim Scoring</th>
+      <th>Pure Points</th>
+      <th>Defensive Big Man</th>
+      <th>Dead Eye</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>-0.340177</td>
+      <td>1.008111</td>
+      <td>1.051622</td>
+      <td>-0.150204</td>
+      <td>0.599516</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code><span class="mf">1</span><span class="w">         </span><span class="n">Abdul</span><span class="o">-</span><span class="n">Jabbar</span><span class="p">,</span><span class="w"> </span><span class="n">Kareem</span>
+<span class="mf">4</span><span class="w">         </span><span class="n">Abdur</span><span class="o">-</span><span class="n">Rahim</span><span class="p">,</span><span class="w"> </span><span class="n">Shareef</span>
+<span class="mf">9</span><span class="w">                 </span><span class="n">Adams</span><span class="p">,</span><span class="w"> </span><span class="n">Alvan</span>
+<span class="mf">18</span><span class="w">               </span><span class="n">Aguirre</span><span class="p">,</span><span class="w"> </span><span class="n">Mark</span>
+<span class="mf">75</span><span class="w">      </span><span class="n">Antetokounmpo</span><span class="p">,</span><span class="w"> </span><span class="n">Giannis</span>
+<span class="mf">77</span><span class="w">            </span><span class="n">Anthony</span><span class="p">,</span><span class="w"> </span><span class="n">Carmelo</span>
+<span class="mf">85</span><span class="w">             </span><span class="n">Arenas</span><span class="p">,</span><span class="w"> </span><span class="n">Gilbert</span>
+<span class="mf">121</span><span class="w">                 </span><span class="n">Baker</span><span class="p">,</span><span class="w"> </span><span class="n">Vin</span>
+<span class="mf">133</span><span class="w">           </span><span class="n">Barkley</span><span class="p">,</span><span class="w"> </span><span class="n">Charles</span>
+<span class="mf">148</span><span class="w">            </span><span class="n">Bates</span><span class="p">,</span><span class="w"> </span><span class="n">Billyray</span>
+<span class="n">Name</span><span class="p">:</span><span class="w"> </span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="p">:</span><span class="w"> </span><span class="n">object</span>
+</code></pre></div>
+
+<p>Cluster 1 is green in the scatter matrix and includes about 14% of players.</p>
+<p>Cluster 1 is highest on the rim scoring, pure points, and Dead Eye components. These players get the ball in the hoop.</p>
+<p>Christian Laettner is the prototype. He's a solid scoring forward.</p>
+<p>Gilbert Arenas stands out in the first ten names as I was tempted to think of this cluster as big men, but it really seems to be players who shoot, score, and draw fouls.</p>
+<p>Cluster 1 Notable players include James Harden,Kevin Garnet, Kevin Durant, Tim Duncan, Kobe, Lebron, Kevin Martin, Shaq, Anthony Randolph??, Kevin Love, Derrick Rose, and Michael Jordan.</p>
+<div class="highlight"><pre><span></span><code> name = player_names[np.argmin([euclidean(x,final_fit.cluster_centers_[2]) for x in reduced_data])]
+ PlayerID = str(int(df[df[&#39;Name&#39;]==name][&#39;PLAYER_ID&#39;]))
+ #player = Image(url = &quot;http://stats.nba.com/media/players/230x185/&quot;+PlayerID+&quot;.png&quot;)
+ player = Image(url = &#39;http://imageocd.com/images/nba10/doug-west-wallpaper-height-weight-position-college-high-school/doug-west.jpg&#39;,width=100)
+ display(player)
+ #display(df[df[&#39;Name&#39;]==name])
+ display(cluster_locs[2:3])
+ df[df[&#39;kmeans_label&#39;]==2][&#39;Name&#39;][:10]
+</code></pre></div>
+
+<p><img src="http://imageocd.com/images/nba10/doug-west-wallpaper-height-weight-position-college-high-school/doug-west.jpg" width="100"/></p>
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Outside Skills</th>
+      <th>Rim Scoring</th>
+      <th>Pure Points</th>
+      <th>Defensive Big Man</th>
+      <th>Dead Eye</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.013618</td>
+      <td>0.101054</td>
+      <td>0.445377</td>
+      <td>-0.347974</td>
+      <td>-1.257634</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code><span class="mf">2</span><span class="w">      </span><span class="n">Abdul</span><span class="o">-</span><span class="n">Rauf</span><span class="p">,</span><span class="w"> </span><span class="n">Mahmoud</span>
+<span class="mf">3</span><span class="w">       </span><span class="n">Abdul</span><span class="o">-</span><span class="n">Wahad</span><span class="p">,</span><span class="w"> </span><span class="n">Tariq</span>
+<span class="mf">5</span><span class="w">           </span><span class="n">Abernethy</span><span class="p">,</span><span class="w"> </span><span class="kr">To</span><span class="n">m</span>
+<span class="mf">10</span><span class="w">           </span><span class="n">Adams</span><span class="p">,</span><span class="w"> </span><span class="n">Hassan</span>
+<span class="mf">14</span><span class="w">         </span><span class="n">Addison</span><span class="p">,</span><span class="w"> </span><span class="n">Rafael</span>
+<span class="mf">24</span><span class="w">            </span><span class="n">Alarie</span><span class="p">,</span><span class="w"> </span><span class="n">Mark</span>
+<span class="mf">27</span><span class="w">      </span><span class="n">Aldridge</span><span class="p">,</span><span class="w"> </span><span class="n">LaMarcus</span>
+<span class="mf">31</span><span class="w">     </span><span class="n">Alexander</span><span class="p">,</span><span class="w"> </span><span class="n">Courtney</span>
+<span class="mf">35</span><span class="w">           </span><span class="n">Alford</span><span class="p">,</span><span class="w"> </span><span class="n">Steve</span>
+<span class="mf">37</span><span class="w">            </span><span class="n">Allen</span><span class="p">,</span><span class="w"> </span><span class="n">Lavoy</span>
+<span class="n">Name</span><span class="p">:</span><span class="w"> </span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="p">:</span><span class="w"> </span><span class="n">object</span>
+</code></pre></div>
+
+<p>Cluster 2 is yellow in the scatter matrix and includes about 17% of players.</p>
+<p>Lots of big men who are not outside shooters and don't draw many fouls. These players are strong 2 point shooters and free throw shooters. I think of these players as mid-range shooters. Many of the more recent Cluster 2 players are forwards since mid-range guards do not have much of a place in the current NBA.</p>
+<p>Cluster 2's prototype is Doug West. Doug West shoots well from the free throw line and on 2-point attempts, but not the 3-point line. He does not draw many fouls or collect many rebounds.</p>
+<p>Cluster 2 noteable players include LaMarcus Aldridge, Tayshaun Prince, Thaddeus Young, and Shaun Livingston</p>
+<div class="highlight"><pre><span></span><code> name = player_names[np.argmin([euclidean(x,final_fit.cluster_centers_[3]) for x in reduced_data])]
+ PlayerID = str(int(df[df[&#39;Name&#39;]==name][&#39;PLAYER_ID&#39;]))
+ #player = Image(url = &quot;http://stats.nba.com/media/players/230x185/&quot;+PlayerID+&quot;.png&quot;)
+ player = Image(url = &#39;http://4.bp.blogspot.com/_f5MWZq1BJXI/TCDRy3v6m9I/AAAAAAAAACc/Ux8M7uiadoc/s400/cato.jpg&#39;,width=100)
+ display(player)
+ #display(df[df[&#39;Name&#39;]==name])
+ display(cluster_locs[3:4])
+ df[df[&#39;kmeans_label&#39;]==3][&#39;Name&#39;][:10]
+</code></pre></div>
+
+<p><img src="http://4.bp.blogspot.com/_f5MWZq1BJXI/TCDRy3v6m9I/AAAAAAAAACc/Ux8M7uiadoc/s400/cato.jpg" width="100"/></p>
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Outside Skills</th>
+      <th>Rim Scoring</th>
+      <th>Pure Points</th>
+      <th>Defensive Big Man</th>
+      <th>Dead Eye</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>-1.28655</td>
+      <td>-0.467105</td>
+      <td>-0.133546</td>
+      <td>0.905368</td>
+      <td>0.000679</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code><span class="mf">7</span><span class="w">            </span><span class="n">Acres</span><span class="p">,</span><span class="w"> </span><span class="n">Mark</span>
+<span class="mf">8</span><span class="w">            </span><span class="n">Acy</span><span class="p">,</span><span class="w"> </span><span class="n">Quincy</span>
+<span class="mf">13</span><span class="w">         </span><span class="n">Adams</span><span class="p">,</span><span class="w"> </span><span class="n">Steven</span>
+<span class="mf">15</span><span class="w">          </span><span class="n">Adrien</span><span class="p">,</span><span class="w"> </span><span class="n">Jeff</span>
+<span class="mf">21</span><span class="w">        </span><span class="n">Ajinca</span><span class="p">,</span><span class="w"> </span><span class="n">Alexis</span>
+<span class="mf">26</span><span class="w">         </span><span class="n">Aldrich</span><span class="p">,</span><span class="w"> </span><span class="n">Cole</span>
+<span class="mf">34</span><span class="w">     </span><span class="n">Alexander</span><span class="p">,</span><span class="w"> </span><span class="n">Victor</span>
+<span class="mf">45</span><span class="w">       </span><span class="n">Alston</span><span class="p">,</span><span class="w"> </span><span class="n">Derrick</span>
+<span class="mf">51</span><span class="w">         </span><span class="n">Amundson</span><span class="p">,</span><span class="w"> </span><span class="n">Lou</span>
+<span class="mf">52</span><span class="w">       </span><span class="ow">And</span><span class="n">ersen</span><span class="p">,</span><span class="w"> </span><span class="n">Chris</span>
+<span class="n">Name</span><span class="p">:</span><span class="w"> </span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="p">:</span><span class="w"> </span><span class="n">object</span>
+</code></pre></div>
+
+<p>Cluster 3 is blue in the scatter matrix and includes about 16% of players.  </p>
+<p>Cluster 3 players do not have outside skills such as assists and 3-point shooting (they're last in outside skills). They do not draw many fouls or shoot well from the free throw line. These players do not shoot often, but have a decent shooting percentage. This is likely because they only shoot when wide open next to the hoop.</p>
+<p>Cluster 3 players are highest on the defensive big man component. They block lots of shots and collect lots of rebounds.</p>
+<p>The Cluster 3 prototype is Kelvin Cato. Cato is not and outside shooter and he only averages 7.5 shots per 36, but he makes these shots at a decent clip. Cato averages about 10 rebounds per 36.</p>
+<p>Notable Cluster 3 players include Andrew Bogut, Tyson Chandler, Andre Drummond, Kawahi Leonard??, Dikembe Mutumbo, and Hassan Whiteside.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">player_names</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">([</span><span class="n">euclidean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">final_fit</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">reduced_data</span><span class="p">])]</span>
+<span class="w"> </span><span class="n">PlayerID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb nb-Type">int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;PLAYER_ID&#39;</span><span class="p">]))</span>
+<span class="w"> </span><span class="c1">#player = Image(url = &quot;http://stats.nba.com/media/players/230x185/&quot;+PlayerID+&quot;.png&quot;)</span>
+<span class="w"> </span><span class="n">player</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Image</span><span class="p">(</span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;http://www.thenolookpass.com/wp-content/uploads/2012/01/IMG-724x1024.jpg&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">width</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span><span class="w"> </span><span class="c1">#a photo just for fun</span>
+<span class="w"> </span><span class="n">display</span><span class="p">(</span><span class="n">player</span><span class="p">)</span>
+<span class="w"> </span><span class="c1">#display(df[df[&#39;Name&#39;]==name])</span>
+<span class="w"> </span><span class="n">display</span><span class="p">(</span><span class="n">cluster_locs</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">])</span>
+<span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;kmeans_label&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">4</span><span class="p">][</span><span class="s1">&#39;Name&#39;</span><span class="p">][:</span><span class="mi">10</span><span class="p">]</span>
+</code></pre></div>
+
+<p><img src="http://www.thenolookpass.com/wp-content/uploads/2012/01/IMG-724x1024.jpg" width="100"/></p>
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Outside Skills</th>
+      <th>Rim Scoring</th>
+      <th>Pure Points</th>
+      <th>Defensive Big Man</th>
+      <th>Dead Eye</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>-0.668445</td>
+      <td>0.035927</td>
+      <td>-0.917479</td>
+      <td>-1.243347</td>
+      <td>0.244897</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code><span class="mf">0</span><span class="w">         </span><span class="n">Abdelnaby</span><span class="p">,</span><span class="w"> </span><span class="n">Alaa</span>
+<span class="mf">17</span><span class="w">          </span><span class="n">Ager</span><span class="p">,</span><span class="w"> </span><span class="n">Maurice</span>
+<span class="mf">28</span><span class="w">       </span><span class="n">Aleksinas</span><span class="p">,</span><span class="w"> </span><span class="n">Chuck</span>
+<span class="mf">33</span><span class="w">         </span><span class="n">Alexander</span><span class="p">,</span><span class="w"> </span><span class="n">Joe</span>
+<span class="mf">36</span><span class="w">          </span><span class="n">Allen</span><span class="p">,</span><span class="w"> </span><span class="n">Jerome</span>
+<span class="mf">48</span><span class="w">          </span><span class="n">Amaechi</span><span class="p">,</span><span class="w"> </span><span class="n">John</span>
+<span class="mf">49</span><span class="w">          </span><span class="n">Amaya</span><span class="p">,</span><span class="w"> </span><span class="n">Ashraf</span>
+<span class="mf">74</span><span class="w">          </span><span class="n">Anstey</span><span class="p">,</span><span class="w"> </span><span class="n">Chris</span>
+<span class="mf">82</span><span class="w">         </span><span class="n">Araujo</span><span class="p">,</span><span class="w"> </span><span class="n">Rafael</span>
+<span class="mf">89</span><span class="w">     </span><span class="n">Armstrong</span><span class="p">,</span><span class="w"> </span><span class="n">Brandon</span>
+<span class="n">Name</span><span class="p">:</span><span class="w"> </span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="p">:</span><span class="w"> </span><span class="n">object</span>
+</code></pre></div>
+
+<p>Cluster 4 is cyan in the scatter matrix above and includes the least number of players (about 13%).</p>
+<p>Cluster 4 players are not high on outsize skills. They are average on rim scoring. They do not score many points, and they don't fill up the defensive side of the stat sheet. These players don't seem like all stars.</p>
+<p>Looking at Doug Edwards' stats - certainly not a 3-point shooter. I guess a good description of cluster 4 players might be ... NBA caliber bench warmers.</p>
+<p>Cluster 4's notable players include Yi Jianlian and Anthony Bennet....yeesh</p>
+<div class="highlight"><pre><span></span><code> name = player_names[np.argmin([euclidean(x,final_fit.cluster_centers_[5]) for x in reduced_data])]
+ #PlayerID = str(int(df[df[&#39;Name&#39;]==name][&#39;PLAYER_ID&#39;]))
+ PlayerID = str(76993) #Two Gerald Hendersons!
+ #player = Image(url = &quot;http://stats.nba.com/media/players/230x185/&quot;+PlayerID+&quot;.png&quot;, width=100)
+ player = Image(url = &#39;http://cdn.fansided.com/wp-content/blogs.dir/18/files/2014/04/b__gerald_henderson_82.jpg&#39;, width=100)
+ display(player)
+ #display(df[df[&#39;PLAYER_ID&#39;]==76993])
+ display(cluster_locs[5:])
+ df[df[&#39;kmeans_label&#39;]==5][&#39;Name&#39;][:10]
+</code></pre></div>
+
+<p><img src="http://cdn.fansided.com/wp-content/blogs.dir/18/files/2014/04/b__gerald_henderson_82.jpg" width="100"/></p>
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Outside Skills</th>
+      <th>Rim Scoring</th>
+      <th>Pure Points</th>
+      <th>Defensive Big Man</th>
+      <th>Dead Eye</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.890984</td>
+      <td>0.846109</td>
+      <td>-0.926444</td>
+      <td>0.735306</td>
+      <td>-0.092395</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code><span class="mf">12</span><span class="w">          </span><span class="n">Adams</span><span class="p">,</span><span class="w"> </span><span class="n">Michael</span>
+<span class="mf">30</span><span class="w">         </span><span class="n">Alexander</span><span class="p">,</span><span class="w"> </span><span class="n">Cory</span>
+<span class="mf">41</span><span class="w">             </span><span class="n">Allen</span><span class="p">,</span><span class="w"> </span><span class="kr">To</span><span class="n">ny</span>
+<span class="mf">62</span><span class="w">         </span><span class="ow">And</span><span class="n">erson</span><span class="p">,</span><span class="w"> </span><span class="n">Kenny</span>
+<span class="mf">65</span><span class="w">      </span><span class="ow">And</span><span class="n">erson</span><span class="p">,</span><span class="w"> </span><span class="n">Mitchell</span>
+<span class="mf">78</span><span class="w">           </span><span class="n">Anthony</span><span class="p">,</span><span class="w"> </span><span class="n">Greg</span>
+<span class="mf">90</span><span class="w">      </span><span class="n">Armstrong</span><span class="p">,</span><span class="w"> </span><span class="n">Darrell</span>
+<span class="mf">113</span><span class="w">           </span><span class="n">Bagley</span><span class="p">,</span><span class="w"> </span><span class="n">John</span>
+<span class="mf">126</span><span class="w">          </span><span class="n">Banks</span><span class="p">,</span><span class="w"> </span><span class="n">Marcus</span>
+<span class="mf">137</span><span class="w">         </span><span class="n">Barrett</span><span class="p">,</span><span class="w"> </span><span class="ow">And</span><span class="n">re</span>
+<span class="n">Name</span><span class="p">:</span><span class="w"> </span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="n">dtype</span><span class="p">:</span><span class="w"> </span><span class="n">object</span>
+</code></pre></div>
+
+<p>Cluster 5 is magenta in the scatter matrix and includes 16% of players.</p>
+<p>Cluster 5 players are highest in outside skills and second highest in rim scoring yet these players are dead last in pure points. It seems they score around the rim, but do not draw many fouls. They are second highest in defensive big man.</p>
+<p>Gerald Henderson Sr is the prototype. Henderson is a good 3 point and free throw shooter but does not draw many fouls. He has lots of assists and steals.</p>
+<p>Of interest mostly because it generates an error in my code, Gerald Henderson Jr is in cluster 2 - the mid range shooters.</p>
+<p>Notable cluster 5 players include Mugsy Bogues, MCW, Jeff Hornacek, Magic Johnson, Jason Kidd, Steve Nash, Rajon Rando, John Stockton. Lots of guards.</p>
+<p>In the cell below, I plot the percentage of players in each cluster.</p>
+<div class="highlight"><pre><span></span><code> plt.clf()
+ plt.hist(df[&#39;kmeans_label&#39;], normed=True,bins=[0,1,2,3,4,5,6],rwidth = 0.5)
+ plt.xticks([0.5,1.5,2.5,3.5,4.5,5.5],[&#39;Group 0&#39;,&#39;Group 1&#39;,&#39;Group 2&#39;,&#39;Goup 3&#39;,&#39;Group 4&#39;,&#39;Group 5&#39;])
+ plt.ylabel(&#39;Percentage of Players in Each Cluster&#39;);
+</code></pre></div>
+
+<p><img src="/images/cluster_inc_nba.png" /></p>
+<p>I began this post by asking whether player positions is the most natural way to group NBA players. The clustering analysis here suggests not.</p>
+<p>Here's my take on the clusters: Cluster 0 is pure shooters, Cluster 1 is talented scorers, Cluster 2 is mid-range shooters, Cluster 3 is defensive big-men, Cluster 4 is bench warmers, Cluster 5 is distributors. We might call the "positions" shooters, scorers, rim protectors, and distributors.</p>
+<p>It's possible that our notion of position comes more from defensive performance than offensive. On defense, a player must have a particular size and agility to guard a particular opposing player. Because of this, a team will want a range of sizes and agility - strong men to defend the rim and quick men to defend agile ball carriers. Box scores are notoriously bad at describing defensive performance. This could account for the lack of "positions" in my cluster.</p>
+<p>I did not include player height and weight in this analysis. I imagine height and weight might have made clusters that resemble the traditional positions. I chose to not include height and weight because these are player attributes; not player performance.</p>
+<p>After looking through all the groups one thing that stands out to me is the lack of specialization. For example we did not find a single cluster of incredible 3-point shooters. Cluster 1 includes many great shooters, but it's not populated exclusively by great shooters. It would be interesting if adding additional clusters to the analysis could find more specific clusters such as big-men that can shoot from the outside (e.g., Dirk) or high-volume scorers (e.g., Kobe).</p>
+<p>I tried to list some of the aberrant cluster choices in the notable players to give you an idea for the amount of error in the clustering. These aberrant choices are not errors, they are simply an artifact of how k-means defines clusters. Using a different clustering algorithm would produce different clusters. On that note, the silhouette score of this clustering model is not great, yet the clustering algorithm definitely found similar players, so its not worthless. Nonetheless, clusters of NBA players might not be spherical. This would prevent a high silhouette score. Trying a different algorithm without the spherical clusters assumption would definitely be worthwhile.</p>
+<p>Throughout this entire analysis, I was tempted to think about group membership, as a predictor of a player's future performance. For instance, when I saw Karl Anthony Towns in the same cluster as Kareem Abdul-Jabbar, I couldn't help but think this meant good things for Karl Anthony Towns. Right now, this doesn't seem justified. No group included less than 10% of players so not much of an oppotunity for a uniformly "star" group to form. Each group contained some good and some bad players. Could more clusters change this? I plan on examining whether more clusters can improve the clustering algorithm's ability to find clusters of exclusively quality players. If it works, I'll post it here.</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2016-02-21T15:14:23-05:00" pubdate>Sun 21 February 2016</time>  <span class="categories">
+    <a class='category' href='/category/nba.html'>nba</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/grouping-nba-players.html';
+    var disqus_url = '/grouping-nba-players.html';
+    var disqus_title = 'Grouping NBA Players';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

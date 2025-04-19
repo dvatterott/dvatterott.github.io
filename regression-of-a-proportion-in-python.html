@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Regression of a Proportion in Python &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Regression of a Proportion in Python</h1>
+    <p class="meta">
+<time datetime="2018-05-03T21:20:09-05:00" pubdate>Thu 03 May 2018</time>    </p>
+</header>
+
+  <div class="entry-content"><p>I frequently predict proportions (e.g., proportion of year during which a customer is active). This is a regression task because the dependent variables is a float, but the dependent variable is bound between the 0 and 1. Googling around, I had a hard time finding the a good way to model this situation, so I've written here what I think is the most straight forward solution.</p>
+<p>Let's get started by importing some libraries for making random data.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">make_regression</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</code></pre></div>
+
+<p>Create random regression data.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">rng</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mh">0</span><span class="p">)</span><span class="w">  </span><span class="p">#</span><span class="w"> </span><span class="n">fix</span><span class="w"> </span><span class="n">random</span><span class="w"> </span><span class="n">state</span>
+<span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">coef</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_regression</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mh">10000</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">n_features</span><span class="o">=</span><span class="mh">100</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">n_informative</span><span class="o">=</span><span class="mh">40</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">effective_rank</span><span class="o">=</span><span class="w"> </span><span class="mh">15</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">random_state</span><span class="o">=</span><span class="mh">0</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">noise</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">bias</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">coef</span><span class="o">=</span><span class="n">True</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Shrink down the dependent variable so it's bound between 0 and 1.</p>
+<div class="highlight"><pre><span></span><code> y_min = min(y)
+ y = [i-y_min for i in y]  # min value will be 0
+ y_max = max(y)
+ y = [i/y_max for i in y]  # max value will be 1
+</code></pre></div>
+
+<p>Make a quick plot to confirm that the data is bound between 0 and 1.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">plt</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="w"> </span><span class="o">%</span><span class="n">matplotlib</span><span class="w"> </span><span class="n">inline</span>
+
+<span class="w"> </span><span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s1">&#39;whitegrid&#39;</span><span class="p">)</span>
+
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+</code></pre></div>
+
+<p><img src="/images/prop_regression/hist.png" /></p>
+<p>All the data here is fake which worries me, but beggars can't be choosers and this is just a quick example.</p>
+<p>Below, I apply a plain GLM to the data. This is what you would expect if you treated this as a plain regression problem</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sm</span>
+
+<span class="w"> </span><span class="n">linear_glm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sm</span><span class="o">.</span><span class="n">GLM</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">X</span><span class="p">)</span>
+<span class="w"> </span><span class="n">linear_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linear_glm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="w"> </span><span class="c1"># print(linear_result.summary2())  # too much output for a blog post</span>
+</code></pre></div>
+
+<p>Here's the actual values plotted (x-axis) against the predicted values (y-axis). The model does a decent job, but check out the values on the y-axis - the linear model predicts negative values!</p>
+<div class="highlight"><pre><span></span><code> plt.plot(y, linear_result.predict(X), &#39;o&#39;, alpha=0.2);
+</code></pre></div>
+
+<p><img src="/images/prop_regression/linear.png" /></p>
+<p>Obviously the linear model above isn't correctly modeling this data since it's guessing values that are impossible.</p>
+<p>I followed <a href="https://stats.idre.ucla.edu/stata/faq/how-does-one-do-regression-when-the-dependent-variable-is-a-proportion/">this tutorial</a> which recommends using a GLM with a logit link and the binomial family. Checking out the <a href="http://www.statsmodels.org/stable/generated/statsmodels.genmod.families.family.Binomial.html#statsmodels.genmod.families.family.Binomial">statsmodels module reference</a>, we can see the default link for the binomial family is logit.</p>
+<p>Below I apply a GLM with a logit link and the binomial family to the data.</p>
+<div class="highlight"><pre><span></span><code> binom_glm = sm.GLM(y, X, family=sm.families.Binomial())
+ binom_results = binom_glm.fit()
+ #print(binom_results.summary2())  # too much output for a blog post
+</code></pre></div>
+
+<p>Here's the actual data (x-axis) plotted against teh predicted data. You can see the fit is much better!</p>
+<div class="highlight"><pre><span></span><code> plt.plot(y, binom_results.predict(X), &#39;o&#39;, alpha=0.2);
+</code></pre></div>
+
+<p><img src="/images/prop_regression/binomial.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nf">%load_ext</span><span class="w"> </span><span class="n">watermark</span>
+<span class="w"> </span><span class="nf">%watermark</span><span class="w"> </span><span class="o">-</span><span class="n">v</span><span class="w"> </span><span class="o">-</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="n">numpy</span><span class="p">,</span><span class="n">matplotlib</span><span class="p">,</span><span class="n">sklearn</span><span class="p">,</span><span class="n">seaborn</span><span class="p">,</span><span class="n">statsmodels</span>
+
+<span class="n">CPython</span><span class="w"> </span><span class="mf">3.6.3</span>
+<span class="n">IPython</span><span class="w"> </span><span class="mf">6.1.0</span>
+
+<span class="n">numpy</span><span class="w"> </span><span class="mf">1.13.3</span>
+<span class="n">matplotlib</span><span class="w"> </span><span class="mf">2.0.2</span>
+<span class="n">sklearn</span><span class="w"> </span><span class="mf">0.19.1</span>
+<span class="n">seaborn</span><span class="w"> </span><span class="mf">0.8.0</span>
+<span class="n">statsmodels</span><span class="w"> </span><span class="mf">0.8.0</span>
+
+<span class="nl">compiler</span><span class="w">   </span><span class="p">:</span><span class="w"> </span><span class="n">GCC</span><span class="w"> </span><span class="mf">7.2.0</span>
+<span class="nl">system</span><span class="w">     </span><span class="p">:</span><span class="w"> </span><span class="n">Linux</span>
+<span class="nl">release</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="mf">4.13.0</span><span class="mi">-38</span><span class="o">-</span><span class="n">generic</span>
+<span class="nl">machine</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="n">x86_64</span>
+<span class="nl">processor</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="n">x86_64</span>
+<span class="n">CPU</span><span class="w"> </span><span class="n">cores</span><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span>
+<span class="nl">interpreter</span><span class="p">:</span><span class="w"> </span><span class="mi">64</span><span class="n">bit</span>
+</code></pre></div></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2018-05-03T21:20:09-05:00" pubdate>Thu 03 May 2018</time>  <span class="categories">
+    <a class='category' href='/category/statistics.html'>statistics</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/regression-of-a-proportion-in-python.html';
+    var disqus_url = '/regression-of-a-proportion-in-python.html';
+    var disqus_title = 'Regression of a Proportion in Python';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

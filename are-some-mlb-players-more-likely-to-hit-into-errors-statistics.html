@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Are Some MLB Players More Likely To Hit Into Errors: Statistics &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Are Some MLB Players More Likely To Hit Into Errors: Statistics</h1>
+    <p class="meta">
+<time datetime="2019-06-04T20:04:31-05:00" pubdate>Tue 04 June 2019</time>    </p>
+</header>
+
+  <div class="entry-content"><p>In a <a href="https://danvatterott.com/are-some-mlb-players-more-likely-to-hit-into-errors-than-others-data-munging.html">previous post</a>, I described how to download and clean data for understanding how likely a baseball player is to hit into an error given that they hit the ball into play.</p>
+<p>This analysis will statistically demonstrate that some players are more likely to hit into errors than others.</p>
+<p>Errors are uncommon, so players hit into errors very infrequently. Estimating the likelihood of an infrequent event is hard and requires lots of data. To acquire as much data as possible, I wrote a bash script that will download data for all players between 1970 and 2018.</p>
+<p>This data enables me to use data from multiple years for each player, giving me more data when estimating how likely a particular player is to hit into an error.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="c">%%bash</span>
+
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nb">i</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="p">{</span><span class="mf">1970..2018</span><span class="p">};</span><span class="w"> </span><span class="n">do</span>
+<span class="w">     </span><span class="s">echo</span><span class="w"> </span><span class="s">&quot;YEAR:</span><span class="w"> </span><span class="s">$i&quot;</span>
+<span class="w">     </span><span class="p">.</span><span class="o">./</span><span class="n">scripts</span><span class="o">/</span><span class="n">get_data</span><span class="p">.</span><span class="n">sh</span><span class="w"> </span>$<span class="p">{</span><span class="nb">i</span><span class="p">};</span>
+<span class="w"> </span><span class="n">done</span>
+
+<span class="w"> </span><span class="s">find</span><span class="w"> </span><span class="s">processed_data/*</span><span class="w"> </span><span class="o">-</span><span class="nb">type</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">-</span><span class="n">name</span><span class="w"> </span><span class="s">&#39;errors_bip.out&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">\</span>
+<span class="w">     </span><span class="n">xargs</span><span class="w"> </span><span class="n">awk</span><span class="w"> </span><span class="s">&#39;{print $0&quot;, &quot;FILENAME}&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">\</span>
+<span class="w">     </span><span class="n">sed</span><span class="w"> </span><span class="n">s1processed_data</span><span class="o">/</span>11<span class="n">g1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">\</span>
+<span class="w">     </span><span class="n">sed</span><span class="w"> </span><span class="n">s1</span><span class="o">/</span><span class="n">errors_bip</span><span class="p">.</span><span class="n">out11g1</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">\</span>
+<span class="w">         </span><span class="n">processed_data</span><span class="o">/</span><span class="n">all_errors_bip</span><span class="p">.</span><span class="n">out</span>
+</code></pre></div>
+
+<p>The data has 5 columns: playerid, playername, errors hit into, balls hit into play (BIP), and year. The file does not have a header.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="c">%%bash</span>
+<span class="w"> </span><span class="nb">head</span><span class="w"> </span><span class="p">.</span><span class="o">./</span><span class="n">processed_data</span><span class="o">/</span><span class="n">all_errors_bip</span><span class="p">.</span><span class="n">out</span>
+
+<span class="n">aaroh101</span><span class="p">,</span><span class="w"> </span><span class="n">Hank</span><span class="w"> </span><span class="n">Aaron</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">453</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">aarot101</span><span class="p">,</span><span class="w"> </span><span class="n">Tommie</span><span class="w"> </span><span class="n">Aaron</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">53</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">abert101</span><span class="p">,</span><span class="w"> </span><span class="n">Ted</span><span class="w"> </span><span class="n">Abernathy</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">adaij101</span><span class="p">,</span><span class="w"> </span><span class="n">Jerry</span><span class="w"> </span><span class="n">Adair</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">ageet101</span><span class="p">,</span><span class="w"> </span><span class="n">Tommie</span><span class="w"> </span><span class="n">Agee</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">480</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">akerj102</span><span class="p">,</span><span class="w"> </span><span class="n">Jack</span><span class="w"> </span><span class="n">Aker</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">alcal101</span><span class="p">,</span><span class="w"> </span><span class="n">Luis</span><span class="w"> </span><span class="n">Alcaraz</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">107</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">alleb105</span><span class="p">,</span><span class="w"> </span><span class="n">Bernie</span><span class="w"> </span><span class="n">Allen</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">240</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">alled101</span><span class="p">,</span><span class="w"> </span><span class="n">Dick</span><span class="w"> </span><span class="n">Allen</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">341</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+<span class="n">alleg101</span><span class="p">,</span><span class="w"> </span><span class="n">Gene</span><span class="w"> </span><span class="n">Alley</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">356</span><span class="p">,</span><span class="w"> </span><span class="mi">1970</span>
+</code></pre></div>
+
+<p>I can load the data into pandas using the following command.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="w"> </span><span class="n">DF</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;../processed_data/all_errors_bip.out&#39;</span><span class="p">,</span>
+<span class="w">                  </span><span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="w">                  </span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;playerid&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;player_name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;errors&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;bip&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;year&#39;</span><span class="p">])</span>
+<span class="w"> </span><span class="n">DF</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div>
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerid</th>
+      <th>player_name</th>
+      <th>errors</th>
+      <th>bip</th>
+      <th>year</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>aaroh101</td>
+      <td>Hank Aaron</td>
+      <td>8</td>
+      <td>453</td>
+      <td>1970</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>aarot101</td>
+      <td>Tommie Aaron</td>
+      <td>0</td>
+      <td>53</td>
+      <td>1970</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>abert101</td>
+      <td>Ted Abernathy</td>
+      <td>0</td>
+      <td>10</td>
+      <td>1970</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>adaij101</td>
+      <td>Jerry Adair</td>
+      <td>0</td>
+      <td>24</td>
+      <td>1970</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ageet101</td>
+      <td>Tommie Agee</td>
+      <td>12</td>
+      <td>480</td>
+      <td>1970</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code> len(DF)
+
+
+38870
+</code></pre></div>
+
+<p>I have almost 39,000 year, player combinations.... a good amount of data to play with.</p>
+<p>While exploring the data, I noticed that players hit into errors less frequently now than they used to. Let's see how the probability that a player hits into an error has changed across the years.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nf">%matplotlib</span><span class="w"> </span><span class="kr">inline</span>
+
+<span class="w"> </span><span class="n">YEAR_DF</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">DF</span>
+<span class="w">            </span><span class="p">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="p">.</span><span class="n">agg</span><span class="p">({</span>
+<span class="w">                </span><span class="s">&quot;errors&quot;</span><span class="o">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="s">&quot;bip&quot;</span><span class="o">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+<span class="w">            </span><span class="p">})</span>
+<span class="w">            </span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="n">prop_error</span><span class="o">=</span><span class="n">lambda</span><span class="w"> </span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="s">&quot;errors&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="s">&quot;bip&quot;</span><span class="p">])</span>
+<span class="w">           </span><span class="p">)</span>
+
+<span class="w"> </span><span class="n">YEAR_DF</span><span class="p">[</span><span class="s">&quot;prop_error&quot;</span><span class="p">].</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s">&quot;o-&quot;</span><span class="p">);</span>
+</code></pre></div>
+
+<p><img src="/images/mlb/error_year.png" /></p>
+<p>Interestingly, the proportion of errors per BIP <a href="https://www.pinstripealley.com/2013/8/16/4623050/mlb-errors-trends-statistics">has been dropping over time</a>. I am not sure if this is a conscious effort by MLB score keepers, a change in how hitters hit, or improved fielding (but I suspect it's the score keepers). It looks like this drop in errors per BIP leveled off around 2015. Zooming in.</p>
+<div class="highlight"><pre><span></span><code> YEAR_DF[YEAR_DF.index &gt; 2010][&quot;prop_error&quot;].plot(style=&quot;o-&quot;);
+</code></pre></div>
+
+<p><img src="/images/mlb/zoom_error_year.png" /></p>
+<p>I explore this statistically in <a href="https://github.com/dvatterott/mlb_errors/blob/master/notebook/PYMC%20-%20Hierarchical%20Beta%20Binomial%20YEAR.ipynb">a jupyter notebook on my github</a>.</p>
+<p>Because I don't want year to confound the analysis, I remove all data before 2015.</p>
+<div class="highlight"><pre><span></span><code> DF = DF[DF[&quot;year&quot;] &gt;= 2015]
+ len(DF)
+
+3591
+</code></pre></div>
+
+<p>This leaves me with 3500 year, player combinations.</p>
+<p>Next I combine players' data across years.</p>
+<div class="highlight"><pre><span></span><code> GROUPED_DF = DF.groupby([&quot;playerid&quot;, &quot;player_name&quot;]).agg({&quot;errors&quot;: &quot;sum&quot;, &quot;bip&quot;: &quot;sum&quot;}).reset_index()
+ GROUPED_DF.describe()
+</code></pre></div>
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>errors</th>
+      <th>bip</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>1552.000000</td>
+      <td>1552.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>3.835052</td>
+      <td>324.950387</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>6.073256</td>
+      <td>494.688755</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.000000</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>0.000000</td>
+      <td>7.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>1.000000</td>
+      <td>69.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>5.000000</td>
+      <td>437.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>37.000000</td>
+      <td>2102.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>I want an idea for how likely players are to hit into errors.</p>
+<div class="highlight"><pre><span></span><code> TOTALS = GROUPED_DF.agg({&quot;errors&quot;: &quot;sum&quot;, &quot;bip&quot;: &quot;sum&quot;})
+ ERROR_RATE = TOTALS[&quot;errors&quot;] / TOTALS[&quot;bip&quot;]
+ ERROR_RATE
+
+0.011801960251664112
+</code></pre></div>
+
+<p>Again, errors are very rare, so I want know how many "trials" (BIP) I need for a reasonable estimate of how likely each player is to hit into an error.</p>
+<p>I'd like the majority of players to have at least 5 errors. I can estimate how many BIP that would require.</p>
+<div class="highlight"><pre><span></span><code> 5. /ERROR_RATE
+
+423.65843413978496
+</code></pre></div>
+
+<p>Looks like I should require at least 425 BIP for each player. I round this to 500.</p>
+<div class="highlight"><pre><span></span><code> GROUPED_DF = GROUPED_DF[GROUPED_DF[&quot;bip&quot;] &gt; 500]
+ GROUPED_DF = GROUPED_DF.reset_index(drop=True)
+ GROUPED_DF.head()
+</code></pre></div>
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerid</th>
+      <th>player_name</th>
+      <th>errors</th>
+      <th>bip</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>abrej003</td>
+      <td>Jose Abreu</td>
+      <td>20</td>
+      <td>1864</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>adamm002</td>
+      <td>Matt Adams</td>
+      <td>6</td>
+      <td>834</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>adrie001</td>
+      <td>Ehire Adrianza</td>
+      <td>2</td>
+      <td>533</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>aguij001</td>
+      <td>Jesus Aguilar</td>
+      <td>2</td>
+      <td>551</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ahmen001</td>
+      <td>Nick Ahmed</td>
+      <td>12</td>
+      <td>1101</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code> GROUPED_DF.describe()
+</code></pre></div>
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>errors</th>
+      <th>bip</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>354.000000</td>
+      <td>354.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>12.991525</td>
+      <td>1129.059322</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>6.447648</td>
+      <td>428.485467</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>1.000000</td>
+      <td>503.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>8.000000</td>
+      <td>747.250000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>12.000000</td>
+      <td>1112.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>17.000000</td>
+      <td>1475.750000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>37.000000</td>
+      <td>2102.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>I've identified 354 players who have enough BIP for me to estimate how frequently they hit into errors.</p>
+<p>Below, I plot how the likelihood of hitting into errors is distributed.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nf">%matplotlib</span><span class="w"> </span><span class="kr">inline</span>
+
+<span class="w"> </span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s">&quot;prop_error&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s">&quot;errors&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s">&quot;bip&quot;</span><span class="p">]</span>
+<span class="w"> </span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s">&quot;prop_error&quot;</span><span class="p">].</span><span class="n">hist</span><span class="p">();</span>
+</code></pre></div>
+
+<p><img src="/images/mlb/error_dist.png" /></p>
+<p>The question is whether someone who has hit into errors in 2% of their BIP is more likely to hit into an error than someone who has hit into errors in 0.5% of their BIP (or is this all just random variation).</p>
+<p>To try and estimate this, I treat each BIP as a Bernoulli trial. Hitting into an error is a "success". I use a Binomial distribution to model the number of "successes". I would like to know if different players are more or less likely to hit into errors. To do this, I model each player as having their own Binomial distribution and ask whether <em>p</em> (the probability of success) differs across players. </p>
+<p>To answer this question, I could use a <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html#scipy.stats.chi2_contingency">chi square contingency test</a> but this would only tell me whether players differ at all and not which players differ.</p>
+<p>The traditional way to identify which players differ is to do pairwise comparisons, but this would result in TONS of comparisons making <a href="https://en.wikipedia.org/wiki/Multiple_comparisons_problem">false positives all but certain</a>.</p>
+<p>Another option is to harness Bayesian statistics and build a <a href="http://sl8r000.github.io/ab_testing_statistics/use_a_hierarchical_model/">Hierarchical Beta-Binomial model</a>. The intuition is that each player's probability of hitting into an error is drawn from a <a href="https://en.wikipedia.org/wiki/Beta_distribution">Beta distribution</a>. I want to know whether these Beta distributions are different. I then assume I can best estimate a player's Beta distribution by using that particular player's data AND data from all players together.</p>
+<p>The model is built so that as I accrue data about a particular player, I will trust that data more and more, relying less and less on data from all players. This is called partial pooling. <a href="https://dsaber.com/2016/08/27/analyze-your-experiment-with-a-multilevel-logistic-regression-using-pymc3%E2%80%8B/">Here's</a> a useful explanation.</p>
+<p>I largely based my analysis on <a href="https://docs.pymc.io/notebooks/hierarchical_partial_pooling.html">this</a> tutorial. Reference the tutorial for an explanation of how I choose my priors. I ended up using a greater lambda value (because the model sampled better) in the Exponential prior, and while this did lead to more extreme estimates of error likelihood, it didn't change the basic story.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">pymc3</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pm</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">theano.tensor</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tt</span>
+
+<span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">model</span><span class="p">:</span>
+
+<span class="w">     </span><span class="n">phi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="s1">&#39;phi&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+<span class="w">     </span><span class="n">kappa_log</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s1">&#39;kappa_log&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">lam</span><span class="o">=</span><span class="mf">25.</span><span class="p">)</span>
+<span class="w">     </span><span class="n">kappa</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s1">&#39;kappa&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">tt</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">kappa_log</span><span class="p">))</span>
+
+<span class="w">     </span><span class="n">rates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">Beta</span><span class="p">(</span><span class="s1">&#39;rates&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">alpha</span><span class="o">=</span><span class="n">phi</span><span class="o">*</span><span class="n">kappa</span><span class="p">,</span><span class="w"> </span><span class="n">beta</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">kappa</span><span class="p">,</span><span class="w"> </span><span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">))</span>
+
+<span class="w">     </span><span class="n">trials</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s2">&quot;bip&quot;</span><span class="p">])</span>
+<span class="w">     </span><span class="n">successes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">])</span>
+
+<span class="w">     </span><span class="n">obs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">Binomial</span><span class="p">(</span><span class="s1">&#39;observed_values&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">trials</span><span class="p">,</span><span class="w"> </span><span class="n">rates</span><span class="p">,</span><span class="w"> </span><span class="n">observed</span><span class="o">=</span><span class="n">successes</span><span class="p">)</span>
+<span class="w">     </span><span class="n">trace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="n">tune</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">cores</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">nuts_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;target_accept&#39;</span><span class="p">:</span><span class="w"> </span><span class="mf">.95</span><span class="p">})</span>
+
+<span class="n">Auto</span><span class="o">-</span><span class="n">assigning</span><span class="w"> </span><span class="n">NUTS</span><span class="w"> </span><span class="n">sampler</span><span class="o">...</span>
+<span class="n">Initializing</span><span class="w"> </span><span class="n">NUTS</span><span class="w"> </span><span class="n">using</span><span class="w"> </span><span class="n">jitter</span><span class="o">+</span><span class="n">adapt_diag</span><span class="o">...</span>
+<span class="n">Multiprocess</span><span class="w"> </span><span class="n">sampling</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="n">chains</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">jobs</span><span class="p">)</span>
+<span class="n">NUTS</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">rates</span><span class="p">,</span><span class="w"> </span><span class="n">kappa_log</span><span class="p">,</span><span class="w"> </span><span class="n">phi</span><span class="p">]</span>
+<span class="n">Sampling</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">chains</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="o">%|</span><span class="err">██████████</span><span class="o">|</span><span class="w"> </span><span class="mi">6000</span><span class="o">/</span><span class="mi">6000</span><span class="w"> </span><span class="p">[</span><span class="mi">01</span><span class="p">:</span><span class="mi">47</span><span class="o">&lt;</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="w"> </span><span class="mf">28.06</span><span class="n">draws</span><span class="o">/</span><span class="n">s</span><span class="p">]</span>
+</code></pre></div>
+
+<p>Check whether the model converged.</p>
+<div class="highlight"><pre><span></span><code> max(np.max(score) for score in pm.gelman_rubin(trace).values())
+
+
+1.0022635936332533
+
+
+
+
+ bfmi = pm.bfmi(trace)
+          max_gr = max(np.max(gr_stats) for gr_stats in pm.gelman_rubin(trace).values())
+ (pm.energyplot(trace, figsize=(6, 4)).set_title(&quot;BFMI = {}\nGelman-Rubin = {}&quot;.format(bfmi, max_gr)));
+</code></pre></div>
+
+<p><img src="/images/mlb/energy.png" /></p>
+<p>The most challenging parameter to fit is <em>kappa</em> which modulates for the variance in the likelihood to hit into an error. I take a look at it to make sure things look as expected.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span><span class="w"> </span><span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;kappa&quot;</span><span class="p">])</span>
+</code></pre></div>
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>mean</th>
+      <th>sd</th>
+      <th>mc_error</th>
+      <th>hpd_2.5</th>
+      <th>hpd_97.5</th>
+      <th>n_eff</th>
+      <th>Rhat</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>kappa</th>
+      <td>927.587178</td>
+      <td>141.027597</td>
+      <td>4.373954</td>
+      <td>657.066554</td>
+      <td>1201.922608</td>
+      <td>980.288914</td>
+      <td>1.000013</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span><span class="w"> </span><span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;kappa&#39;</span><span class="p">]);</span>
+</code></pre></div>
+
+<p><img src="/images/mlb/kappa.png" /></p>
+<p>I can also look at <em>phi</em>, the estimated global likelihood to hit into an error.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span><span class="w"> </span><span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;phi&#39;</span><span class="p">]);</span>
+</code></pre></div>
+
+<p><img src="/images/mlb/phi.png" /></p>
+<p>Finally, I can look at how all players vary in their likelihood to hit into an error.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span><span class="w"> </span><span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;rates&#39;</span><span class="p">]);</span>
+</code></pre></div>
+
+<p><img src="/images/mlb/rate_trace.png" /></p>
+<p>Obviously, the above plot is a lot to look at it, so let's order players by how likely the model believes they are to hit in an error.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">plt</span>
+
+<span class="w"> </span><span class="n">rate_means</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">trace</span><span class="p">[</span><span class="s1">&#39;rates&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="w"> </span><span class="n">rate_se</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">trace</span><span class="p">[</span><span class="s1">&#39;rates&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="w"> </span><span class="n">mean_se</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">zip</span><span class="p">(</span><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="n">rate_means</span><span class="p">,</span><span class="w"> </span><span class="n">rate_se</span><span class="p">)]</span>
+<span class="w"> </span><span class="n">sorted_means_se</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sorted</span><span class="p">(</span><span class="n">mean_se</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span><span class="w"> </span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="w"> </span><span class="n">sorted_means</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">sorted_means_se</span><span class="p">]</span>
+<span class="w"> </span><span class="n">sorted_se</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">sorted_means_se</span><span class="p">]</span>
+
+<span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sorted_means</span><span class="p">))</span>
+
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">sorted_means</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">);</span>
+
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x_val</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">se</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">sorted_means</span><span class="p">,</span><span class="w"> </span><span class="n">sorted_se</span><span class="p">):</span>
+<span class="w">     </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">x_val</span><span class="p">,</span><span class="w"> </span><span class="n">x_val</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="n">m</span><span class="o">-</span><span class="n">se</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="o">+</span><span class="n">se</span><span class="p">],</span><span class="w"> </span><span class="s1">&#39;b-&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</code></pre></div>
+
+<p><img src="/images/mlb/players_ranked.png" /></p>
+<p>Now, the ten players who are most likely to hit into an error.</p>
+<div class="highlight"><pre><span></span><code> <span class="s s-Atom">estimated_mean</span> <span class="o">=</span> <span class="s s-Atom">pm</span><span class="p">.</span><span class="nf">summary</span><span class="p">(</span><span class="s s-Atom">trace</span><span class="p">,</span> <span class="s s-Atom">varnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;rates&quot;</span><span class="p">]).</span><span class="s s-Atom">iloc</span><span class="p">[[</span><span class="s s-Atom">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="s s-Atom">for</span> <span class="s s-Atom">x</span> <span class="s s-Atom">in</span> <span class="s s-Atom">sorted_means_se</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="o">:</span><span class="p">]]][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+
+ <span class="nv">GROUPED_DF</span><span class="p">.</span><span class="s s-Atom">loc</span><span class="p">[[</span><span class="s s-Atom">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="s s-Atom">for</span> <span class="s s-Atom">x</span> <span class="s s-Atom">in</span> <span class="s s-Atom">sorted_means_se</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="o">:</span><span class="p">]],</span> <span class="o">:</span><span class="p">].</span><span class="nf">assign</span><span class="p">(</span><span class="s s-Atom">estimated_mean</span><span class="o">=</span><span class="s s-Atom">estimated_mean</span><span class="p">.</span><span class="nb">val</span><span class="s s-Atom">ues</span><span class="p">).</span><span class="s s-Atom">iloc</span><span class="p">[</span><span class="o">::-</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div>
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerid</th>
+      <th>player_name</th>
+      <th>errors</th>
+      <th>bip</th>
+      <th>prop_error</th>
+      <th>estimated_mean</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>71</th>
+      <td>corrc001</td>
+      <td>Carlos Correa</td>
+      <td>30</td>
+      <td>1368</td>
+      <td>0.021930</td>
+      <td>0.017838</td>
+    </tr>
+    <tr>
+      <th>227</th>
+      <td>myerw001</td>
+      <td>Wil Myers</td>
+      <td>27</td>
+      <td>1214</td>
+      <td>0.022241</td>
+      <td>0.017724</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>andre001</td>
+      <td>Elvis Andrus</td>
+      <td>37</td>
+      <td>1825</td>
+      <td>0.020274</td>
+      <td>0.017420</td>
+    </tr>
+    <tr>
+      <th>258</th>
+      <td>plawk001</td>
+      <td>Kevin Plawecki</td>
+      <td>14</td>
+      <td>528</td>
+      <td>0.026515</td>
+      <td>0.017200</td>
+    </tr>
+    <tr>
+      <th>285</th>
+      <td>rojam002</td>
+      <td>Miguel Rojas</td>
+      <td>21</td>
+      <td>952</td>
+      <td>0.022059</td>
+      <td>0.017001</td>
+    </tr>
+    <tr>
+      <th>118</th>
+      <td>garca003</td>
+      <td>Avisail Garcia</td>
+      <td>28</td>
+      <td>1371</td>
+      <td>0.020423</td>
+      <td>0.016920</td>
+    </tr>
+    <tr>
+      <th>244</th>
+      <td>pench001</td>
+      <td>Hunter Pence</td>
+      <td>22</td>
+      <td>1026</td>
+      <td>0.021442</td>
+      <td>0.016875</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>baezj001</td>
+      <td>Javier Baez</td>
+      <td>23</td>
+      <td>1129</td>
+      <td>0.020372</td>
+      <td>0.016443</td>
+    </tr>
+    <tr>
+      <th>335</th>
+      <td>turnt001</td>
+      <td>Trea Turner</td>
+      <td>23</td>
+      <td>1140</td>
+      <td>0.020175</td>
+      <td>0.016372</td>
+    </tr>
+    <tr>
+      <th>50</th>
+      <td>cainl001</td>
+      <td>Lorenzo Cain</td>
+      <td>32</td>
+      <td>1695</td>
+      <td>0.018879</td>
+      <td>0.016332</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>And the 10 players who are least likely to hit in an error. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">estimated_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span><span class="w"> </span><span class="n">varnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;rates&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">sorted_means_se</span><span class="p">[:</span><span class="mi">10</span><span class="p">]]][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+
+<span class="w"> </span><span class="n">GROUPED_DF</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">sorted_means_se</span><span class="p">[:</span><span class="mi">10</span><span class="p">]],</span><span class="w"> </span><span class="p">:]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">estimated_mean</span><span class="o">=</span><span class="n">estimated_mean</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+</code></pre></div>
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerid</th>
+      <th>player_name</th>
+      <th>errors</th>
+      <th>bip</th>
+      <th>prop_error</th>
+      <th>estimated_mean</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>226</th>
+      <td>murpd006</td>
+      <td>Daniel Murphy</td>
+      <td>4</td>
+      <td>1680</td>
+      <td>0.002381</td>
+      <td>0.005670</td>
+    </tr>
+    <tr>
+      <th>223</th>
+      <td>morrl001</td>
+      <td>Logan Morrison</td>
+      <td>4</td>
+      <td>1241</td>
+      <td>0.003223</td>
+      <td>0.006832</td>
+    </tr>
+    <tr>
+      <th>343</th>
+      <td>vottj001</td>
+      <td>Joey Votto</td>
+      <td>8</td>
+      <td>1724</td>
+      <td>0.004640</td>
+      <td>0.007112</td>
+    </tr>
+    <tr>
+      <th>239</th>
+      <td>panij002</td>
+      <td>Joe Panik</td>
+      <td>7</td>
+      <td>1542</td>
+      <td>0.004540</td>
+      <td>0.007245</td>
+    </tr>
+    <tr>
+      <th>51</th>
+      <td>calhk001</td>
+      <td>Kole Calhoun</td>
+      <td>9</td>
+      <td>1735</td>
+      <td>0.005187</td>
+      <td>0.007413</td>
+    </tr>
+    <tr>
+      <th>55</th>
+      <td>carpm002</td>
+      <td>Matt Carpenter</td>
+      <td>8</td>
+      <td>1566</td>
+      <td>0.005109</td>
+      <td>0.007534</td>
+    </tr>
+    <tr>
+      <th>142</th>
+      <td>hamib001</td>
+      <td>Billy Hamilton</td>
+      <td>8</td>
+      <td>1476</td>
+      <td>0.005420</td>
+      <td>0.007822</td>
+    </tr>
+    <tr>
+      <th>289</th>
+      <td>rosae001</td>
+      <td>Eddie Rosario</td>
+      <td>8</td>
+      <td>1470</td>
+      <td>0.005442</td>
+      <td>0.007855</td>
+    </tr>
+    <tr>
+      <th>275</th>
+      <td>renda001</td>
+      <td>Anthony Rendon</td>
+      <td>9</td>
+      <td>1564</td>
+      <td>0.005754</td>
+      <td>0.007966</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>alony001</td>
+      <td>Yonder Alonso</td>
+      <td>8</td>
+      <td>1440</td>
+      <td>0.005556</td>
+      <td>0.008011</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>It looks to me like players who hit more ground balls are more likely to hit into an error than players who predominately hits fly balls and line-drives. This makes sense since infielders make more errors than outfielders.</p>
+<p>Using the posterior distribution of estimated likelihoods to hit into an error, I can assign a probability to whether Carlos Correa is more likely to hit into an error than Daniel Murphy.</p>
+<div class="highlight"><pre><span></span><code> np.mean(trace[&#39;rates&#39;, 1000:][:, 71] &lt;= trace[&#39;rates&#39;, 1000:][:, 226])
+
+
+0.0
+</code></pre></div>
+
+<p>The model believes Correa is much more likely to hit into an error than Murphy!</p>
+<p>I can also plot these players' posterior distributions.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+
+<span class="w"> </span><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="s1">&#39;rates&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">:][:,</span><span class="w"> </span><span class="mi">226</span><span class="p">],</span><span class="w"> </span><span class="n">shade</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="w"> </span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Daniel Murphy&quot;</span><span class="p">);</span>
+<span class="w"> </span><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="s1">&#39;rates&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">:][:,</span><span class="w"> </span><span class="mi">71</span><span class="p">],</span><span class="w"> </span><span class="n">shade</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="w"> </span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Carlos Correa&quot;</span><span class="p">);</span>
+<span class="w"> </span><span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="s1">&#39;rates&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span><span class="w"> </span><span class="n">shade</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="w"> </span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Overall&quot;</span><span class="p">);</span>
+</code></pre></div>
+
+<p><img src="/images/mlb/play_comparison.png" /></p>
+<p>Finally, I can look exclusively at how the posterior distributions of the ten most likely and 10 least likely players to hit into an error compare.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nt">sns</span><span class="p">.</span><span class="nc">kdeplot</span><span class="o">(</span><span class="nt">trace</span><span class="cp">[</span><span class="s1">&#39;rates&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">:</span><span class="cp">][</span><span class="p">:,</span><span class="w"> </span><span class="err">[</span><span class="nx">x</span><span class="err">[</span><span class="mi">2</span><span class="cp">]</span><span class="w"> </span><span class="nt">for</span><span class="w"> </span><span class="nt">x</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">sorted_means_se</span><span class="cp">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:</span><span class="cp">]</span><span class="o">]]</span><span class="p">.</span><span class="nc">flatten</span><span class="o">(),</span><span class="w"> </span><span class="nt">shade</span><span class="o">=</span><span class="nt">True</span><span class="o">,</span><span class="w"> </span><span class="nt">label</span><span class="o">=</span><span class="s2">&quot;10 Least Likely&quot;</span><span class="o">);</span>
+<span class="w"> </span><span class="nt">sns</span><span class="p">.</span><span class="nc">kdeplot</span><span class="o">(</span><span class="nt">trace</span><span class="cp">[</span><span class="s1">&#39;rates&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">:</span><span class="cp">][</span><span class="p">:,</span><span class="w"> </span><span class="err">[</span><span class="nx">x</span><span class="err">[</span><span class="mi">2</span><span class="cp">]</span><span class="w"> </span><span class="nt">for</span><span class="w"> </span><span class="nt">x</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">sorted_means_se</span><span class="cp">[</span><span class="p">:</span><span class="mi">10</span><span class="cp">]</span><span class="o">]]</span><span class="p">.</span><span class="nc">flatten</span><span class="o">(),</span><span class="w"> </span><span class="nt">shade</span><span class="o">=</span><span class="nt">True</span><span class="o">,</span><span class="w"> </span><span class="nt">label</span><span class="o">=</span><span class="s2">&quot;10 Most Likely&quot;</span><span class="o">);</span>
+</code></pre></div>
+
+<p><img src="/images/mlb/top10.png" /></p>
+<p>All in all, this analysis makes it obvious that some players are more likely to hit into errors than other players. This is probably driven by how often players hit ground balls.</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2019-06-04T20:04:31-05:00" pubdate>Tue 04 June 2019</time>  <span class="categories">
+    <a class='category' href='/category/statistics.html'>statistics</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/are-some-mlb-players-more-likely-to-hit-into-errors-statistics.html';
+    var disqus_url = '/are-some-mlb-players-more-likely-to-hit-into-errors-statistics.html';
+    var disqus_title = 'Are Some MLB Players More Likely To Hit Into Errors: Statistics';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

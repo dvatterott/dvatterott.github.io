@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Are we in a TV golden age? &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Are we in a TV golden age?</h1>
+    <p class="meta">
+<time datetime="2017-07-15T16:12:26-04:00" pubdate>Sat 15 July 2017</time>    </p>
+</header>
+
+  <div class="entry-content"><p>I recently found myself in a argument with my wife regarding whether TV was better now than previously. I believed that TV was better now than 20 years ago. My wife contended that there was simply more TV content being produced, and that this led to more good shows, but shows are not inherently any better.</p>
+<p>This struck me as a great opportunity to do some quick data science. For this post, I scraped the names (from wikipedia) and ratings (from <a href="https://www.themoviedb.org/">TMDb</a>) of all American TV shows. I did the same for major American movies, so that I could have a comparison group (maybe all content is better or worse). The ratings are given by TMDb's users and are scores between 1 and 10 (where 10 is a great show/movie and 1 is a lousy show/movie).</p>
+<p>All the code for this post can be found <a href="https://github.com/dvatterott/tv_vs_movies">on my github</a>.</p>
+<p>I decided to operationalize my "golden age of TV" hypothesis as the average TV show is better now than previously. This would be expressed as a positive slope (beta coefficient) when building a linear regression that outputs the rating of a show given the date on which the show first aired. My wife predicted a slope near zero or negative (shows are no better or worse than previously).</p>
+<p>Below, I plot the ratings of TV shows and movies across time. Each show is a dot in the scatter plot. Show rating (average rating given my TMBb) is on the y-axis. The date of the show's first airing is on the x-axis. When I encountered shows with the same name, I just tacked a number onto the end. For instance, show "x" would become show "x_1." The size of each point in the scatter plot is the show's "popularity", which is a bit of a black box, but it's given by TMBb's API. TMDb does not give a full description of how they calculate popularity, but they do say its a function of how many times an item is viewed on TMDb, how many times an item is rated, and how many times the item has been added to watch or favorite list. I decided to depict it here just to give the figures a little more detail. The larger the dot, the more popular the show.</p>
+<p>Here's a plot of all TV shows across time.</p>
+<iframe src="{static}/images/tv_movies/index_tv.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
+
+<p>To test the "golden age of TV" hypothesis, I coded up a linear regression in javascript (below). I put the regression's output as a comment at the end of the code.
+Before stating whether the hypothesis was rejected or not, I should note that that I removed shows with less than 10 votes because these shows had erratic ratings.</p>
+<p>As you can see, there is no evidence that TV is better now that previously. In fact, if anything, this dataset says that TV is worse (but more on this later).</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="n">linearRegression</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="err">{</span>
+
+<span class="w">     </span><span class="nf">var</span><span class="w"> </span><span class="n">lr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">{}</span><span class="p">;</span>
+<span class="w">     </span><span class="nf">var</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">length</span><span class="p">;</span>
+<span class="w">     </span><span class="nf">var</span><span class="w"> </span><span class="n">sum_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">     </span><span class="nf">var</span><span class="w"> </span><span class="n">sum_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">     </span><span class="nf">var</span><span class="w"> </span><span class="n">sum_xy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">     </span><span class="nf">var</span><span class="w"> </span><span class="n">sum_xx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">     </span><span class="nf">var</span><span class="w"> </span><span class="n">sum_yy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">     </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="nf">var</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">length</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="err">{</span>
+
+<span class="w">         </span><span class="n">sum_x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">x</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">;</span>
+<span class="w">         </span><span class="n">sum_y</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">y</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">;</span>
+<span class="w">         </span><span class="n">sum_xy</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">[</span><span class="n">i</span><span class="o">]*</span><span class="n">y</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">);</span>
+<span class="w">         </span><span class="n">sum_xx</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">[</span><span class="n">i</span><span class="o">]*</span><span class="n">x</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">);</span>
+<span class="w">         </span><span class="n">sum_yy</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="o">[</span><span class="n">i</span><span class="o">]*</span><span class="n">y</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">);</span>
+<span class="w">     </span><span class="err">}</span>
+
+<span class="w">     </span><span class="n">lr</span><span class="o">[</span><span class="n">&#39;slope&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sum_xy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sum_x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sum_y</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">sum_xx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sum_x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sum_x</span><span class="p">);</span>
+<span class="w">     </span><span class="n">lr</span><span class="o">[</span><span class="n">&#39;intercept&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">sum_y</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">lr</span><span class="p">.</span><span class="n">slope</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sum_x</span><span class="p">)</span><span class="o">/</span><span class="n">n</span><span class="p">;</span>
+<span class="w">     </span><span class="n">lr</span><span class="o">[</span><span class="n">&#39;r2&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="n">pow</span><span class="p">((</span><span class="n">n</span><span class="o">*</span><span class="n">sum_xy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sum_x</span><span class="o">*</span><span class="n">sum_y</span><span class="p">)</span><span class="o">/</span><span class="n">Math</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">((</span><span class="n">n</span><span class="o">*</span><span class="n">sum_xx</span><span class="o">-</span><span class="n">sum_x</span><span class="o">*</span><span class="n">sum_x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">sum_yy</span><span class="o">-</span><span class="n">sum_y</span><span class="o">*</span><span class="n">sum_y</span><span class="p">)),</span><span class="mi">2</span><span class="p">);</span>
+
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">lr</span><span class="p">;</span>
+
+<span class="w"> </span><span class="err">}</span><span class="p">;</span>
+
+<span class="w"> </span><span class="nf">var</span><span class="w"> </span><span class="n">yval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">data</span>
+<span class="w">     </span><span class="p">.</span><span class="k">filter</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="err">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">vote_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="err">}</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="k">map</span><span class="p">(</span><span class="k">function</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="err">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">parseFloat</span><span class="p">(</span><span class="n">d</span><span class="p">.</span><span class="n">vote_average</span><span class="p">);</span><span class="w"> </span><span class="err">}</span><span class="p">);</span>
+<span class="w"> </span><span class="nf">var</span><span class="w"> </span><span class="n">xval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">data</span>
+<span class="w">     </span><span class="p">.</span><span class="k">filter</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="err">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">vote_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="err">}</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="k">map</span><span class="p">(</span><span class="k">function</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="err">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">first_air_date</span><span class="p">.</span><span class="n">getTime</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="err">}</span><span class="p">);</span>
+<span class="w"> </span><span class="nf">var</span><span class="w"> </span><span class="n">lr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linearRegression</span><span class="p">(</span><span class="n">yval</span><span class="p">,</span><span class="n">xval</span><span class="p">);</span>
+<span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="k">Object</span><span class="w"> </span><span class="err">{</span><span class="w"> </span><span class="nl">slope</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mf">3.754543948800799e-10</span><span class="p">,</span><span class="w"> </span><span class="nl">intercept</span><span class="p">:</span><span class="w"> </span><span class="mf">7.0808230581192815</span><span class="p">,</span><span class="w"> </span><span class="nl">r2</span><span class="p">:</span><span class="w"> </span><span class="mf">0.038528573017115</span><span class="w"> </span><span class="err">}</span>
+</code></pre></div>
+
+<p>I wanted to include movies as a comparison to TV. Here's a plot of all movies across time.</p>
+<iframe src="{static}/images/tv_movies/index_movie.html" marginwidth="0" marginheight="0" scrolling="no" width="800" height="500"></iframe>
+
+<p>It's important to note that I removed all movies with less than 1000 votes. This is completely 100% unfair, BUT I am very proud of my figures here and things get a little laggy when including too many movies in the plot. Nonetheless, movies seem to be getting worse over time! More dramatically than TV shows!</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="k">var</span><span class="w"> </span><span class="n">yval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span>
+<span class="w">     </span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">function</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">vote_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1000</span><span class="w"> </span><span class="p">})</span>
+<span class="w">     </span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">function</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">parseFloat</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">vote_average</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+<span class="w"> </span><span class="k">var</span><span class="w"> </span><span class="n">xval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span>
+<span class="w">     </span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">function</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">vote_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1000</span><span class="w"> </span><span class="p">})</span>
+<span class="w">     </span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">function</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">first_air_date</span><span class="o">.</span><span class="n">getTime</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w"> </span><span class="k">var</span><span class="w"> </span><span class="n">lr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linearRegression</span><span class="p">(</span><span class="n">yval</span><span class="p">,</span><span class="n">xval</span><span class="p">);</span>
+<span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="nb nb-Type">Object</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">slope</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mf">8.11645196776367e-10</span><span class="p">,</span><span class="w"> </span><span class="n">intercept</span><span class="p">:</span><span class="w"> </span><span class="mf">7.659366705415847</span><span class="p">,</span><span class="w"> </span><span class="n">r2</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16185069580043676</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<p>Okay, so this was a fun little analysis, but I have to come out and say that I wasn't too happy with my dataset and the conclusions we can draw from this analysis are only as good as the dataset.</p>
+<p>The first limitation is that recent content is much more likely to receive a rating than older content, which could systematically bias the ratings of older content (e.g., only good shows from before 2000 receive ratings). It's easy to imagine how this would lead us to believing that all older content is better than it actually was.</p>
+<p>Also, TMDb seems to have IMDB type tastes by which I mean its dominated by young males. For instance, while I don't like the show "Keeping up the Kardashians," it's definitely not the worst show ever. Also, "Girls" is an amazing show which gets no respect here. The quality of a show is in the eye of the beholder, which in this case seems to be boys.</p>
+<p>I would have used Rotten Tomatoes' API, but they don't provide access to TV ratings.</p>
+<p>Even with all these caveats in mind, it's hard to defend my "golden age of TV" hypothesis. Instead, it seems like there is just more content being produced, which leads to more good shows (yay!), but the average show is no better or worse than previously.</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2017-07-15T16:12:26-04:00" pubdate>Sat 15 July 2017</time>  <span class="categories">
+    <a class='category' href='/category/data-science.html'>data science</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/are-we-in-a-tv-golden-age.html';
+    var disqus_url = '/are-we-in-a-tv-golden-age.html';
+    var disqus_title = 'Are we in a TV golden age?';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

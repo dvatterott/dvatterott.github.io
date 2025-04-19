@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My first Kodi Addon - PBS NewsHour (a tutorial) &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">My first Kodi Addon - PBS NewsHour (a tutorial)</h1>
+    <p class="meta">
+<time datetime="2017-03-11T13:21:03-05:00" pubdate>Sat 11 March 2017</time>    </p>
+</header>
+
+  <div class="entry-content"><p>NOTE: Since writing this post, PBS Newshour changed their site. They know use the url, https://www.pbs.org/newshour/video. The mechanics here will work but the url has changed and some of the queries need to be changed too. Check the repo for a working version of the code.</p>
+<p>I've been using <a href="https://kodi.tv/">Kodi/XBMC</a> since 2010. It provides a flexible and (relatively) intuitive interface for interacting with content through your TV (much like an apple TV). One of the best parts of Kodi is the addons - these are apps that you can build or download. For instance, I use the NBA League Pass addon for watching Wolves games. I've been looking for a reason to build my own Kodi addon for years.</p>
+<p>Enter <a href="http://www.pbs.org/newshour/">PBS NewsHour</a>. If you're not watching PBS NewsHour, I'm not sure what you're doing with your life because it's the shit. It rocks. PBS NewsHour disseminates all their content on youtube and their website. For the past couple years, I've been watching their broadcasts every morning through the <a href="http://kodi.wiki/view/Add-on:YouTube">Youtube addon</a>. This works fine, but it's clunky. I decided to stream line watching the NewsHour by building a Kodi addon for it.</p>
+<p>I used <a href="http://forum.kodi.tv/showthread.php?tid=254207">this tutorial</a> to build a Kodi addon that accesses the PBS NewsHour content through the youtube addon. This addon can be found on <a href="https://github.com/dvatterott/Kodi_addons/tree/master/plugin.video.pbsnewshouryoutube">my github</a>. The addon works pretty well, but it includes links to all NewsHour's content, and I only want the full episodes. I am guessing I could have modified this addon to get what I wanted, but I really wanted to build my own addon from scratch.</p>
+<p>The addon I built is available on <a href="https://github.com/dvatterott/Kodi_addons/tree/master/plugin.video.pbsnewshour">my github</a>. To build my addon, I used <a href="http://kodi.wiki/view/HOW-TO:Video_addon">this tutorial</a>, and some code from <a href="https://github.com/learningit/Kodi-plugins-source">this github</a> repository. Below I describe how the addon works. I only describe the file default.py because this file does the majority of the work, and I found the linked tutorials did a good job explaining the other files.</p>
+<p>I start by importing libraries that I will use. Most these libraries are used for scraping content off the web. I then create some basic variables to describe the addon's name (addonID), its name in kodi (base_url), the number used to refer to it (addon_handle - I am not sure how this number is used), and current arguments sent to my addon (args).</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">zlib</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">urlparse</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">xbmc</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">xbmcgui</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">xbmcplugin</span>
+
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">urllib2</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="w"> </span><span class="n">addonID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;plugin.video.pbsnewshour&#39;</span>
+
+<span class="w"> </span><span class="n">base_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="w"> </span><span class="n">addon_handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="w"> </span><span class="n">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">urlparse</span><span class="o">.</span><span class="n">parse_qs</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+</code></pre></div>
+
+<p>The next function, getRequest, gathers html from a website (specified by the variable url). The dictionary httpHeaders tells the website a little about myself, and how I want the html. I use urllib2 to get a compressed version of the html, which is decompressed using zlib.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="nt">-----------</span><span class="w">  </span><span class="nt">Create</span><span class="w"> </span><span class="nt">some</span><span class="w"> </span><span class="nt">functions</span><span class="w"> </span><span class="nt">for</span><span class="w"> </span><span class="nt">fetching</span><span class="w"> </span><span class="nt">videos</span><span class="w"> </span><span class="nt">---------------</span>
+<span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="nt">https</span><span class="o">://</span><span class="nt">github</span><span class="p">.</span><span class="nc">com</span><span class="o">/</span><span class="nt">learningit</span><span class="o">/</span><span class="nt">Kodi-plugins-source</span><span class="o">/</span><span class="nt">blob</span><span class="o">/</span><span class="nt">master</span><span class="o">/</span><span class="nt">script</span><span class="p">.</span><span class="nc">module</span><span class="p">.</span><span class="nc">t1mlib</span><span class="o">/</span><span class="nt">lib</span><span class="o">/</span><span class="nt">t1mlib</span><span class="p">.</span><span class="nc">py</span>
+<span class="w"> </span><span class="nt">UTF8</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;utf-8&#39;</span>
+<span class="w"> </span><span class="nt">USERAGENT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 \</span>
+<span class="s2">             (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36&quot;&quot;&quot;</span>
+<span class="w"> </span><span class="nt">httpHeaders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="err">&#39;User-Agent&#39;:</span><span class="w"> </span><span class="err">USERAGENT,</span>
+<span class="w">                </span><span class="err">&#39;Accept&#39;:</span><span class="w"> </span><span class="err">&quot;application/json,</span><span class="w"> </span><span class="err">text/javascript,</span><span class="w"> </span><span class="err">text/html,*/*&quot;,</span>
+<span class="w">                </span><span class="err">&#39;Accept-Encoding&#39;:</span><span class="w"> </span><span class="err">&#39;gzip,deflate,sdch&#39;,</span>
+<span class="w">                </span><span class="err">&#39;Accept-Language&#39;:</span><span class="w"> </span><span class="err">&#39;en-US,en</span><span class="p">;</span><span class="err">q=0.8&#39;</span>
+<span class="w">                </span><span class="p">}</span>
+
+
+<span class="w"> </span><span class="nt">def</span><span class="w"> </span><span class="nt">getRequest</span><span class="o">(</span><span class="nt">url</span><span class="o">,</span><span class="w"> </span><span class="nt">udata</span><span class="o">=</span><span class="nt">None</span><span class="o">,</span><span class="w"> </span><span class="nt">headers</span><span class="o">=</span><span class="nt">httpHeaders</span><span class="o">):</span>
+<span class="w">     </span><span class="nt">req</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">urllib2</span><span class="p">.</span><span class="nc">Request</span><span class="o">(</span><span class="nt">url</span><span class="p">.</span><span class="nc">encode</span><span class="o">(</span><span class="nt">UTF8</span><span class="o">),</span><span class="w"> </span><span class="nt">udata</span><span class="o">,</span><span class="w"> </span><span class="nt">headers</span><span class="o">)</span>
+<span class="w">     </span><span class="nt">try</span><span class="o">:</span>
+<span class="w">         </span><span class="nt">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">urllib2</span><span class="p">.</span><span class="nc">urlopen</span><span class="o">(</span><span class="nt">req</span><span class="o">)</span>
+<span class="w">         </span><span class="nt">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">response</span><span class="p">.</span><span class="nc">read</span><span class="o">()</span>
+<span class="w">         </span><span class="nt">if</span><span class="w"> </span><span class="nt">response</span><span class="p">.</span><span class="nc">info</span><span class="o">()</span><span class="p">.</span><span class="nc">getheader</span><span class="o">(</span><span class="s1">&#39;Content-Encoding&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;gzip&#39;</span><span class="o">:</span>
+<span class="w">             </span><span class="nt">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">zlib</span><span class="p">.</span><span class="nc">decompress</span><span class="o">(</span><span class="nt">page</span><span class="o">,</span><span class="w"> </span><span class="nt">zlib</span><span class="p">.</span><span class="nc">MAX_WBITS</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nt">16</span><span class="o">)</span>
+<span class="w">         </span><span class="nt">response</span><span class="p">.</span><span class="nc">close</span><span class="o">()</span>
+<span class="w">     </span><span class="nt">except</span><span class="w"> </span><span class="nt">Exception</span><span class="o">:</span>
+<span class="w">         </span><span class="nt">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">         </span><span class="nt">xbmc</span><span class="p">.</span><span class="nc">log</span><span class="o">(</span><span class="nt">msg</span><span class="o">=</span><span class="s1">&#39;REQUEST ERROR&#39;</span><span class="o">,</span><span class="w"> </span><span class="nt">level</span><span class="o">=</span><span class="nt">xbmc</span><span class="p">.</span><span class="nc">LOGDEBUG</span><span class="o">)</span>
+<span class="w">     </span><span class="nt">return</span><span class="o">(</span><span class="nt">page</span><span class="o">)</span>
+</code></pre></div>
+
+<p>The hardest part of building this addon was finding video links. I was able to find a <a href="https://github.com/learningit/Kodi-plugins-source/">github repo</a> with code for identifying links to PBS's videos, but PBS initially posts their videos on youtube. I watch PBS NewsHour the morning after it airs, so I needed a way to watch these youtube links. I started this post by saying I wanted to avoid using Kodi's youtube addon, but I punted and decided to use the youtube addon to play these links. Below is a function for finding the youtube id of a video.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span>def<span class="w"> </span>deal_with_youtube(html):
+<span class="w">     </span>vid_num<span class="w"> </span>=<span class="w"> </span>re.compile(&#39;<span class="nt">&lt;span</span><span class="w"> </span><span class="na">class=</span><span class="s">&quot;youtubeid&quot;</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/span&gt;</span>&#39;,
+<span class="w">                          </span>re.DOTALL).search(html)
+<span class="w">     </span>url<span class="w"> </span>=<span class="w"> </span>vid_num.group(1)
+<span class="w">     </span>return<span class="w"> </span>url
+</code></pre></div>
+
+<p>This next function actually fetches the videos (the hard part of building this addon). This function fetches the html of the website that has PBS's video. It then searches the html for "coveplayerid," which is PBS's name for the video. I use this name to create a url that will play the video. I get the html associated with this new url, and search it for a json file that contains the video. I grab this json file, and viola I have the video's url! In the final part of the code, I request a higher version of the video than PBS would give me by default.</p>
+<p>If I fail to find "coveplayerid," then I know this is a video with a youtube link, so I grab the youtube id. Some pages have a coveplayerid class, but no actual coveplayerid. I also detect these cases and find the youtube id when it occurs.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span>#<span class="w"> </span>https://github.com/learningit/Kodi-plugins-source/blob/master/plugin.video.thinktv/resources/lib/scraper.py
+<span class="w"> </span>#<span class="w"> </span>modified<span class="w"> </span>from<span class="w"> </span>link<span class="w"> </span>above
+<span class="w"> </span>def<span class="w"> </span>getAddonVideo(url,<span class="w"> </span>udata=None,<span class="w"> </span>headers=httpHeaders):
+<span class="w">     </span>html<span class="w"> </span>=<span class="w"> </span>getRequest(url)
+
+<span class="w">     </span>vid_num<span class="w"> </span>=<span class="w"> </span>re.compile(&#39;<span class="nt">&lt;span</span><span class="w"> </span><span class="na">class=</span><span class="s">&quot;coveplayerid&quot;</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/span&gt;</span>&#39;,
+<span class="w">                          </span>re.DOTALL).search(html)
+<span class="w">     </span>if<span class="w"> </span>vid_num:
+<span class="w">         </span>vid_num<span class="w"> </span>=<span class="w"> </span>vid_num.group(1)
+<span class="w">         </span>if<span class="w"> </span>&#39;youtube&#39;<span class="w"> </span>in<span class="w"> </span>vid_num:
+<span class="w">             </span>return<span class="w"> </span>deal_with_youtube(html)
+<span class="w">         </span>pg<span class="w"> </span>=<span class="w"> </span>getRequest(&#39;http://player.pbs.org/viralplayer/%s/&#39;<span class="w"> </span>%<span class="w"> </span>(vid_num))
+<span class="w">         </span>query<span class="w"> </span>=<span class="w"> </span>&quot;&quot;&quot;PBS.videoData<span class="w"> </span>=.+?recommended_encoding.+?&#39;url&#39;.+?&#39;(.+?)&#39;&quot;&quot;&quot;
+<span class="w">         </span>urls<span class="w"> </span>=<span class="w"> </span>re.compile(query,<span class="w"> </span>re.DOTALL).search(pg)
+
+<span class="w">         </span>url<span class="w"> </span>=<span class="w"> </span>urls.groups()
+<span class="w">         </span>pg<span class="w"> </span>=<span class="w"> </span>getRequest(&#39;%s?format=json&#39;<span class="w"> </span>%<span class="w"> </span>url)
+<span class="w">         </span>url<span class="w"> </span>=<span class="w"> </span>json.loads(pg)[&#39;url&#39;]
+<span class="w">     </span>else:<span class="w">  </span>#<span class="w"> </span>weekend<span class="w"> </span>links<span class="w"> </span>are<span class="w"> </span>initially<span class="w"> </span>posted<span class="w"> </span>as<span class="w"> </span>youtube<span class="w"> </span>vids
+<span class="w">         </span>deal_with_youtube(html)
+
+<span class="w">     </span>url<span class="w"> </span>=<span class="w"> </span>url.replace(&#39;800k&#39;,<span class="w"> </span>&#39;2500k&#39;)
+<span class="w">     </span>if<span class="w"> </span>&#39;hd-1080p&#39;<span class="w"> </span>in<span class="w"> </span>url:
+<span class="w">         </span>url<span class="w"> </span>=<span class="w"> </span>url.split(&#39;-hls-&#39;,<span class="w"> </span>1)[0]
+<span class="w">         </span>url<span class="w"> </span>=<span class="w"> </span>url+&#39;-hls-6500k.m3u8&#39;
+<span class="w">     </span>return<span class="w"> </span>url
+</code></pre></div>
+
+<p>This next function identifies full episodes that have aired in the past week. It's the meat of the addon. The function gets the html of <a href="http://www.pbs.org/newshour/videos/">PBS NewsHour's page</a>, and finds all links in a side-bar where PBS lists their past week's episodes. I loop through the links and create a menu item for each one. These menu items are python objects that Kodi can display to users. The items include a label/title (the name of the episode), an image, and a url that Kodi can use to find the video url.</p>
+<p>The most important part of this listing is the url I create. This url gives Kodi all the information I just described, associates the link with an addon, and tells Kodi that the link is playable. In the final part of the function, I pass the list of links to Kodi.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span>#<span class="w"> </span><span class="o">--------------</span><span class="w"> </span><span class="n">Create</span><span class="w"> </span><span class="n">list</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">videos</span><span class="w"> </span><span class="o">--------------------</span>
+<span class="w"> </span>#<span class="w"> </span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">kodi</span><span class="p">.</span><span class="n">wiki</span><span class="o">/</span><span class="nb">view</span><span class="o">/</span><span class="n">HOW</span><span class="o">-</span><span class="n">TO</span><span class="p">:</span><span class="n">Video_addon</span>
+<span class="w"> </span><span class="n">def</span><span class="w"> </span><span class="n">list_videos</span><span class="p">(</span><span class="n">url</span><span class="p">=</span><span class="s">&#39;http://www.pbs.org/newshour/videos/&#39;</span><span class="p">):</span>
+<span class="w">     </span><span class="n">html</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">getRequest</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+<span class="w">     </span><span class="n">query</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;&lt;div class=&#39;sw-pic maxwidth&#39;&gt;.+?href=&#39;(.+?)&#39;.+?src=&quot;</span><span class="p">(.</span><span class="o">+</span>?<span class="p">)</span><span class="s">&quot;.+?title=&quot;</span><span class="p">(.</span><span class="o">+</span>?<span class="p">)</span><span class="s">&quot; &quot;&quot;&quot;</span>
+<span class="w">     </span><span class="n">videos</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">re</span><span class="p">.</span><span class="n">compile</span><span class="p">(</span><span class="n">query</span><span class="p">,</span><span class="w"> </span><span class="n">re</span><span class="p">.</span><span class="n">DOTALL</span><span class="p">).</span><span class="n">findall</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+
+<span class="w">     </span><span class="n">listing</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+<span class="w">     </span><span class="k">for</span><span class="w"> </span><span class="n">vids</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">videos</span><span class="p">:</span>
+<span class="w">         </span><span class="n">list_item</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">xbmcgui</span><span class="p">.</span><span class="n">ListItem</span><span class="p">(</span><span class="n">label</span><span class="p">=</span><span class="n">vids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+<span class="w">                                      </span><span class="n">thumbnailImage</span><span class="p">=</span><span class="n">vids</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="w">         </span><span class="n">list_item</span><span class="p">.</span><span class="n">setInfo</span><span class="p">(</span><span class="s">&#39;video&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&#39;title&#39;</span><span class="p">:</span><span class="w"> </span><span class="n">vids</span><span class="p">[</span><span class="mi">2</span><span class="p">]})</span>
+<span class="w">         </span><span class="n">list_item</span><span class="p">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s">&#39;IsPlayable&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;true&#39;</span><span class="p">)</span>
+
+<span class="w">         </span><span class="n">url</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;%s?action=%s&amp;title=%s&amp;url=%s&amp;thumbnail=%s&quot;</span>
+<span class="w">                </span><span class="c">% (base_url, &#39;play&#39;, vids[2], vids[0], vids[1]))</span>
+
+<span class="w">         </span><span class="n">listing</span><span class="p">.</span><span class="n">append</span><span class="p">((</span><span class="n">url</span><span class="p">,</span><span class="w"> </span><span class="n">list_item</span><span class="p">,</span><span class="w"> </span><span class="n">False</span><span class="p">))</span>
+
+<span class="w">     </span>#<span class="w"> </span><span class="n">Add</span><span class="w"> </span><span class="n">list</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">Kodi</span><span class="p">.</span>
+<span class="w">     </span><span class="n">xbmcplugin</span><span class="p">.</span><span class="n">addDirectoryItems</span><span class="p">(</span><span class="n">addon_handle</span><span class="p">,</span><span class="w"> </span><span class="n">listing</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">(</span><span class="n">listing</span><span class="p">))</span>
+<span class="w">     </span><span class="n">xbmcplugin</span><span class="p">.</span><span class="n">endOfDirectory</span><span class="p">(</span><span class="nb">handle</span><span class="p">=</span><span class="n">addon_handle</span><span class="p">,</span><span class="w"> </span><span class="n">succeeded</span><span class="p">=</span><span class="n">True</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Okay, thats the hard part. The rest of the code implements the functions I just described. The function below is executed when a user chooses to play a video. It gets the url of the video, and gives this to the xbmc function that will play the video. The only hiccup here is I check whether the link is for the standard PBS video type or not. If it is, then I give the link directly to Kodi. If it's not, then this is a youtube link and I launch the youtube plugin with my youtube video id.</p>
+<div class="highlight"><pre><span></span><code> def play_video(path):
+     path = getAddonVideo(path)
+     if &#39;00k&#39; in path:
+         play_item = xbmcgui.ListItem(path=path)
+         xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
+     else:  # deal with youtube links
+         path = &#39;plugin://plugin.video.youtube/?action=play_video&amp;videoid=&#39; + path
+         play_item = xbmcgui.ListItem(path=path)
+         xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
+</code></pre></div>
+
+<p>This final function is launched whenever a user calls the addon or executes an action in the addon (thats why I call the function in the final line of code here). params is an empty dictionary if the addon is being opened. params being empty causes the addon to call list_videos, creating the list of episodes that PBS has aired in the past week. If the user selects one of the episodes, then router is called again, but this time the argument is the url of the selected item. This url is passed to the play_video function, which plays the video for the user!</p>
+<div class="highlight"><pre><span></span><code> def router():
+     params = dict(args)
+
+     if params:
+         if params[&#39;action&#39;][0] == &#39;play&#39;:
+             play_video(params[&#39;url&#39;][0])
+         else:
+             raise ValueError(&#39;Invalid paramstring: {0}!&#39;.format(params))
+     else:
+         list_videos()
+
+
+ router()
+</code></pre></div>
+
+<p>That's my addon! I hope this tutorial helps people create future Kodi addons. Definitely reach out if you have questions. Also, make sure to check out the NewsHour soon and often. It's the bomb.</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2017-03-11T13:21:03-05:00" pubdate>Sat 11 March 2017</time>  <span class="categories">
+    <a class='category' href='/category/python.html'>python</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/my-first-kodi-addon-pbs-newshour-a-tutorial.html';
+    var disqus_url = '/my-first-kodi-addon-pbs-newshour-a-tutorial.html';
+    var disqus_title = 'My first Kodi Addon - PBS NewsHour (a tutorial)';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

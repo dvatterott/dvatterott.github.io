@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Are some mlb players more likely to hit into errors than others: Data Munging &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Are some mlb players more likely to hit into errors than others: Data Munging</h1>
+    <p class="meta">
+<time datetime="2019-04-19T11:02:56-05:00" pubdate>Fri 19 April 2019</time>    </p>
+</header>
+
+  <div class="entry-content"><p>I recently found myself wondering if some baseball players are more likely to hit into errors than others. In theory, the answer should be "no" since fielders produce errors regardless of who is hitting. Nonetheless, it's also possible that some hitters "force" errors by hitting the ball harder or running to first base faster. </p>
+<p>In order to evaluate this possibility, I found play-by-play data on <a href="https://www.retrosheet.org/">retrosheet.org</a>. This data contains row by row data describing each event (e.g., a hit, stolen base etc) in a baseball game. I've posted this analysis on <a href="https://github.com/dvatterott/mlb_errors">github</a> and will walk through it here. </p>
+<p>The user is expected to input what year's data they want. I write the code's output for the year 2018 as comments. The code starts by downloading and unzipping the data.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span>YEAR=$1
+<span class="w"> </span>FILE_LOC=https://www.retrosheet.org/events/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>eve.zip
+
+<span class="w"> </span>echo<span class="w"> </span>&quot;---------DOWNLOAD----------&quot;
+<span class="w"> </span>wget<span class="w"> </span>-nc<span class="w"> </span><span class="nv">$FILE_LOC</span><span class="w"> </span>-O<span class="w"> </span>./raw_data/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>.zip
+
+<span class="w"> </span>echo<span class="w"> </span>&quot;---------UNPACK----------&quot;
+<span class="w"> </span>mkdir<span class="w"> </span>raw_data/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>/
+<span class="w"> </span>unzip<span class="w"> </span>-o<span class="w"> </span>raw_data/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>.zip<span class="w"> </span>-d<span class="w"> </span>raw_data/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>/
+</code></pre></div>
+
+<p>The unzipped data contain play-by-play data in files with the EVN or EVA extensions. Each team's home stadium has its own file. I combine all the play-by play eveSSplants (.EVN and .EVA files) into a single file. I then remove all non batting events (e.g., balk, stolen base etc).</p>
+<p>I also combine all the roster files (.ROS) into a single file. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="c1"># export playbyplay to single file</span>
+<span class="w"> </span><span class="n">mkdir</span><span class="w"> </span><span class="n">processed_data</span><span class="o">/$</span><span class="p">{</span><span class="n">YEAR</span><span class="p">}</span><span class="o">/</span>
+<span class="w"> </span><span class="n">find</span><span class="w"> </span><span class="n">raw_data</span><span class="o">/$</span><span class="p">{</span><span class="n">YEAR</span><span class="p">}</span><span class="o">/</span><span class="w"> </span><span class="o">-</span><span class="n">regex</span><span class="w"> </span><span class="s1">&#39;.*EV[A|N]&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span>\
+<span class="w">    </span><span class="n">xargs</span><span class="w"> </span><span class="n">grep</span><span class="w"> </span><span class="n">play</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span>\
+<span class="w">    </span><span class="o">./</span><span class="n">processed_data</span><span class="o">/$</span><span class="p">{</span><span class="n">YEAR</span><span class="p">}</span><span class="o">/</span><span class="n">playbyplay</span><span class="o">.</span><span class="n">out</span>
+
+<span class="w"> </span><span class="c1"># get all plate appearances from data (and hitter). remove all non plate appearance rows</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">./</span><span class="n">processed_data</span><span class="o">/$</span><span class="p">{</span><span class="n">YEAR</span><span class="p">}</span><span class="o">/</span><span class="n">playbyplay</span><span class="o">.</span><span class="n">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span>\
+<span class="w">    </span><span class="n">awk</span><span class="w"> </span><span class="o">-</span><span class="n">F</span><span class="s1">&#39;,&#39;</span><span class="w"> </span><span class="s1">&#39;{print $4&quot;,&quot;$7}&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span>\
+<span class="w">    </span><span class="n">grep</span><span class="w"> </span><span class="o">-</span><span class="n">Ev</span><span class="w"> </span><span class="s1">&#39;,[A-Z]{3}[0-9]{2}&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span>\
+<span class="w">    </span><span class="n">grep</span><span class="w"> </span><span class="o">-</span><span class="n">Ev</span><span class="w"> </span><span class="s1">&#39;,(NP|BK|CS|DI|OA|PB|WP|PO|POCS|SB|FLE)&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span>\
+<span class="w">    </span><span class="o">./</span><span class="n">processed_data</span><span class="o">/$</span><span class="p">{</span><span class="n">YEAR</span><span class="p">}</span><span class="o">/</span><span class="n">batters</span><span class="o">.</span><span class="n">out</span>
+
+<span class="w"> </span><span class="c1"># one giant roster file</span>
+<span class="w"> </span><span class="n">find</span><span class="w"> </span><span class="n">raw_data</span><span class="o">/$</span><span class="p">{</span><span class="n">YEAR</span><span class="p">}</span><span class="o">/</span><span class="w"> </span><span class="o">-</span><span class="n">name</span><span class="w"> </span><span class="s1">&#39;*ROS&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span>\
+<span class="w">    </span><span class="n">xargs</span><span class="w"> </span><span class="n">awk</span><span class="w"> </span><span class="o">-</span><span class="n">F</span><span class="s1">&#39;,&#39;</span><span class="w"> </span><span class="s1">&#39;{print $1&quot; &quot;$2&quot; &quot;$3}&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span>\
+<span class="w">    </span><span class="o">./</span><span class="n">processed_data</span><span class="o">/$</span><span class="p">{</span><span class="n">YEAR</span><span class="p">}</span><span class="o">/</span><span class="n">players</span><span class="o">.</span><span class="n">out</span>
+</code></pre></div>
+
+<p>In this next few code blocks I print some data just to see what I am working with. For instance, I print out players with the most plate appearances. I was able to confirm these numbers with <a href="https://baseball-reference.com">baseball-reference</a>. This operation requires me to groupby player and count the rows. I join this file with the roster file to get player's full names.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="ss">&quot;---------PLAYERS WITH MOST PLATE APPEARANCES----------&quot;</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">batters</span><span class="p">.</span><span class="k">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">awk</span><span class="w"> </span><span class="o">-</span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k2</span><span class="w"> </span><span class="o">-</span><span class="n">nr</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">most_pa</span><span class="p">.</span><span class="k">out</span>
+<span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="o">&lt;</span><span class="p">(</span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">players</span><span class="p">.</span><span class="k">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="p">(</span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">most_pa</span><span class="p">.</span><span class="k">out</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">uniq</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">-</span><span class="n">nr</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">awk</span><span class="w"> </span><span class="s1">&#39;{print $3&quot;, &quot;$2&quot;, &quot;$4}&#39;</span>
+
+<span class="w"> </span><span class="err">#</span><span class="o">---------</span><span class="n">PLAYERS</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">MOST</span><span class="w"> </span><span class="n">PLATE</span><span class="w"> </span><span class="n">APPEARANCES</span><span class="o">----------</span>
+<span class="w"> </span><span class="n">#Francisco</span><span class="p">,</span><span class="w"> </span><span class="n">Lindor</span><span class="p">,</span><span class="w"> </span><span class="mi">745</span>
+<span class="w"> </span><span class="n">#Trea</span><span class="p">,</span><span class="w"> </span><span class="n">Turner</span><span class="p">,</span><span class="w"> </span><span class="mi">740</span>
+<span class="w"> </span><span class="n">#Manny</span><span class="p">,</span><span class="w"> </span><span class="n">Machado</span><span class="p">,</span><span class="w"> </span><span class="mi">709</span>
+<span class="w"> </span><span class="n">#Cesar</span><span class="p">,</span><span class="w"> </span><span class="n">Hernandez</span><span class="p">,</span><span class="w"> </span><span class="mi">708</span>
+<span class="w"> </span><span class="n">#Whit</span><span class="p">,</span><span class="w"> </span><span class="n">Merrifield</span><span class="p">,</span><span class="w"> </span><span class="mi">707</span>
+<span class="w"> </span><span class="n">#Freddie</span><span class="p">,</span><span class="w"> </span><span class="n">Freeman</span><span class="p">,</span><span class="w"> </span><span class="mi">707</span>
+<span class="w"> </span><span class="n">#Giancarlo</span><span class="p">,</span><span class="w"> </span><span class="n">Stanton</span><span class="p">,</span><span class="w"> </span><span class="mi">706</span>
+<span class="w"> </span><span class="n">#Nick</span><span class="p">,</span><span class="w"> </span><span class="n">Markakis</span><span class="p">,</span><span class="w"> </span><span class="mi">705</span>
+<span class="w"> </span><span class="n">#Alex</span><span class="p">,</span><span class="w"> </span><span class="n">Bregman</span><span class="p">,</span><span class="w"> </span><span class="mi">705</span>
+<span class="w"> </span><span class="n">#Marcus</span><span class="p">,</span><span class="w"> </span><span class="n">Semien</span><span class="p">,</span><span class="w"> </span><span class="mi">703</span>
+</code></pre></div>
+
+<p>Here's the players with the most hits. Notice that I filter out all non-hits in the grep, then group by player.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="ss">&quot;---------PLAYERS WITH MOST HITS----------&quot;</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">batters</span><span class="p">.</span><span class="k">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">grep</span><span class="w"> </span><span class="o">-</span><span class="n">E</span><span class="w"> </span><span class="s1">&#39;,(S|D|T|HR)&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">awk</span><span class="w"> </span><span class="o">-</span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k2</span><span class="w"> </span><span class="o">-</span><span class="n">nr</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">head</span>
+
+<span class="w"> </span><span class="err">#</span><span class="o">---------</span><span class="n">PLAYERS</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">MOST</span><span class="w"> </span><span class="n">HITS</span><span class="o">----------</span>
+<span class="w"> </span><span class="n">#merrw001</span><span class="w"> </span><span class="mi">192</span>
+<span class="w"> </span><span class="n">#freef001</span><span class="w"> </span><span class="mi">191</span>
+<span class="w"> </span><span class="n">#martj006</span><span class="w"> </span><span class="mi">188</span>
+<span class="w"> </span><span class="n">#machm001</span><span class="w"> </span><span class="mi">188</span>
+<span class="w"> </span><span class="n">#yelic001</span><span class="w"> </span><span class="mi">187</span>
+<span class="w"> </span><span class="n">#markn001</span><span class="w"> </span><span class="mi">185</span>
+<span class="w"> </span><span class="n">#castn001</span><span class="w"> </span><span class="mi">185</span>
+<span class="w"> </span><span class="n">#lindf001</span><span class="w"> </span><span class="mi">183</span>
+<span class="w"> </span><span class="n">#peraj003</span><span class="w"> </span><span class="mi">182</span>
+<span class="w"> </span><span class="n">#blacc001</span><span class="w"> </span><span class="mi">182</span>
+</code></pre></div>
+
+<p>Here's the players with the most at-bats.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="ss">&quot;---------PLAYERS WITH MOST AT BATS----------&quot;</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">batters</span><span class="p">.</span><span class="k">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">grep</span><span class="w"> </span><span class="o">-</span><span class="n">Ev</span><span class="w"> </span><span class="s1">&#39;SF|SH&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">grep</span><span class="w"> </span><span class="o">-</span><span class="n">E</span><span class="w"> </span><span class="s1">&#39;,(S|D|T|HR|K|[0-9]|E|DGR|FC)&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">awk</span><span class="w"> </span><span class="o">-</span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="nf">abs</span><span class="p">.</span><span class="k">out</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="nf">abs</span><span class="p">.</span><span class="k">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k2</span><span class="w"> </span><span class="o">-</span><span class="n">nr</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">head</span>
+
+<span class="w"> </span><span class="err">#</span><span class="o">---------</span><span class="n">PLAYERS</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">MOST</span><span class="w"> </span><span class="k">AT</span><span class="w"> </span><span class="n">BATS</span><span class="o">----------</span>
+<span class="w"> </span><span class="n">#turnt001</span><span class="w"> </span><span class="mi">664</span>
+<span class="w"> </span><span class="n">#lindf001</span><span class="w"> </span><span class="mi">661</span>
+<span class="w"> </span><span class="n">#albio001</span><span class="w"> </span><span class="mi">639</span>
+<span class="w"> </span><span class="n">#semim001</span><span class="w"> </span><span class="mi">632</span>
+<span class="w"> </span><span class="n">#peraj003</span><span class="w"> </span><span class="mi">632</span>
+<span class="w"> </span><span class="n">#merrw001</span><span class="w"> </span><span class="mi">632</span>
+<span class="w"> </span><span class="n">#machm001</span><span class="w"> </span><span class="mi">632</span>
+<span class="w"> </span><span class="n">#blacc001</span><span class="w"> </span><span class="mi">626</span>
+<span class="w"> </span><span class="n">#markn001</span><span class="w"> </span><span class="mi">623</span>
+<span class="w"> </span><span class="n">#castn001</span><span class="w"> </span><span class="mi">620</span>
+</code></pre></div>
+
+<p>And, finally, here's the players who hit into the most errors.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="ss">&quot;---------PLAYERS WHO HIT INTO THE MOST ERRORS----------&quot;</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">batters</span><span class="p">.</span><span class="k">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">        </span><span class="n">grep</span><span class="w"> </span><span class="o">-</span><span class="n">Ev</span><span class="w"> </span><span class="s1">&#39;SF|SH&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">grep</span><span class="w"> </span><span class="s1">&#39;,E[0-9]&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">awk</span><span class="w"> </span><span class="o">-</span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">errors</span><span class="p">.</span><span class="k">out</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">errors</span><span class="p">.</span><span class="k">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k2</span><span class="w"> </span><span class="o">-</span><span class="n">nr</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">head</span>
+
+<span class="w"> </span><span class="err">#</span><span class="o">---------</span><span class="n">PLAYERS</span><span class="w"> </span><span class="n">WHO</span><span class="w"> </span><span class="n">HIT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">THE</span><span class="w"> </span><span class="n">MOST</span><span class="w"> </span><span class="n">ERRORS</span><span class="o">----------</span>
+<span class="w"> </span><span class="n">#gurry001</span><span class="w"> </span><span class="mi">13</span>
+<span class="w"> </span><span class="n">#casts001</span><span class="w"> </span><span class="mi">13</span>
+<span class="w"> </span><span class="n">#baezj001</span><span class="w"> </span><span class="mi">12</span>
+<span class="w"> </span><span class="n">#goldp001</span><span class="w"> </span><span class="mi">11</span>
+<span class="w"> </span><span class="n">#desmi001</span><span class="w"> </span><span class="mi">11</span>
+<span class="w"> </span><span class="n">#castn001</span><span class="w"> </span><span class="mi">10</span>
+<span class="w"> </span><span class="n">#bogax001</span><span class="w"> </span><span class="mi">10</span>
+<span class="w"> </span><span class="n">#andum001</span><span class="w"> </span><span class="mi">10</span>
+<span class="w"> </span><span class="n">#turnt001</span><span class="w"> </span><span class="mi">9</span>
+<span class="w"> </span><span class="n">#rojam002</span><span class="w"> </span><span class="mi">9</span>
+</code></pre></div>
+
+<p>Because players with more at-bats hit into more errors, I need to take the number of at-bats into account. I also filter out all players with less than 250 at bats. I figure we only want players with lots of opportunities to create errors.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span>echo<span class="w"> </span>&quot;---------PLAYERS<span class="w"> </span>WITH<span class="w"> </span>MOST<span class="w"> </span>ERRORS<span class="w"> </span>PER<span class="w"> </span>AT<span class="w"> </span>BAT----------&quot;
+<span class="w"> </span>join<span class="w"> </span>-e&quot;0&quot;<span class="w"> </span>-a1<span class="w"> </span>-a2<span class="w"> </span><span class="err">&lt;</span>(sort<span class="w"> </span>-k<span class="w"> </span>1<span class="w"> </span>./processed_data/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>/abs.out)<span class="w"> </span>-o<span class="w"> </span>0<span class="w"> </span>1.2<span class="w"> </span>2.2<span class="w"> </span><span class="err">&lt;</span>(sort<span class="w"> </span>-k<span class="w"> </span>1<span class="w"> </span>./processed_data/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>/errors.out)<span class="w"> </span>|<span class="w"> </span>\
+<span class="w">    </span>uniq<span class="w"> </span>|<span class="w"> </span>\
+<span class="w">    </span>awk<span class="w"> </span>-v<span class="w"> </span>OFS=&#39;,<span class="w"> </span>&#39;<span class="w"> </span>&#39;$2<span class="w"> </span>&gt;<span class="w"> </span>250<span class="w"> </span>{print<span class="w"> </span>$1,<span class="w"> </span>$3,<span class="w"> </span>$2,<span class="w"> </span>$3/$2}&#39;<span class="w"> </span>&gt;<span class="w">  </span>\
+<span class="w">    </span>./processed_data/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>/errors_abs.out
+<span class="w"> </span>cat<span class="w"> </span>./processed_data/<span class="cp">${</span><span class="n">YEAR</span><span class="cp">}</span>/errors_abs.out<span class="w"> </span>|<span class="w"> </span>sort<span class="w"> </span>-k<span class="w"> </span>4<span class="w"> </span>-nr<span class="w"> </span>|<span class="w"> </span>head
+
+<span class="w"> </span>#---------PLAYERS<span class="w"> </span>WITH<span class="w"> </span>MOST<span class="w"> </span>ERRORS<span class="w"> </span>PER<span class="w"> </span>AT<span class="w"> </span>BAT----------
+<span class="w"> </span>#pereh001,<span class="w"> </span>8,<span class="w"> </span>316,<span class="w"> </span>0.0253165
+<span class="w"> </span>#gurry001,<span class="w"> </span>13,<span class="w"> </span>537,<span class="w"> </span>0.0242086
+<span class="w"> </span>#andre001,<span class="w"> </span>9,<span class="w"> </span>395,<span class="w"> </span>0.0227848
+<span class="w"> </span>#casts001,<span class="w"> </span>13,<span class="w"> </span>593,<span class="w"> </span>0.0219224
+<span class="w"> </span>#desmi001,<span class="w"> </span>11,<span class="w"> </span>555,<span class="w"> </span>0.0198198
+<span class="w"> </span>#baezj001,<span class="w"> </span>12,<span class="w"> </span>606,<span class="w"> </span>0.019802
+<span class="w"> </span>#garca003,<span class="w"> </span>7,<span class="w"> </span>356,<span class="w"> </span>0.0196629
+<span class="w"> </span>#bogax001,<span class="w"> </span>10,<span class="w"> </span>512,<span class="w"> </span>0.0195312
+<span class="w"> </span>#goldp001,<span class="w"> </span>11,<span class="w"> </span>593,<span class="w"> </span>0.0185497
+<span class="w"> </span>#iglej001,<span class="w"> </span>8,<span class="w"> </span>432,<span class="w"> </span>0.0185185
+</code></pre></div>
+
+<p>At-bats is great but even better is to remove strike-outs and just look at occurences when a player hit the ball into play. I remove all players with less than 450 balls hit into play which limits us to just 37 players but the players have enough reps to make the estimates more reliable.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="ss">&quot;---------PLAYERS WITH MOST ERRORS PER BALL IN PLAY----------&quot;</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">batters</span><span class="p">.</span><span class="k">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">grep</span><span class="w"> </span><span class="o">-</span><span class="n">Ev</span><span class="w"> </span><span class="s1">&#39;SF|SH&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">grep</span><span class="w"> </span><span class="o">-</span><span class="n">E</span><span class="w"> </span><span class="s1">&#39;,(S|D|T|HR|[0-9]|E|DGR|FC)&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">awk</span><span class="w"> </span><span class="o">-</span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{a[$1]++;}END{for (i in a)print i, a[i];}&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">bip</span><span class="p">.</span><span class="k">out</span>
+<span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="o">-</span><span class="n">e</span><span class="ss">&quot;0&quot;</span><span class="w"> </span><span class="o">-</span><span class="n">a1</span><span class="w"> </span><span class="o">-</span><span class="n">a2</span><span class="w"> </span><span class="o">&lt;</span><span class="p">(</span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">bip</span><span class="p">.</span><span class="k">out</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="n">o</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mf">1.2</span><span class="w"> </span><span class="mf">2.2</span><span class="w"> </span><span class="o">&lt;</span><span class="p">(</span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">errors</span><span class="p">.</span><span class="k">out</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">uniq</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="n">awk</span><span class="w"> </span><span class="o">-</span><span class="n">v</span><span class="w"> </span><span class="n">OFS</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="w"> </span><span class="s1">&#39;$2 &gt; 450 {print $1, $3, $2, $3/$2}&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="err">\</span>
+<span class="w">    </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">errors_bip</span><span class="p">.</span><span class="k">out</span>
+<span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">processed_data</span><span class="o">/</span><span class="err">${</span><span class="nf">YEAR</span><span class="err">}</span><span class="o">/</span><span class="n">errors_bip</span><span class="p">.</span><span class="k">out</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">-</span><span class="n">k</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">-</span><span class="n">nr</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">head</span>
+
+<span class="w"> </span><span class="err">#</span><span class="o">---------</span><span class="n">PLAYERS</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">MOST</span><span class="w"> </span><span class="n">ERRORS</span><span class="w"> </span><span class="n">PER</span><span class="w"> </span><span class="n">BALL</span><span class="w"> </span><span class="ow">IN</span><span class="w"> </span><span class="n">PLAY</span><span class="o">----------</span>
+<span class="w"> </span><span class="n">#casts001</span><span class="p">,</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">469</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0277186</span>
+<span class="w"> </span><span class="n">#gurry001</span><span class="p">,</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">474</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0274262</span>
+<span class="w"> </span><span class="n">#castn001</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">469</span><span class="p">,</span><span class="w"> </span><span class="mf">0.021322</span>
+<span class="w"> </span><span class="n">#andum001</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">476</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0210084</span>
+<span class="w"> </span><span class="n">#andeb006</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">461</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0195228</span>
+<span class="w"> </span><span class="n">#turnt001</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">532</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0169173</span>
+<span class="w"> </span><span class="n">#simma001</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">510</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0156863</span>
+<span class="w"> </span><span class="n">#lemad001</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">451</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0155211</span>
+<span class="w"> </span><span class="n">#sancc001</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">462</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0151515</span>
+<span class="w"> </span><span class="n">#freef001</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">486</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0144033</span>
+</code></pre></div>
+
+<p>Now we have some data. In future posts I will explore how we can use statistics to evaluate whether some players are more likely to hit into errors than others.</p>
+<p>Check out the <a href="https://danvatterott.com/are-some-mlb-players-more-likely-to-hit-into-errors-statistics.html">companion post</a> that statistically explores this question.</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2019-04-19T11:02:56-05:00" pubdate>Fri 19 April 2019</time>  <span class="categories">
+    <a class='category' href='/category/data-science.html'>data science</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/are-some-mlb-players-more-likely-to-hit-into-errors-than-others-data-munging.html';
+    var disqus_url = '/are-some-mlb-players-more-likely-to-hit-into-errors-than-others-data-munging.html';
+    var disqus_title = 'Are some mlb players more likely to hit into errors than others: Data Munging';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

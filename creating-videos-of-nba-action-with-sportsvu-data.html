@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Creating videos of NBA action with Sportsvu data &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Creating videos of NBA action with Sportsvu data</h1>
+    <p class="meta">
+<time datetime="2016-06-16T08:11:47-04:00" pubdate>Thu 16 June 2016</time>    </p>
+</header>
+
+  <div class="entry-content"><p>All basketball teams have a camera system called <a href="https://en.wikipedia.org/wiki/SportVU">SportVU</a> installed in their arenas. These camera systems track players and the ball throughout a basketball game. </p>
+<p>The data produced by sportsvu camera systems used to be freely available on NBA.com, but was recently removed (I have no idea why). Luckily, the data for about 600 games are available on <a href="https://github.com/neilmj/BasketballData">neilmj's github</a>. In this post, I show how to create a video recreation of a given basketball play using the sportsvu data. </p>
+<p>This code is also available as a jupyter notebook on my <a href="https://github.com/dvatterott/jupyter_notebooks">github</a>. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="c1">#import some libraries</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+<span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">print_function</span>
+
+<span class="w"> </span><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;font.family&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Bitstream Vera Sans&#39;</span><span class="p">]</span>
+</code></pre></div>
+
+<p>The data is provided as a json. Here's how to import the python json library and load the data. I'm a T-Wolves fan, so the game I chose is a wolves game.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="w"> </span><span class="c1">#import json library</span>
+<span class="w"> </span><span class="n">json_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/home/dan-laptop/github/BasketballData/2016.NBA.Raw.SportVU.Game.Logs/0021500594.json&#39;</span><span class="p">)</span><span class="w"> </span><span class="c1">#import the data from wherever you saved it.</span>
+<span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span><span class="w"> </span><span class="c1">#load the data</span>
+</code></pre></div>
+
+<p>Let's take a quick look at the data. It's a dictionary with three keys: gamedate, gameid, and events. Gamedate and gameid are the date of this game and its specific id number, respectively. Events is the structure with data we're interested in. </p>
+<div class="highlight"><pre><span></span><code> data.keys()
+
+[u&#39;gamedate&#39;, u&#39;gameid&#39;, u&#39;events&#39;]
+</code></pre></div>
+
+<p>Lets take a look at the first event. The first event has an associated eventid number. We will use these later. There's also data for each player on the visiting and home team. We will use these later too. Finally, and most importantly, there's the "moments." There are 25 moments for each second of the "event" (the data is sampled at 25hz). </p>
+<div class="highlight"><pre><span></span><code> data[&#39;events&#39;][0].keys()
+
+
+[u&#39;eventId&#39;, u&#39;visitor&#39;, u&#39;moments&#39;, u&#39;home&#39;]
+</code></pre></div>
+
+<p>Here's the first moment of the first event. The first number is the quarter. The second number is the time of the event in milliseconds. The third number is the number of seconds left in the quarter (the 1st quarter hasn't started yet, so 12 * 60 = 720). The fourth number is the number of seconds left on the shot clock. I am not sure what fourth number (None) represents. </p>
+<p>The final matrix is 11x5 matrix. The first row describes the ball. The first two columns are the teamID and the playerID of the ball (-1 for both because the ball does not belong to a team and is not a player). The 3rd and 4th columns are xy coordinates of the ball. The final column is the height of the ball (z coordinate). </p>
+<p>The next 10 rows describe the 10 players on the court. The first 5 players belong to the home team and the last 5 players belong to the visiting team. Each player has his teamID, playerID, xy&amp;z coordinates (although I don't think players' z coordinates ever change). </p>
+<div class="highlight"><pre><span></span><code> data[&#39;events&#39;][0][&#39;moments&#39;][0]
+
+
+[1,
+ 1452903036782,
+ 720.0,
+ 24.0,
+ None,
+ [[-1, -1, 44.16456, 26.34142, 5.74423],
+  [1610612760, 201142, 45.46259, 32.01456, 0.0],
+  [1610612760, 201566, 10.39347, 24.77219, 0.0],
+  [1610612760, 201586, 25.86087, 25.55881, 0.0],
+  [1610612760, 203460, 47.28525, 17.76225, 0.0],
+  [1610612760, 203500, 43.68634, 26.63098, 0.0],
+  [1610612750, 708, 55.6401, 25.55583, 0.0],
+  [1610612750, 2419, 47.95942, 31.66328, 0.0],
+  [1610612750, 201937, 67.28725, 25.10267, 0.0],
+  [1610612750, 203952, 47.28525, 17.76225, 0.0],
+  [1610612750, 1626157, 49.46814, 24.24193, 0.0]]]
+</code></pre></div>
+
+<p>Alright, so we have the sportsvu data, but its not clear what each event is. Luckily, the NBA also provides play by play (pbp) data. I write a function for acquiring play by play game data. This function collects (and trims) the play by play data for a given sportsvu data set. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">acquire_gameData</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">     </span><span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="w">     </span><span class="n">header_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">#I pulled this header from the py goldsberry library</span>
+<span class="w">         </span><span class="s1">&#39;Accept-Encoding&#39;</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;gzip, deflate, sdch&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;Accept-Language&#39;</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;en-US,en;q=0.8&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;Upgrade-Insecure-Requests&#39;</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;1&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;User-Agent&#39;</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; WOW64)&#39;</span><span class="w">\</span>
+<span class="w">         </span><span class="s1">&#39; AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 &#39;</span><span class="w">\</span>
+<span class="w">         </span><span class="s1">&#39;Safari/537.36&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;Accept&#39;</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;text/html,application/xhtml+xml,application/xml;q=0.9&#39;</span><span class="w">\</span>
+<span class="w">         </span><span class="s1">&#39;,image/webp,*/*;q=0.8&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;max-age=0&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;Connection&#39;</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;keep-alive&#39;</span>
+<span class="w">     </span><span class="p">}</span>
+<span class="w">     </span><span class="n">game_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;http://stats.nba.com/stats/playbyplayv2?EndPeriod=0&amp;EndRange=0&amp;GameID=&#39;</span><span class="o">+</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;gameid&#39;</span><span class="p">]</span><span class="o">+</span><span class="w">\</span>
+<span class="w">                 </span><span class="s1">&#39;&amp;RangeType=0&amp;StartPeriod=0&amp;StartRange=0&#39;</span><span class="w"> </span><span class="c1">#address for querying the data</span>
+<span class="w">     </span><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">game_url</span><span class="p">,</span><span class="n">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">header_data</span><span class="p">)</span><span class="w"> </span><span class="c1">#go get the data</span>
+<span class="w">     </span><span class="n">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;resultSets&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;headers&#39;</span><span class="p">]</span><span class="w"> </span><span class="c1">#get headers of data</span>
+<span class="w">     </span><span class="n">gameData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;resultSets&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;rowSet&#39;</span><span class="p">]</span><span class="w"> </span><span class="c1">#get actual data from json object</span>
+<span class="w">     </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">gameData</span><span class="p">,</span><span class="w"> </span><span class="n">columns</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span><span class="w"> </span><span class="c1">#turn the data into a pandas dataframe</span>
+<span class="w">     </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">[[</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">18</span><span class="p">]]]</span><span class="w"> </span><span class="c1">#there&#39;s a ton of data here, so I trim  it doown</span>
+<span class="w">     </span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;TEAM&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;PLAYER1_TEAM_ABBREVIATION&#39;</span><span class="p">]</span>
+<span class="w">     </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;PLAYER1_TEAM_ABBREVIATION&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">df</span>
+</code></pre></div>
+
+<p>Below I show what the play by play data looks like. There's a column for event number (eventnum). These event numbers match up with the event numbers from the sportsvu data, so we will use this later for seeking out specific plays in the sportsvu data. There's a column for the event type (eventmsgtype). This column has a number describing what occured in the play. I list these number codes in the comments below. </p>
+<p>There's also short text descriptions of the plays in the home description and visitor description columns. Finally, I use the team column to represent the primary team involved in a play. </p>
+<p>I stole the idea of using play by play data from <a href="http://projects.rajivshah.com/sportvu/PBP_NBA_SportVu.html">Raji Shah</a>. </p>
+<div class="highlight"><pre><span></span><code> df = acquire_gameData(data)
+ df.head()
+ #EVENTMSGTYPE
+ #1 - Make 
+ #2 - Miss 
+ #3 - Free Throw 
+ #4 - Rebound 
+ #5 - out of bounds / Turnover / Steal 
+ #6 - Personal Foul 
+ #7 - Violation 
+ #8 - Substitution 
+ #9 - Timeout 
+ #10 - Jumpball 
+ #12 - Start Q1? 
+ #13 - Start Q2?
+</code></pre></div>
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>EVENTNUM</th>
+      <th>EVENTMSGTYPE</th>
+      <th>HOMEDESCRIPTION</th>
+      <th>VISITORDESCRIPTION</th>
+      <th>TEAM</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>12</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>10</td>
+      <td>Jump Ball Adams vs. Towns: Tip to Ibaka</td>
+      <td>None</td>
+      <td>OKC</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>5</td>
+      <td>Westbrook Out of Bounds Lost Ball Turnover (P1...</td>
+      <td>None</td>
+      <td>OKC</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>2</td>
+      <td>None</td>
+      <td>MISS Wiggins 16' Jump Shot</td>
+      <td>MIN</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>4</td>
+      <td>Westbrook REBOUND (Off:0 Def:1)</td>
+      <td>None</td>
+      <td>OKC</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>When viewing the videos, its nice to know what players are on the court. I like to depict this by labeling each player with their number. Here I create a dictionary that contains each player's id number (these are assigned by nba.com) as the key and their jersey number as the associated value. </p>
+<div class="highlight"><pre><span></span><code> player_fields = data[&#39;events&#39;][0][&#39;home&#39;][&#39;players&#39;][0].keys()
+ home_players = pd.DataFrame(data=[i for i in data[&#39;events&#39;][0][&#39;home&#39;][&#39;players&#39;]], columns=player_fields)
+ away_players = pd.DataFrame(data=[i for i in data[&#39;events&#39;][0][&#39;visitor&#39;][&#39;players&#39;]], columns=player_fields)
+ players = pd.merge(home_players, away_players, how=&#39;outer&#39;)
+ jerseydict = dict(zip(players.playerid.values, players.jersey.values))
+</code></pre></div>
+
+<p>Alright, almost there! Below I write some functions for creating the actual video! First, there's a short function for placing an image of the basketball court beneath our depiction of players moving around. This image is from gmf05's github, but I will provide it on <a href="https://github.com/dvatterott/nba_project">mine</a> too. </p>
+<p>Much of this code is either straight from <a href="https://github.com/gmf05/nba/blob/master/scripts/notebooks/svmovie.ipynb">gmf05's github</a> or slightly modified. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="c1"># Animation function / loop</span>
+<span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">draw_court</span><span class="p">(</span><span class="n">axis</span><span class="p">):</span>
+<span class="w">     </span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.image</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpimg</span>
+<span class="w">     </span><span class="n">img</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mpimg</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s1">&#39;./nba_court_T.png&#39;</span><span class="p">)</span><span class="w"> </span><span class="c1">#read image. I got this image from gmf05&#39;s github.</span>
+<span class="w">     </span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="n">extent</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">#show the image.</span>
+
+<span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">animate</span><span class="p">(</span><span class="n">n</span><span class="p">):</span><span class="w"> </span><span class="c1">#matplotlib&#39;s animation function loops through a function n times that draws a different frame on each iteration</span>
+<span class="w">     </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="n">ii</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">enumerate</span><span class="p">(</span><span class="n">player_xy</span><span class="p">[</span><span class="n">n</span><span class="p">]):</span><span class="w"> </span><span class="c1">#loop through all the players</span>
+<span class="w">         </span><span class="n">player_circ</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">center</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ii</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">ii</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="w"> </span><span class="c1">#change each players xy position</span>
+<span class="w">         </span><span class="n">player_text</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">jerseydict</span><span class="p">[</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]]))</span><span class="w"> </span><span class="c1">#draw the text for each player. </span>
+<span class="w">         </span><span class="n">player_text</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_x</span><span class="p">(</span><span class="n">ii</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="c1">#set the text x position</span>
+<span class="w">         </span><span class="n">player_text</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="n">ii</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="w"> </span><span class="c1">#set text y position</span>
+<span class="w">     </span><span class="n">ball_circ</span><span class="o">.</span><span class="n">center</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ball_xy</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">ball_xy</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="c1">#change ball xy position</span>
+<span class="w">     </span><span class="n">ball_circ</span><span class="o">.</span><span class="n">radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.1</span><span class="w"> </span><span class="c1">#i could change the size of the ball according to its height, but chose to keep this constant</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="nb">tuple</span><span class="p">(</span><span class="n">player_text</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">tuple</span><span class="p">(</span><span class="n">player_circ</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">ball_circ</span><span class="p">,)</span>
+
+<span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">():</span><span class="w"> </span><span class="c1">#this is what matplotlib&#39;s animation will create before drawing the first frame. </span>
+<span class="w">     </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span><span class="w"> </span><span class="c1">#set up players</span>
+<span class="w">         </span><span class="n">player_text</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="w">         </span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">player_circ</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="w">     </span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">ball_circ</span><span class="p">)</span><span class="w"> </span><span class="c1">#create ball</span>
+<span class="w">     </span><span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span><span class="w"> </span><span class="c1">#turn off axis</span>
+<span class="w">     </span><span class="n">dx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="w">     </span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">0</span><span class="o">-</span><span class="n">dx</span><span class="p">,</span><span class="mi">100</span><span class="o">+</span><span class="n">dx</span><span class="p">])</span><span class="w"> </span><span class="c1">#set axis</span>
+<span class="w">     </span><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="mi">0</span><span class="o">-</span><span class="n">dx</span><span class="p">,</span><span class="mi">50</span><span class="o">+</span><span class="n">dx</span><span class="p">])</span><span class="w">  </span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="nb">tuple</span><span class="p">(</span><span class="n">player_text</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">tuple</span><span class="p">(</span><span class="n">player_circ</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">ball_circ</span><span class="p">,)</span>
+</code></pre></div>
+
+<p>The event that I want to depict is event 41. In this event, Karl Anthony Towns misses a shot, grabs his own rebounds, and puts it back in.</p>
+<div class="highlight"><pre><span></span><code> df[37:38]
+</code></pre></div>
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>EVENTNUM</th>
+      <th>EVENTMSGTYPE</th>
+      <th>HOMEDESCRIPTION</th>
+      <th>VISITORDESCRIPTION</th>
+      <th>TEAM</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>37</th>
+      <td>41</td>
+      <td>1</td>
+      <td>None</td>
+      <td>Towns 1' Layup (2 PTS)</td>
+      <td>MIN</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>We need to find where event 41 is in the sportsvu data structure, so I created a function for finding the location of a particular event. I then create a matrix with position data for the ball and a matrix with position data for each player for event 41. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">#the</span><span class="w"> </span><span class="k">order</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="n">does</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">up</span><span class="p">,</span><span class="w"> </span><span class="n">so</span><span class="w"> </span><span class="n">we</span><span class="w"> </span><span class="n">have</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="k">use</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">eventIds</span><span class="p">.</span><span class="w"> </span><span class="n">This</span><span class="w"> </span><span class="n">loop</span><span class="w"> </span><span class="n">finds</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">correct</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">id</span><span class="err">#</span><span class="p">.</span>
+<span class="w"> </span><span class="n">search_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">41</span>
+<span class="w"> </span><span class="n">def</span><span class="w"> </span><span class="n">find_moment</span><span class="p">(</span><span class="n">search_id</span><span class="p">)</span><span class="err">:</span>
+<span class="w">     </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="n">events</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">enumerate</span><span class="p">(</span><span class="k">data</span><span class="o">[</span><span class="n">&#39;events&#39;</span><span class="o">]</span><span class="p">)</span><span class="err">:</span>
+<span class="w">         </span><span class="k">if</span><span class="w"> </span><span class="n">events</span><span class="o">[</span><span class="n">&#39;eventId&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nf">str</span><span class="p">(</span><span class="n">search_id</span><span class="p">)</span><span class="err">:</span>
+<span class="w">             </span><span class="n">finder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span>
+<span class="w">             </span><span class="k">break</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">finder</span>
+
+<span class="w"> </span><span class="n">event_num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find_moment</span><span class="p">(</span><span class="n">search_id</span><span class="p">)</span><span class="w"> </span>
+<span class="w"> </span><span class="n">ball_xy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span><span class="o">[</span><span class="n">x[5</span><span class="o">][</span><span class="n">0</span><span class="o">][</span><span class="n">2:5</span><span class="o">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">data</span><span class="o">[</span><span class="n">&#39;events&#39;</span><span class="o">][</span><span class="n">event_num</span><span class="o">][</span><span class="n">&#39;moments&#39;</span><span class="o">]</span><span class="err">]</span><span class="p">)</span><span class="w"> </span><span class="n">#create</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">ball</span><span class="w"> </span><span class="k">data</span>
+<span class="w"> </span><span class="n">player_xy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="k">array</span><span class="p">(</span><span class="o">[</span><span class="n">np.array(x[5</span><span class="o">][</span><span class="n">1:</span><span class="o">]</span><span class="p">)</span><span class="o">[</span><span class="n">:,1:4</span><span class="o">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">data</span><span class="o">[</span><span class="n">&#39;events&#39;</span><span class="o">][</span><span class="n">event_num</span><span class="o">][</span><span class="n">&#39;moments&#39;</span><span class="o">]</span><span class="err">]</span><span class="p">)</span><span class="w"> </span><span class="n">#create</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">player</span><span class="w"> </span><span class="k">data</span>
+</code></pre></div>
+
+<p>Okay. We're actually there! Now we get to create the video. We have to create figure and axes objects for the animation to draw on. Then I place a picture of the basketball court on this plot. Finally, I create the circle and text objects that will move around throughout the video (depicting the ball and players). The location of these objects are then updated in the animation loop.</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.animation</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">animation</span>
+
+<span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mf">7.5</span><span class="p">))</span><span class="w"> </span><span class="c1">#create figure object</span>
+<span class="w"> </span><span class="n">ax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="w"> </span><span class="c1">#create axis object</span>
+
+<span class="w"> </span><span class="n">draw_court</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">50</span><span class="p">])</span><span class="w"> </span><span class="c1">#draw the court</span>
+<span class="w"> </span><span class="n">player_text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="c1">#create player text vector</span>
+<span class="w"> </span><span class="n">player_circ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="c1">#create player circle vector</span>
+<span class="w"> </span><span class="n">ball_circ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mf">1.1</span><span class="p">,</span><span class="w"> </span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="c1">#create circle object for bal</span>
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span><span class="w"> </span><span class="c1">#create circle object and text object for each player</span>
+<span class="w">     </span><span class="n">col</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">,</span><span class="s1">&#39;k&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">5</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="w"> </span><span class="c1">#color scheme</span>
+<span class="w">     </span><span class="n">player_circ</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mf">2.2</span><span class="p">,</span><span class="w"> </span><span class="n">facecolor</span><span class="o">=</span><span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span><span class="w"> </span><span class="c1">#player circle</span>
+<span class="w">     </span><span class="n">player_text</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span><span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span><span class="w"> </span><span class="c1">#player jersey # (text)</span>
+
+<span class="w"> </span><span class="n">ani</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span><span class="w"> </span><span class="n">animate</span><span class="p">,</span><span class="w"> </span><span class="n">frames</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ball_xy</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span><span class="w"> </span><span class="n">init_func</span><span class="o">=</span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">blit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="w"> </span><span class="n">interval</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="n">repeat</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="w">\</span>
+<span class="w">                              </span><span class="n">save_count</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">#function for making video</span>
+<span class="w"> </span><span class="n">ani</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;Event_</span><span class="si">%d</span><span class="s1">.mp4&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="p">(</span><span class="n">search_id</span><span class="p">),</span><span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">fps</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span><span class="w"> </span><span class="c1">#function for saving video</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span><span class="w"> </span><span class="c1">#close the plot</span>
+</code></pre></div>
+
+<p><span class="videobox">
+            <video width="None" height="None" preload="none" controls poster="None"><source src='/images/Event_41.mp4' type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'></video></span></p>
+<p>I've been told this video does not work for all users. I've also posted it on <a href="https://youtu.be/ZPvQOorvVtI">youtube</a>.</p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2016-06-16T08:11:47-04:00" pubdate>Thu 16 June 2016</time>  <span class="categories">
+    <a class='category' href='/category/nba.html'>nba</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/creating-videos-of-nba-action-with-sportsvu-data.html';
+    var disqus_url = '/creating-videos-of-nba-action-with-sportsvu-data.html';
+    var disqus_title = 'Creating videos of NBA action with Sportsvu data';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Simulating the Monty Hall Problem &mdash; Dan Vatterott</title>
+  <meta name="author" content="Dan Vatterott">
+
+
+
+
+
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <link href="/favicon.png" rel="icon">
+
+  <link href="/theme/css/main.css" media="screen, projection"
+        rel="stylesheet" type="text/css">
+
+  <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic"
+        rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header role="banner"><hgroup>
+  <h1><a href="/">Dan Vatterott</a></h1>
+    <h2>Data Scientist</h2>
+</hgroup></header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+</ul>
+
+
+<ul class="main-navigation">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about-me.html">About Me</a></li>
+    <li><a href="/publications.html">Publications</a></li>
+    <li><a href="/Vatterott_Resume.pdf">Resume</a></li>
+    <li><a href="/my-reads.html">My Reads</a></li>
+    <li><a href="/presentations.html">Presentations</a></li>
+    <li><a href="/blog.html">Blog</a></li>
+    <li><a href="/archives.html">Archive</a></li>
+</ul></nav>
+  <div id="main">
+    <div id="content">
+<div>
+  <article class="hentry" role="article">
+<header>
+      <h1 class="entry-title">Simulating the Monty Hall Problem</h1>
+    <p class="meta">
+<time datetime="2016-12-25T11:19:53-05:00" pubdate>Sun 25 December 2016</time>    </p>
+</header>
+
+  <div class="entry-content"><p>I've been hearing about the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty Hall problem</a> for years and its never quite made sense to me, so I decided to program up a quick simulation. </p>
+<p>In the Monty Hall problem, there is a car behind one of three doors. There are goats behind the other two doors. The contestant picks one of the three doors. Monty Hall (the game show host) then reveals that one of the two unchosen doors has a goat behind it. The question is whether the constestant should change the door they picked or keep their choice. </p>
+<p>My first intuition was that it doesn't matter whether the contestant changes their choice because its equally probable that the car is behind either of the two unopened doors, but I've been told this is incorrect! Instead, the contestant is more likely to win the car if they change their choice. </p>
+<p>How can this be? Well, I decided to create a simple simulation of the Monty Hall problem in order to prove to myself that there really is an advantage to changing the chosen door and (hopefully) gain an intuition into how this works. </p>
+<p>Below I've written my little simulation. A jupyter notebook with this code is available on my <a href="https://github.com/dvatterott/jupyter_notebooks">github</a>. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="w"> </span><span class="n">start_vect</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="c1">#doors</span>
+
+<span class="w"> </span><span class="n">samples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5000</span><span class="w"> </span><span class="c1">#number of simulations to run</span>
+
+<span class="w"> </span><span class="n">change</span><span class="p">,</span><span class="w"> </span><span class="n">no_change</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[],[]</span>
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+
+<span class="w">     </span><span class="c1">#shuffle data</span>
+<span class="w">     </span><span class="n">vect</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">start_vect</span><span class="p">)</span>
+<span class="w">     </span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span>
+
+<span class="w">     </span><span class="c1">#make choice</span>
+<span class="w">     </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vect</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="w">     </span><span class="n">no_change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span><span class="w"> </span><span class="c1">#outcome if do not change choice</span>
+
+<span class="w">     </span><span class="c1">#show bad door</span>
+<span class="w">     </span><span class="k">try</span><span class="p">:</span>
+<span class="w">         </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vect</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+<span class="w">     </span><span class="k">except</span><span class="p">:</span>
+<span class="w">         </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vect</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="w">     </span><span class="n">change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vect</span><span class="p">)</span><span class="w"> </span><span class="c1">#outcome if change choice</span>
+</code></pre></div>
+
+<p>Here I plot the results</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="w"> </span><span class="o">%</span><span class="n">matplotlib</span><span class="w"> </span><span class="n">inline</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;ggplot&#39;</span><span class="p">)</span>
+
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">change</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">no_change</span><span class="p">)],</span><span class="n">width</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Proportion Correct Choice&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">2.0</span><span class="p">),[</span><span class="s1">&#39;Change Choice&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Do not change choice&#39;</span><span class="p">])</span>
+
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">stats</span>
+<span class="w"> </span><span class="n">obs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">change</span><span class="p">),</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">no_change</span><span class="p">)],</span><span class="w"> </span><span class="p">[</span><span class="n">samples</span><span class="p">,</span><span class="w"> </span><span class="n">samples</span><span class="p">]])</span>
+<span class="w"> </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Probability of choosing correctly if change choice: </span><span class="si">%0.2f</span><span class="s1">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">change</span><span class="p">))</span>
+<span class="w"> </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Probability of choosing correctly if do not change choice: </span><span class="si">%0.2f</span><span class="s1">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">no_change</span><span class="p">))</span>
+<span class="w"> </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Probability of difference arising from chance: </span><span class="si">%0.5f</span><span class="s1">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">stats</span><span class="o">.</span><span class="n">chi2_contingency</span><span class="p">(</span><span class="n">obs</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">Probability</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">choosing</span><span class="w"> </span><span class="n">correctly</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">change</span><span class="w"> </span><span class="n">choice</span><span class="p">:</span><span class="w"> </span><span class="mf">0.67</span>
+<span class="n">Probability</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">choosing</span><span class="w"> </span><span class="n">correctly</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">do</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">change</span><span class="w"> </span><span class="n">choice</span><span class="p">:</span><span class="w"> </span><span class="mf">0.33</span>
+<span class="n">Probability</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">difference</span><span class="w"> </span><span class="n">arising</span><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">chance</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00000</span>
+</code></pre></div>
+
+<p><img src="/images/montyhall/montyhall1.png" /></p>
+<p>Clearly, the contestant should change their choice! </p>
+<p>So now, just to make sure I am not crazy, I decided to simulate the Monty Hall problem with the contestant choosing what door to open after Monty Hall opens a door with a goat. </p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">change</span><span class="p">,</span><span class="w"> </span><span class="nx">no_change</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[],[]</span>
+<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">range</span><span class="p">(</span><span class="nx">samples</span><span class="p">):</span>
+<span class="w">     </span><span class="err">#</span><span class="nx">shuffle</span><span class="w"> </span><span class="nx">data</span>
+<span class="w">     </span><span class="nx">vect</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">copy</span><span class="p">.</span><span class="nx">copy</span><span class="p">(</span><span class="nx">start_vect</span><span class="p">)</span>
+<span class="w">     </span><span class="nx">random</span><span class="p">.</span><span class="nx">shuffle</span><span class="p">(</span><span class="nx">vect</span><span class="p">)</span>
+
+<span class="w">     </span><span class="err">#</span><span class="nx">show</span><span class="w"> </span><span class="nx">bad</span><span class="w"> </span><span class="nx">door</span>
+<span class="w">     </span><span class="nx">bad</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">vect</span><span class="p">.</span><span class="nx">pop</span><span class="p">(</span><span class="nx">int</span><span class="p">(</span><span class="nx">np</span><span class="p">.</span><span class="k">where</span><span class="p">(</span><span class="nx">np</span><span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="nx">vect</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+
+<span class="w">     </span><span class="err">#</span><span class="nx">make</span><span class="w"> </span><span class="kd">choice</span>
+<span class="w">     </span><span class="kd">choice</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">vect</span><span class="p">.</span><span class="nx">pop</span><span class="p">(</span><span class="nx">random</span><span class="p">.</span><span class="nx">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="w">     </span><span class="nx">no_change</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="kd">choice</span><span class="p">)</span>
+
+<span class="w">     </span><span class="nx">change</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="nx">vect</span><span class="p">)</span>
+
+
+<span class="w"> </span><span class="nx">plt</span><span class="p">.</span><span class="nx">bar</span><span class="p">([</span><span class="m m-Double">0.5</span><span class="p">,</span><span class="m m-Double">1.5</span><span class="p">],[</span><span class="nx">np</span><span class="p">.</span><span class="nx">mean</span><span class="p">(</span><span class="nx">change</span><span class="p">),</span><span class="nx">np</span><span class="p">.</span><span class="nx">mean</span><span class="p">(</span><span class="nx">no_change</span><span class="p">)],</span><span class="nx">width</span><span class="p">=</span><span class="m m-Double">1.0</span><span class="p">)</span>
+<span class="w"> </span><span class="nx">plt</span><span class="p">.</span><span class="nx">xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="w"> </span><span class="nx">plt</span><span class="p">.</span><span class="nx">ylim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="w"> </span><span class="nx">plt</span><span class="p">.</span><span class="nx">ylabel</span><span class="p">(</span><span class="err">&#39;</span><span class="nx">Proportion</span><span class="w"> </span><span class="nx">Correct</span><span class="w"> </span><span class="nx">Choice</span><span class="err">&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="nx">plt</span><span class="p">.</span><span class="nx">xticks</span><span class="p">((</span><span class="m m-Double">1.0</span><span class="p">,</span><span class="m m-Double">2.0</span><span class="p">),[</span><span class="err">&#39;</span><span class="nx">Change</span><span class="w"> </span><span class="nx">Choice</span><span class="err">&#39;</span><span class="p">,</span><span class="w"> </span><span class="err">&#39;</span><span class="nx">Do</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="nx">change</span><span class="w"> </span><span class="kd">choice</span><span class="err">&#39;</span><span class="p">])</span>
+
+<span class="w"> </span><span class="nx">obs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">np</span><span class="p">.</span><span class="nx">array</span><span class="p">([[</span><span class="nx">np</span><span class="p">.</span><span class="nx">sum</span><span class="p">(</span><span class="nx">change</span><span class="p">),</span><span class="w"> </span><span class="nx">np</span><span class="p">.</span><span class="nx">sum</span><span class="p">(</span><span class="nx">no_change</span><span class="p">)],</span><span class="w"> </span><span class="p">[</span><span class="nx">samples</span><span class="p">,</span><span class="w"> </span><span class="nx">samples</span><span class="p">]])</span>
+<span class="w"> </span><span class="nx">print</span><span class="p">(</span><span class="err">&#39;</span><span class="nx">Probability</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">choosing</span><span class="w"> </span><span class="nx">correctly</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nx">change</span><span class="w"> </span><span class="kd">choice</span><span class="p">:</span><span class="w"> </span><span class="o">%</span><span class="m m-Double">0.2</span><span class="nx">f</span><span class="err">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">np</span><span class="p">.</span><span class="nx">mean</span><span class="p">(</span><span class="nx">change</span><span class="p">))</span>
+<span class="w"> </span><span class="nx">print</span><span class="p">(</span><span class="err">&#39;</span><span class="nx">Probability</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">choosing</span><span class="w"> </span><span class="nx">correctly</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nx">do</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="nx">change</span><span class="w"> </span><span class="kd">choice</span><span class="p">:</span><span class="w"> </span><span class="o">%</span><span class="m m-Double">0.2</span><span class="nx">f</span><span class="err">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">np</span><span class="p">.</span><span class="nx">mean</span><span class="p">(</span><span class="nx">no_change</span><span class="p">))</span>
+<span class="w"> </span><span class="nx">print</span><span class="p">(</span><span class="err">&#39;</span><span class="nx">Probability</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">difference</span><span class="w"> </span><span class="nx">arising</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">chance</span><span class="p">:</span><span class="w"> </span><span class="o">%</span><span class="m m-Double">0.5</span><span class="nx">f</span><span class="err">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">stats</span><span class="p">.</span><span class="nx">chi2_contingency</span><span class="p">(</span><span class="nx">obs</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="nx">Probability</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">choosing</span><span class="w"> </span><span class="nx">correctly</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nx">change</span><span class="w"> </span><span class="kd">choice</span><span class="p">:</span><span class="w"> </span><span class="m m-Double">0.51</span>
+<span class="nx">Probability</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">choosing</span><span class="w"> </span><span class="nx">correctly</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nx">do</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="nx">change</span><span class="w"> </span><span class="kd">choice</span><span class="p">:</span><span class="w"> </span><span class="m m-Double">0.49</span>
+<span class="nx">Probability</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">difference</span><span class="w"> </span><span class="nx">arising</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">chance</span><span class="p">:</span><span class="w"> </span><span class="m m-Double">0.57546</span>
+</code></pre></div>
+
+<p><img src="/images/montyhall/montyhall2.png" /></p>
+<p>Now, there is clearly no difference between whether the contestant changes their choice or not. </p>
+<p>So what is different about these two scenarios? </p>
+<p>In the first scenario, the contestant makes a choice before Monty Hall reveals which of the two unchosen options is incorrect. Here's the intution I've gained by doing this - because Monty Hall cannot reveal what is behind the chosen door, when Monty Hall reveals what is behind one of the unchosen doors, this has no impact on how likely the car is to appear behind the chosen door. Yet, the probability that the car is behind the revealed door drops to 0 (because Monty Hall shows there's a goat behind it), and the total probability must be conserved so the second unchosen door receives any belief that the car was behind the revealed door! Thus, the unchosen and unrevealed door becomes 66% likely to contain the car! I am still not 100% convinced of this new intuition, but it seems correct given these simulations! </p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">
+        Dan Vatterott
+    </span>
+  </span>
+<time datetime="2016-12-25T11:19:53-05:00" pubdate>Sun 25 December 2016</time>  <span class="categories">
+    <a class='category' href='/category/python.html'>python</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+</div>
+<aside class="sidebar">
+
+
+<!-- <section> -->
+    <section style="max-width: fit-content; margin-inline: auto;">
+
+            <span class="fa-stack fa-lg">
+                <a href="mailto:dvatterott@gmail.com"><i class="fa fa-envelope fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="http://www.linkedin.com/in/dan-vatterott"><i class="fa fa-linkedin fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://twitter.com/dvatterott"><i class="fa fa-twitter fa-1x"></i></a>
+            </span>
+
+            <span class="fa-stack fa-lg">
+                <a href="https://github.com/dvatterott"><i class="fa fa-github fa-1x"></i></a>
+            </span>
+            <span class="fa-stack fa-lg">
+                <a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl"><i class="fa fa-graduation-cap fa-1x"></i></a>
+            </span>
+
+            <!-- <h1>Social</h1>
+                 <ul>
+                 <li><a href="dvatterott@gmail.com" target="_blank">email</a></li>
+                 <li><a href="http://www.linkedin.com/in/dan-vatterott" target="_blank">linkedin</a></li>
+                 <li><a href="https://twitter.com/dvatterott" target="_blank">twitter</a></li>
+                 <li><a href="https://github.com/dvatterott" target="_blank">github</a></li>
+                 <li><a href="https://scholar.google.com/citations?hl=en&user=-S7mhDQAAAAJ&hl" target="_blank">google-scholar</a></li>
+
+
+                 </ul> -->
+    </section>
+
+
+  <section>
+    <h1>Recent Posts</h1>
+    <ul id="recent_posts">
+      <li class="post">
+          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+      </li>
+      <li class="post">
+          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+      </li>
+      <li class="post">
+          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+      </li>
+      <li class="post">
+          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+      </li>
+      <li class="post">
+          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+      </li>
+    </ul>
+  </section>
+</aside>    </div>
+  </div>
+  <footer role="contentinfo"><p>
+    Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
+  <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
+</p></footer>
+  <script src="/theme/js/modernizr-2.0.js"></script>
+  <script src="/theme/js/ender.js"></script>
+  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var disqus_shortname = 'danvatterott';
+    var disqus_identifier = '/simulating-the-monty-hall-problem.html';
+    var disqus_url = '/simulating-the-monty-hall-problem.html';
+    var disqus_title = 'Simulating the Monty Hall Problem';
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = "//" + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+  </script>
+</body>
+</html>
