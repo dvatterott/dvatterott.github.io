@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -152,7 +152,7 @@
 <span class="w"> </span><span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">ax</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">axs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]];</span>
 </code></pre></div>
 
-<p><img src="/images/scatter_mat1_nba.png" /></p>
+<p><img src="https://danvatterott.com/images/scatter_mat1_nba.png" /></p>
 <p>There are a couple things to note in the graph above. First, there's a TON of information there. Second, it looks like there are some strong correlations. For example, look at the subplots depicting offensive rebounds by defensive rebounds.</p>
 <p>While I tried to throw out redundant data, I clearly did not throw out all redundant data. For example, players that are good 3-point shooters are probably also good free throw shooters. These players are simply good shooters, and being a good shooter contributes to multiple data columns above.</p>
 <p>When I group the data, I do not want an ability such as shooting to contribute too much. I want to group players equally according to all their abilities. Below I use a PCA to seperate variance associated with the different "components" (e.g., shooting ability) of basketball performance.</p>
@@ -183,7 +183,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;PCA Component&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/PCA_nba.png" /></p>
+<p><img src="https://danvatterott.com/images/PCA_nba.png" /></p>
 <p>On the left, I plot the amount of variance explained after including each additional PCA component. Using all the components explains all the variability, but notice how little the last few components contribute. It doesn't make sense to include a component that only explains 1% of the variability...but how many components to include!?</p>
 <p>I chose to include the first 5 components because no component after the 5th explained more than 5% of the data. This part of the analysis is admittedly arbitrary, but 5% is a relatively conservative cut-off.</p>
 <p>Below is the fun part of the data. We get to look at what features contribute to the different principle components.</p>
@@ -244,7 +244,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Average Silhouette Score*100&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/cluster_eval_nba.png" /></p>
+<p><img src="https://danvatterott.com/images/cluster_eval_nba.png" /></p>
 <p>As you can in the left hand plot, adding more clusters explains more of the variance, but there are diminishing returns. Each additional cluster explains a little less data than the last (much like each PCA component explained less variance than the previous component).</p>
 <p>The particularly intersting point here is the point where the second derivative is greatest, when the amount of change changes the most (the elbow). The elbow occurs at the 6th cluster.</p>
 <p>Perhaps not coincidently, 6 clusters also has the highest silhouette score (right hand plot). The silhouette score computes the average distance between a player and all other players in this player's cluster. It then divides this distance by the distance between this player and all players in the next nearest cluster. Silhouette scores range between -1 and 1 (where negative one means the player is in the wrong cluster, 0 means the clusters completely overlap, and 1 means the clusters are extermely well separated).</p>
@@ -303,7 +303,7 @@
 <span class="w">     </span><span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">density</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 </code></pre></div>
 
-<p><img src="/images/scatter_mat2_nba.png" /></p>
+<p><img src="https://danvatterott.com/images/scatter_mat2_nba.png" /></p>
 <p>In this plot above. I mark the center of a given cluster with an X. For example, Cluster 0 and Cluster 5 are both high in outside skills. Cluster 5 is also high in rim scoring, but low in pure points.</p>
 <p>Below I look at the players in each cluster. The first thing I do is identify the player closest to the cluster's center. I call this player the prototype. It is the player that most exemplifies a cluster.</p>
 <p>I then show a picture of this player because... well I wanted to see who these players were.
@@ -631,7 +631,7 @@ Finally, I print out the first ten players in this cluster. This is the first te
  plt.ylabel(&#39;Percentage of Players in Each Cluster&#39;);
 </code></pre></div>
 
-<p><img src="/images/cluster_inc_nba.png" /></p>
+<p><img src="https://danvatterott.com/images/cluster_inc_nba.png" /></p>
 <p>I began this post by asking whether player positions is the most natural way to group NBA players. The clustering analysis here suggests not.</p>
 <p>Here's my take on the clusters: Cluster 0 is pure shooters, Cluster 1 is talented scorers, Cluster 2 is mid-range shooters, Cluster 3 is defensive big-men, Cluster 4 is bench warmers, Cluster 5 is distributors. We might call the "positions" shooters, scorers, rim protectors, and distributors.</p>
 <p>It's possible that our notion of position comes more from defensive performance than offensive. On defense, a player must have a particular size and agility to guard a particular opposing player. Because of this, a team will want a range of sizes and agility - strong men to defend the rim and quick men to defend agile ball carriers. Box scores are notoriously bad at describing defensive performance. This could account for the lack of "positions" in my cluster.</p>
@@ -647,12 +647,16 @@ Finally, I print out the first ten players in this cluster. This is the first te
     </span>
   </span>
 <time datetime="2016-02-21T15:14:23-05:00" pubdate>Sun 21 February 2016</time>  <span class="categories">
-    <a class='category' href='/category/nba.html'>nba</a>
+    <a class='category' href='https://danvatterott.com/category/nba.html'>nba</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -695,19 +699,19 @@ Finally, I print out the first ten players in this cluster. This is the first te
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -717,13 +721,13 @@ Finally, I print out the first ten players in this cluster. This is the first te
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/grouping-nba-players.html';
-    var disqus_url = '/grouping-nba-players.html';
+    var disqus_url = 'https://danvatterott.com/grouping-nba-players.html';
     var disqus_title = 'Grouping NBA Players';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

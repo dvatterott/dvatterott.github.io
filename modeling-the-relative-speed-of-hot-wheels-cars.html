@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -62,10 +62,10 @@
   <div class="entry-content"><p>I recently came across a really interesting modeling problem when playing with my kids. It all started when my 5yr old received this <a href="https://www.amazon.com/Hot-Wheels-Ultimate-Transforms-Stomping/dp/B0BN15GCB7/">Hot Wheels T-Rex Transporter</a>.</p>
 <div>
   <div float:left>
-    <img src="/images/misc/hot_wheels_dino1.jpeg" />
+    <img src="https://danvatterott.com/images/misc/hot_wheels_dino1.jpeg" />
   </div>
   <div float:left>
-    <img src="/images/misc/hot_wheels_dino2.jpeg" />
+    <img src="https://danvatterott.com/images/misc/hot_wheels_dino2.jpeg" />
   </div>
 </div>
 
@@ -78,7 +78,7 @@
 <p>Needless to say, this wasn't going to happen. My 5yr old is going to choose the fastest car that she's willing to risk losing. My 3yr old is going to choose her favorite car. Repeatedly.</p>
 <p>Another interesting feature of this problem is the race cars compete against each other. This means in a given race, I can learn about both the cars. I wanted to create a model that took advantage of this feature.</p>
 <p>Okay, before I get too deep into the problem, I should introduce the 12 cars. Here they are.</p>
-<p><img src="/images/misc/hot_wheels_cars.jpeg" /></p>
+<p><img src="https://danvatterott.com/images/misc/hot_wheels_cars.jpeg" /></p>
 <p>We had the patience to record 37 races (not bad!). That said, let's get into it.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -494,7 +494,7 @@
 <span class="w"> </span><span class="n">az</span><span class="o">.</span><span class="n">plot_trace</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span><span class="w"> </span><span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;lane2&quot;</span><span class="p">],</span><span class="w"> </span><span class="n">compact</span><span class="o">=</span><span class="kc">False</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/misc/hot_wheels_trace.png" /></p>
+<p><img src="https://danvatterott.com/images/misc/hot_wheels_trace.png" /></p>
 <div class="highlight"><pre><span></span><code> az.summary(trace, kind=&quot;diagnostics&quot;)
 </code></pre></div>
 
@@ -999,7 +999,7 @@
  ax.set_title(&quot;HDI of Car Speed&quot;);
 </code></pre></div>
 
-<p><img src="/images/misc/hot_wheels_output1.png" /></p>
+<p><img src="https://danvatterott.com/images/misc/hot_wheels_output1.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="n">TeamLabeller</span><span class="p">(</span><span class="n">az</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">BaseLabeller</span><span class="p">):</span>
 <span class="w">     </span><span class="n">def</span><span class="w"> </span><span class="n">make_label_flat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">var_name</span><span class="p">,</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span><span class="w"> </span><span class="n">isel</span><span class="p">):</span>
 <span class="w">         </span><span class="n">sel_str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">sel_to_str</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span><span class="w"> </span><span class="n">isel</span><span class="p">)</span>
@@ -1008,7 +1008,7 @@
 <span class="w"> </span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Car Speed&quot;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/misc/hot_wheels_output2.png" /></p></div>
+<p><img src="https://danvatterott.com/images/misc/hot_wheels_output2.png" /></p></div>
     <footer>
 <p class="meta">
   <span class="byline author vcard">
@@ -1017,12 +1017,16 @@
     </span>
   </span>
 <time datetime="2025-02-01T08:49:00-06:00" pubdate>Sat 01 February 2025</time>  <span class="categories">
-    <a class='category' href='/category/statistics.html'>statistics</a>
+    <a class='category' href='https://danvatterott.com/category/statistics.html'>statistics</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -1065,19 +1069,19 @@
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -1087,13 +1091,13 @@
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/modeling-the-relative-speed-of-hot-wheels-cars.html';
-    var disqus_url = '/modeling-the-relative-speed-of-hot-wheels-cars.html';
+    var disqus_url = 'https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html';
     var disqus_title = 'Modeling the relative speed of Hot Wheels Cars';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

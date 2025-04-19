@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -343,7 +343,7 @@ standard deviation of accuracies
 0.71
 </code></pre></div>
 
-<p><img src="/images/Wyble1.png" /></p>
+<p><img src="https://danvatterott.com/images/Wyble1.png" /></p>
 <p>Lets look at participants' performance when asked to identify the target's location. I will plot performance as mean accuracy in the presurprise,surprise, and postsurprose trials.</p>
 <p>I will also run some quick statistical tests. For these tests, I take the arcsine of the square root of the accuracies (Rao, 1960) to increase the accuracies' normality (I use adj. to indiciate that the tested data is transformed). I test whether this worked with a Shapiro-Wilk test of normality. If the p-value of the Shapiro-Wilk test is greater than 0.1, I run a t test to see if the accuracy in the two conditions is significantly different. If the p-value of the Shapiro-Wilk test is less than or equal to 0.1, then I run a Wilcoxon signed rank test since this test does not care about normality.</p>
 <div class="highlight"><pre><span></span><code>  Loc_Acc = df.pivot_table(values=&#39;Loc_Acc&#39;, index=&#39;Sub#&#39;, columns=&#39;TrialType&#39;, aggfunc=np.mean)
@@ -369,7 +369,7 @@ Presurprise vs Postsurprise
      T-test adj. Test value: 0.92 P-value: 0.3695
 </code></pre></div>
 
-<p><img src="/images/Wyble2.png" /></p>
+<p><img src="https://danvatterott.com/images/Wyble2.png" /></p>
 <p>The y-axis represents percent correct. All graphs in this post will have percent correct on the y-axis.</p>
 <p>Replicating Chen and Wyble, participants perform no worse in the surprise and post surprise trials, indicating that they succesfully found the target.</p>
 <p>Now lets look at participants' ability to report the target's color in the surprise trial and the trial immediately following the surprise test.</p>
@@ -390,7 +390,7 @@ Presurprise vs Postsurprise
 <span class="w">     </span><span class="n">Chi</span><span class="o">-</span><span class="nf">Square</span><span class="w"> </span><span class="nl">Comparison</span><span class="p">:</span><span class="w"> </span><span class="mf">6.4</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="k">value</span><span class="err">:</span><span class="w"> </span><span class="mf">0.0114</span>
 </code></pre></div>
 
-<p><img src="/images/Wyble3.png" /></p>
+<p><img src="https://danvatterott.com/images/Wyble3.png" /></p>
 <p>We perfectly replicate Chen and Wyble; participants respond more accurarely in the post-surprise trial than in the surprise trial.</p>
 <p>The next cell examines participants' ability to report the target's identity on the surprise trial and the trial immediately following the surprise trial. Remember, the participants locate the target based on whether its a letter or number, so they know the broad category of the target. Nonetheless, they cannot report the target's identity on the surprise trial</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">Trial_Trimmer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="o">[</span><span class="n">&#39;TrialType2&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
@@ -409,7 +409,7 @@ Presurprise vs Postsurprise
 <span class="w">     </span><span class="n">Chi</span><span class="o">-</span><span class="nf">Square</span><span class="w"> </span><span class="nl">Comparison</span><span class="p">:</span><span class="w"> </span><span class="mf">10.0</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="k">value</span><span class="err">:</span><span class="w"> </span><span class="mf">0.0016</span>
 </code></pre></div>
 
-<p><img src="/images/Wyble4.png" /></p>
+<p><img src="https://danvatterott.com/images/Wyble4.png" /></p>
 <h4>Experiment 1 - Intertrial analyses</h4>
 <p>So far, I've perfectly replicated Chen &amp; Wyble (which is good since this is their data).</p>
 <p>Now I want to see if the target's color or identity on the previous trial influences the current trial's performance in the location task. I am only examining presurprise trials, so this should be trials when the participants don't "remember" the target's color or identity.</p>
@@ -438,7 +438,7 @@ Presurprise vs Postsurprise
 <span class="w">     </span><span class="n">Wilcoxon</span><span class="p">.</span><span class="w"> </span><span class="n">Test</span><span class="w"> </span><span class="k">value</span><span class="err">:</span><span class="w"> </span><span class="mf">51.0</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="k">value</span><span class="err">:</span><span class="w"> </span><span class="mf">0.04</span>
 </code></pre></div>
 
-<p><img src="/images/Wyble5.png" /></p>
+<p><img src="https://danvatterott.com/images/Wyble5.png" /></p>
 <p>Looks like a 2.5% increase in accuracy. Now, this wasn't really a planned comparison, so please take this result with a grain of salt.</p>
 <p>As a sanity check, lets look at how repetitions in the target's location (the reported feature) effect performance.</p>
 <p>We have to quickly create a new variable coding target location repetitions</p>
@@ -461,7 +461,7 @@ Presurprise vs Postsurprise
 <span class="w">     </span><span class="n">T</span><span class="o">-</span><span class="n">test</span><span class="w"> </span><span class="n">adj</span><span class="p">.</span><span class="w"> </span><span class="n">Test</span><span class="w"> </span><span class="k">value</span><span class="err">:</span><span class="w"> </span><span class="mf">2.62</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="k">value</span><span class="err">:</span><span class="w"> </span><span class="mf">0.0168</span>
 </code></pre></div>
 
-<p><img src="/images/Wyble6.png" /></p>
+<p><img src="https://danvatterott.com/images/Wyble6.png" /></p>
 <p>Target location repetitions lead to a 2% increase in performance. Again, this result is robust.</p>
 <p>It's a good sign that this effect is about the same size as repetitions in the unreported features.</p>
 <h3>Replicate Experiments 1 Intertrial Analyses with Experiment 1b</h3>
@@ -500,7 +500,7 @@ Presurprise vs Postsurprise
 <span class="w">     </span><span class="n">T</span><span class="o">-</span><span class="n">test</span><span class="w"> </span><span class="n">adj</span><span class="p">.</span><span class="w"> </span><span class="n">Test</span><span class="w"> </span><span class="k">value</span><span class="err">:</span><span class="w"> </span><span class="mf">2.81</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="k">value</span><span class="err">:</span><span class="w"> </span><span class="mf">0.0112</span>
 </code></pre></div>
 
-<p><img src="/images/Wyble7.png" /></p>
+<p><img src="https://danvatterott.com/images/Wyble7.png" /></p>
 <p>Wow. Only a 1% change in accuracy, so again not big. Nonetheless, this result is signficant. So, Some evidence that participants perform a little better when the targets' color and identity repeat.</p>
 <p>This suggests that participants retain some information about the targets' color and identity even though they cannot explicitly report these attributes.</p>
 <p>Now, I would probably want to replicate this result again before trusting it, but I'm relatively confident that participants unconsciously retain some information about the target's color and identity.</p></div>
@@ -512,12 +512,16 @@ Presurprise vs Postsurprise
     </span>
   </span>
 <time datetime="2015-12-12T13:10:09-05:00" pubdate>Sat 12 December 2015</time>  <span class="categories">
-    <a class='category' href='/category/cognition.html'>cognition</a>
+    <a class='category' href='https://danvatterott.com/category/cognition.html'>cognition</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -560,19 +564,19 @@ Presurprise vs Postsurprise
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -582,13 +586,13 @@ Presurprise vs Postsurprise
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/complete-amnesia-for-object-attributes.html';
-    var disqus_url = '/complete-amnesia-for-object-attributes.html';
+    var disqus_url = 'https://danvatterott.com/complete-amnesia-for-object-attributes.html';
     var disqus_title = 'Complete amnesia for object attributes?';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

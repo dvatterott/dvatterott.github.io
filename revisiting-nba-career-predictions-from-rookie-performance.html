@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -151,7 +151,7 @@
 <span class="w">     </span><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.25</span><span class="p">]);</span>
 </code></pre></div>
 
-<p><img src="/images/regression2NBA/original_model.png" /></p>
+<p><img src="https://danvatterott.com/images/regression2NBA/original_model.png" /></p>
 <p>More quick reminders - predicted performances are on the Y-axis, actual performances are on the X-axis, and the red line is the <a href="https://en.wikipedia.org/wiki/Identity_line">identity line</a>. Thus far, everything has been exactly the same as my previous post (although my group labels are different).</p>
 <p>I want to investigate whether the model is overfitting the data. If the data is overfitting the data, then the error should go up when training and testing with different datasets (because the model was fitting itself to noise and noise changes when the datasets change). To investigate whether the model overfits the data, I will evaluate whether the model "generalizes" via <a href="https://en.wikipedia.org/wiki/Cross-validation_%28statistics%29">cross-validation</a>.</p>
 <p>The reason I'm worried about overfitting is I used a LOT of predictors in these models and the number of predictors might have allowed the model the model to fit noise in the predictors.</p>
@@ -229,7 +229,7 @@
 <span class="w">     </span><span class="n">plt</span><span class="p">.</span><span class="n">yticks</span><span class="p">(</span><span class="o">[</span><span class="n">-0.1,0.0,0.1</span><span class="o">]</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/regression2NBA/residuals.png" /></p>
+<p><img src="https://danvatterott.com/images/regression2NBA/residuals.png" /></p>
 <p>Residuals are on the Y-axis and career performances are on the X-axis. Negative residuals are over predictions (the player is worse than my model predicts) and postive residuals are under predictions (the player is better than my model predicts). I don't test this, but the residuals appear VERY correlated. That is, the model tends to over estimate bad players (players with WS/48 less than 0.0) and under estimate good players. Just to clarify, non-correlated residuals would have no apparent slope.</p>
 <p>This means the model is making systematic errors and not fitting the actual shape of the data. I'm not going to say the model is damned, but this is an obvious sign that the model needs more flexibility.</p>
 <p>No model is perfect, but this model definitely needs more work. I've been playing with more flexible models and will post these models here if they do a better job predicting player performance.</p></div>
@@ -241,12 +241,16 @@
     </span>
   </span>
 <time datetime="2016-04-08T21:19:25-04:00" pubdate>Fri 08 April 2016</time>  <span class="categories">
-    <a class='category' href='/category/nba.html'>nba</a>
+    <a class='category' href='https://danvatterott.com/category/nba.html'>nba</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -289,19 +293,19 @@
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -311,13 +315,13 @@
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/revisiting-nba-career-predictions-from-rookie-performance.html';
-    var disqus_url = '/revisiting-nba-career-predictions-from-rookie-performance.html';
+    var disqus_url = 'https://danvatterott.com/revisiting-nba-career-predictions-from-rookie-performance.html';
     var disqus_title = 'Revisiting NBA Career Predictions From Rookie Performance';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

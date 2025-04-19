@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -80,7 +80,7 @@
 <span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span><span class="w"> </span><span class="c1">#draw the network</span>
 </code></pre></div>
 
-<p><img src="/images/neural_net/example1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/example1.png" /></p>
 <p>Above is our neural network. It has two input neurons and a single output neuron. In this example, I'll give the network an input of [0 1]. This means Input A will receive an input value of 0 and Input B will have an input value of 1.</p>
 <p>The input is the input unit's <em>activity.</em> This activity is sent to the Output unit, but the activity changes when traveling to the Output unit. The <em>weights</em> between the input and output units change the activity. A large positive weight between the input and output units causes the input unit to send a large positive (excitatory) signal. A large negative weight between the input and output units causes the input unit to send a large negative (inhibitory) signal. A weight near zero means the input unit does not influence the output unit.</p>
 <p>In order to know the Output unit's activity, we need to know its input. I will refer to the output unit's input as $$net_{Output}$$. Here is how we can calculate $$net_{Output}$$</p>
@@ -120,7 +120,7 @@ $$</p>
  plt.xlabel(&#39;Input&#39;);
 </code></pre></div>
 
-<p><img src="/images/neural_net/logistic1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/logistic1.png" /></p>
 <p>As you can see above, the logistic used here transforms negative values into values near 0 and positive values into values near 1. Thus, when a unit receives a negative input it has activity near zero and when a unit receives a postitive input it has activity near 1. The most important aspect of this activation function is that its non-linear - it's not a straight line.</p>
 <p>Now lets see the activity of our output neuron. Remember, the net input is 0.5</p>
 <div class="highlight"><pre><span></span><code> Output_neuron = logistic(net_Output)
@@ -133,7 +133,7 @@ $$</p>
 0.622459331202
 </code></pre></div>
 
-<p><img src="/images/neural_net/logistic2.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/logistic2.png" /></p>
 <p>The activity of our output neuron is depicted as the red dot.</p>
 <p>So far I've described how to find a unit's activity, but I haven't described how to find the weights of connections between units. In the example above, I chose the weights to be 0.25 and 0.5, but I can't arbitrarily decide weights unless I already know the solution to the problem. If I want the network to find a solution for me, I need the network to find the weights itself.</p>
 <p>In order to find the weights of connections between neurons, I will use an algorithm called <a href="https://en.wikipedia.org/wiki/Backpropagation">backpropogation</a>. In backpropogation, we have the neural network guess the answer to a problem and adjust the weights so that this guess gets closer and closer to the correct answer. Backpropogation is the method by which we reduce the distance between guesses and the correct answer. After many iterations of guesses by the neural network and weight adjustments through backpropogation, the network can learn an answer to a problem.</p>
@@ -154,7 +154,7 @@ $$</p>
 [0.56217650088579807, 0.62245933120185459]
 </code></pre></div>
 
-<p><img src="/images/neural_net/net_guess1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/net_guess1.png" /></p>
 <p>The guesses are in blue and the answers are in red. As you can tell, the guesses and the answers look almost nothing alike. Our network likes to guess around 0.6 while the correct answer is 0 in the first example and 1 in the second.</p>
 <p>Lets look at how backpropogation reduces the distance between our guesses and the correct answers.</p>
 <p>First, we want to know how the amount of error changes with an adjustment to a given weight. We can write this as</p>
@@ -239,7 +239,7 @@ $$</p>
  plt.xlabel(&#39;Iteration #&#39;);
 </code></pre></div>
 
-<p><img src="/images/neural_net/net_learn1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/net_learn1.png" /></p>
 <p>It looks like the while loop excecuted about 1000 iterations before converging. As you can see the error decreases. Quickly at first then slowly as the weights zone in on the correct answer. lets see how our guesses compare to the correct answers.</p>
 <div class="highlight"><pre><span></span><code> Inputs = [[1,0],[0,1]]
  Answers = [0,1,]
@@ -256,7 +256,7 @@ $$</p>
 [array([ 0.05420561]), array([ 0.95020512])]
 </code></pre></div>
 
-<p><img src="/images/neural_net/net_guess2.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/net_guess2.png" /></p>
 <p>Not bad! Our guesses are much closer to the correct answers than before we started running the backpropogation procedure! Now, you might say, "HEY! But you haven't reached the <em>correct</em> answers." That's true, but note that acheiving the values of 0 and 1 with a logistic function are only possible at -$$\infty$$ and $$\infty$$, respectively. Because of this, we treat 0.05 as 0 and 0.95 as 1.</p>
 <p>Okay, all this is great, but that was a really simple problem, and I said that neural networks could solve interesting problems!</p>
 <p>Well... this post is already longer than I anticipated. I will follow-up this post with another post explaining how we can expand neural networks to solve more interesting problems.</p></div>
@@ -268,12 +268,16 @@ $$</p>
     </span>
   </span>
 <time datetime="2016-04-29T19:17:07-04:00" pubdate>Fri 29 April 2016</time>  <span class="categories">
-    <a class='category' href='/category/python.html'>python</a>
+    <a class='category' href='https://danvatterott.com/category/python.html'>python</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -316,19 +320,19 @@ $$</p>
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -338,13 +342,13 @@ $$</p>
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/an-introduction-to-neural-networks-part-1.html';
-    var disqus_url = '/an-introduction-to-neural-networks-part-1.html';
+    var disqus_url = 'https://danvatterott.com/an-introduction-to-neural-networks-part-1.html';
     var disqus_title = 'An Introduction to Neural Networks: Part 1';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

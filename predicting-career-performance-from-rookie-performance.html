@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -90,7 +90,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;WS/48&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/regressionNBA/predictor_hist.png" /></p>
+<p><img src="https://danvatterott.com/images/regressionNBA/predictor_hist.png" /></p>
 <p>The predicted variable looks pretty gaussian, so I can use ordinary least squares. This will be nice because while ols is not flexible, it's highly interpretable. At the end of the post I'll mention some more complex models that I will try.</p>
 <div class="highlight"><pre><span></span><code> rook_games = rookie_df[&#39;Career Games&#39;]&gt;50
  rook_year = rookie_df[&#39;Year&#39;]&gt;1980
@@ -192,7 +192,7 @@
  plt.xlabel(&#39;Predicted WS/48&#39;);
 </code></pre></div>
 
-<p><img src="/images/regressionNBA/regression1_predict.png" /></p>
+<p><img src="https://danvatterott.com/images/regressionNBA/regression1_predict.png" /></p>
 <p>The blue line above is NOT the best-fit line. It's the identity line. I plot it to help visualize where the model fails. The model seems to primarily fail in the extremes - it tends to overestimate the worst players.</p>
 <p>All in all, This model does a remarkably good job given its simplicity (linear regression), but it also leaves a lot of variance unexplained.</p>
 <p>One reason this model might miss some variance is there's more than one way to be a productive basketball player. For instance, Dwight Howard and Steph Curry find very different ways to contribute. One linear regression model is unlikely to succesfully predict both players.</p>
@@ -224,7 +224,7 @@
  plt.boxplot(WS_48);
 </code></pre></div>
 
-<p><img src="/images/regressionNBA/boxwhisk_ws48.png" /></p>
+<p><img src="https://danvatterott.com/images/regressionNBA/boxwhisk_ws48.png" /></p>
 <p>Some groups perform better than others, but there's lots of overlap between the groups. Importantly, each group has a fair amount of variability. Each group spans at least 0.15 WS/48. This gives the regression enough room to successfully predict performance in each group.</p>
 <p>Now, lets get a bit of a refresher on what the groups are. Again, my previous post has a good description of these groups.</p>
 <div class="highlight"><pre><span></span><code> TS = [np.mean(df[df[&#39;kmeans_label&#39;]==x][&#39;TS%&#39;])*100 for x in np.unique(df[&#39;kmeans_label&#39;])] #create vectors of each stat for each cluster
@@ -246,7 +246,7 @@
  plt.ylabel(&#39;Percent&#39;);
 </code></pre></div>
 
-<p><img src="/images/regressionNBA/grouping_performance.png" /></p>
+<p><img src="https://danvatterott.com/images/regressionNBA/grouping_performance.png" /></p>
 <p>I've plotted the groups across a number of useful categories. For information about these categories see <a href="http://www.basketball-reference.com/about/glossary.html">basketball reference's glossary</a>.</p>
 <p>Here's a quick rehash of the groupings. See my <a href="http://www.danvatterott.com/blog/2016/02/21/grouping-nba-players/">previous post</a> for more detail.</p>
 <ul>
@@ -312,7 +312,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="p">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Beta Weights&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/regressionNBA/beta_weights.png" /></p>
+<p><img src="https://danvatterott.com/images/regressionNBA/beta_weights.png" /></p>
 <p>Above I plot the beta weights for each principle component across the groupings. This plot is a lot to look at, but I wanted to depict how the beta values changed across the groups. They are not drastically different, but they're also not identical. Error bars depict 95% confidence intervals.</p>
 <p>Below I fit a regression to each group, but with all the features. Again, multicollinearity will be a problem, but this will not decrease the regression's accuracy, which is all I really care about.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rookie_df</span><span class="p">.</span><span class="n">as_matrix</span><span class="p">()</span><span class="w"> </span><span class="n">#take</span><span class="w"> </span><span class="k">data</span><span class="w"> </span><span class="k">out</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">dataframe</span>
@@ -352,7 +352,7 @@
 <span class="w">     </span><span class="n">plt</span><span class="p">.</span><span class="n">yticks</span><span class="p">(</span><span class="o">[</span><span class="n">0.0,0.12,0.25</span><span class="o">]</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/regressionNBA/model2_predictions.png" /></p>
+<p><img src="https://danvatterott.com/images/regressionNBA/model2_predictions.png" /></p>
 <p>The plots above depict each regression's predictions against actual ws/48. I provide each model's r^2 in the plot too.</p>
 <p>Some regressions are better than others. For instance, the regression model does a pretty awesome job predicting the bench warmers...I wonder if this is because they have shorter careers... The regression model does not do a good job predicting the 3-point shooters.</p>
 <p>Now onto the fun stuff though.</p>
@@ -436,7 +436,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Draft Position&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/regressionNBA/draft_2015_predict.png" /></p>
+<p><img src="https://danvatterott.com/images/regressionNBA/draft_2015_predict.png" /></p>
 <p>The plot above is ordered by draft pick. The error bars depict 95% confidence interbals...which are a little wider than I would like. It's interesting to look at what clusters these players fit into. Lots of 3-pt shooters! It could be that rookies play a limited role in the offense - just shooting 3s.</p>
 <p>As a t-wolves fan, I am relatively happy about the high prediction for Karl-Anthony Towns. His predicted ws/48 is between Marc Gasol and Elton Brand. Again, the CIs are quite wide, so the model says there's a 95% chance he is somewhere between Lebron James ever and a player that averages less than 0.1 ws/48.</p>
 <p>Karl-Anthony Towns would have the highest predicted ws/48 if it were not for Kevin Looney who the model loves. Kevin Looney has not seen much playing time though, which likely makes his prediction more erratic. Keep in mind I did not use draft position as a predictor in the model.</p>
@@ -829,12 +829,16 @@
     </span>
   </span>
 <time datetime="2016-03-20T15:56:18-04:00" pubdate>Sun 20 March 2016</time>  <span class="categories">
-    <a class='category' href='/category/nba.html'>nba</a>
+    <a class='category' href='https://danvatterott.com/category/nba.html'>nba</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -877,19 +881,19 @@
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -899,13 +903,13 @@
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/predicting-career-performance-from-rookie-performance.html';
-    var disqus_url = '/predicting-career-performance-from-rookie-performance.html';
+    var disqus_url = 'https://danvatterott.com/predicting-career-performance-from-rookie-performance.html';
     var disqus_title = 'Predicting Career Performance from Rookie Performance';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

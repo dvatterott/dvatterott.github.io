@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -80,7 +80,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span><span class="mi">30</span><span class="p">]);</span>
 </code></pre></div>
 
-<p><img src="/images/PCA/original_data.png" /></p>
+<p><img src="https://danvatterott.com/images/PCA/original_data.png" /></p>
 <p>The first step before doing PCA is to normalize the data. This centers each feature (each feature will have a mean of 0) and divides data by its standard deviation (changing the standard deviation to 1). Normalizing the data puts all features on the same scale. Having features on the same scale is important because features might be more or less variable because of measurement rather than the latent variables producing the feature. For example, in basketball, points are often accumulated in sets of 2s and 3s, while rebounds are accumulated one at a time. The nature of basketball puts points and rebounds on a different scales, but this doesn't mean that the latent variables <em>scoring ability</em> and <em>rebounding ability</em> are more or less variable.</p>
 <p>Below I normalize and plot the data.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">stats</span>
@@ -94,7 +94,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]);</span>
 </code></pre></div>
 
-<p><img src="/images/PCA/stand_data.png" /></p>
+<p><img src="https://danvatterott.com/images/PCA/stand_data.png" /></p>
 <p>After standardizing the data, I need to find the <a href="http://setosa.io/ev/eigenvectors-and-eigenvalues/">eigenvectors and eigenvalues</a>. The eigenvectors point in the direction of a component and eigenvalues represent the amount of variance explained by the component. Below, I plot the standardized data with the eigenvectors ploted with their eigenvalues as the vectors distance from the origin.</p>
 <p>As you can see, the blue eigenvector is longer and points in the direction with the most variability. The purple eigenvector is shorter and points in the direction with less variability.</p>
 <p>As expected, one component explains far more variability than the other component (becaus both my features share variance from a single latent gaussian distribution).</p>
@@ -110,7 +110,7 @@
  plt.axis([-4,4,-4,4]);
 </code></pre></div>
 
-<p><img src="/images/PCA/eigen_data.png" /></p>
+<p><img src="https://danvatterott.com/images/PCA/eigen_data.png" /></p>
 <p>Next I order the eigenvectors according to the magnitude of their eigenvalues. This orders the components so that the components that explain more variability occur first. I then transform the data so that they're axis aligned. This means the first component explain variability on the x-axis and the second component explains variance on the y-axis.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">indices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">V</span><span class="p">)</span>
 <span class="w"> </span><span class="n">V</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">V</span><span class="o">[</span><span class="n">indices</span><span class="o">]</span>
@@ -127,7 +127,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="p">.</span><span class="n">axis</span><span class="p">(</span><span class="o">[</span><span class="n">-4,4,-4,4</span><span class="o">]</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/PCA/trans_data.png" /></p>
+<p><img src="https://danvatterott.com/images/PCA/trans_data.png" /></p>
 <p>Finally, just to make sure the PCA was done correctly, I will call PCA from the sklearn library, run it, and make sure it produces the same results as my analysis.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="n">PCA</span>
 
@@ -148,12 +148,16 @@
     </span>
   </span>
 <time datetime="2016-11-06T13:33:50-05:00" pubdate>Sun 06 November 2016</time>  <span class="categories">
-    <a class='category' href='/category/python.html'>python</a>
+    <a class='category' href='https://danvatterott.com/category/python.html'>python</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -196,19 +200,19 @@
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -218,13 +222,13 @@
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/pca-tutorial.html';
-    var disqus_url = '/pca-tutorial.html';
+    var disqus_url = 'https://danvatterott.com/pca-tutorial.html';
     var disqus_title = 'PCA Tutorial';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

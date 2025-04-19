@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -79,7 +79,7 @@
 <span class="w"> </span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">]);</span>
 </code></pre></div>
 
-<p><img src="/images/neural_net/exampleXOR.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/exampleXOR.png" /></p>
 <p>Again, each item has two values. An item's first value is represented on the x-axis. An items second value is represented on the y-axis. The red items belong to one category and the blue items belong to another.</p>
 <p>This is a non-linear problem because no linear function can segregate the groups. For instance, a horizontal line could segregate the upper and lower items and a vertical line could segregate the left and right items, but no single linear function can segregate the red and blue items.</p>
 <p>We need a non-linear function to seperate the groups, and neural networks can emulate a non-linear function that segregates them.</p>
@@ -94,7 +94,7 @@
 <span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img src="/images/neural_net/3_layer_net.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/3_layer_net.png" /></p>
 <p>Notice that this network now has 5 total neurons. The two units at the bottom are the <em>input layer</em>. The activity of input units is the value of the inputs (same as the inputs in my previous post). The two units in the middle are the <em>hidden layer</em>. The activity of hidden units are calculated in the same manner as the output units from my previous post. The unit at the top is the <em>output layer</em>. The activity of this unit is found in the same manner as in my previous post, but the activity of the hidden units replaces the input units.  </p>
 <p>Thus, when the neural network makes its guess, the only difference is we have to compute an extra layer's activity.</p>
 <p>The goal of this network is for the output unit to have an activity of 0 when presented with an item from the blue group (inputs are same) and to have an activity of 1 when presented with an item from the red group (inputs are different).</p>
@@ -123,7 +123,7 @@
  network.draw()
 </code></pre></div>
 
-<p><img src="/images/neural_net/3_layer_weights.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/3_layer_weights.png" /></p>
 <p>Above we have out network. The depiction of $$Weight_{Input_{1}\to.Hidden_{2}}$$ and $$Weight_{Input_{2}\to.Hidden_{1}}$$ are confusing. -0.8 belongs to $$Weight_{Input_{1}\to.Hidden_{2}}$$. -0.5 belongs to $$Weight_{Input_{2}\to.Hidden_{1}}$$.  </p>
 <p>Lets go through one example of our network receiving an input and making a guess. Lets say the input is [0 1].
 This means $$Input_{1} = 0$$ and $$Input_{2} = 1$$. The correct answer in this case is 1.</p>
@@ -204,7 +204,7 @@ Output
 <span class="s1"> plt.yticks([0.5,1.5], [&#39;</span><span class="mi">0</span><span class="s1">&#39;,&#39;</span><span class="mi">1</span><span class="err">&#39;]</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/neural_net/net_guess1_1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/net_guess1_1.png" /></p>
 <p>In the plot above, I have Input 1 on the x-axis and Input 2 on the y-axis. So if the Input is [0,0], the network produces the activity depicted in the lower left square. If the Input is [1,0], the network produces the activity depicted in the lower right square. If the network produces an output of 0, then the square will be blue. If the network produces an output of 1, then the square will be red. As you can see, the network produces all output between 0.25 and 0.5... no where near the correct answers.</p>
 <p>So how do we update the weights in order to reduce the error between our guess and the correct answer?</p>
 <p>First, we will do backpropogation between the output and hidden layers. This is exactly the same as backpropogation in the previous post.</p>
@@ -323,7 +323,7 @@ $$</p>
  plt.xlabel(&#39;Iteration #&#39;);
 </code></pre></div>
 
-<p><img src="/images/neural_net/net_learn1_1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/net_learn1_1.png" /></p>
 <p>Really cool. The network start with volatile error - sometimes being nearly correct and sometimes being completely incorrect. Then After about 5000 iterations, the network starts down the slow path of perfecting an answer scheme. Below, I create a plot depicting the networks' activity for the different input patterns.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">Weights_1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Weight_Dict</span><span class="o">[</span><span class="n">&#39;Weights_1&#39;</span><span class="o">]</span>
 <span class="w"> </span><span class="n">Weights_2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Weight_Dict</span><span class="o">[</span><span class="n">&#39;Weights_2&#39;</span><span class="o">]</span>
@@ -343,7 +343,7 @@ $$</p>
 <span class="w"> </span><span class="n">plt</span><span class="p">.</span><span class="n">yticks</span><span class="p">(</span><span class="o">[</span><span class="n">0.5,1.5</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">&#39;0&#39;,&#39;1&#39;</span><span class="o">]</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/neural_net/net_guess2_1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/net_guess2_1.png" /></p>
 <p>Again, the Input 1 value is on the x-axis and the Input 2 value is on the y-axis. As you can see, the network guesses 1 when the inputs are different and it guesses 0 when the inputs are the same. Perfect! Below I depict the network with these correct weights.</p>
 <div class="highlight"><pre><span></span><code> Weight_Dict = {&#39;Weights_1&#39;:Weights_1,&#39;Weights_2&#39;:Weights_2}
 
@@ -357,7 +357,7 @@ $$</p>
  network.draw()
 </code></pre></div>
 
-<p><img src="/images/neural_net/3_layer_weights1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/3_layer_weights1.png" /></p>
 <p>The network finds a pretty cool solution. Both hidden units are relatively active, but one hidden unit sends a strong postitive signal and the other sends a strong negative signal. The output unit has a negative bias, so if neither input is on, it will have an activity around 0. If both Input units are on, then the hidden unit that sends a postitive signal will be inhibited, and the output unit will have activity near 0. Otherwise, the hidden unit with a positive signal gives the output unit an acitivty near 1.</p>
 <p>This is all well and good, but if you try to train this network with random weights you might find that it produces an incorrect set of weights sometimes. This is because the network runs into a <a href="https://en.wikipedia.org/wiki/Maxima_and_minima">local minima</a>. A local minima is an instance when any change in the weights would increase the error, so the network is left with a sub-optimal set of weights.</p>
 <p>Below I hand-pick of set of weights that produce a local optima.</p>
@@ -377,7 +377,7 @@ $$</p>
  network.draw()
 </code></pre></div>
 
-<p><img src="/images/neural_net/local_minimaWeights.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/local_minimaWeights.png" /></p>
 <p>Using these weights as the start of the training set, lets see what the network will do with training.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">Train_Set</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[[</span><span class="m m-Double">1.0</span><span class="p">,</span><span class="m m-Double">1.0</span><span class="p">],[</span><span class="m m-Double">0.0</span><span class="p">,</span><span class="m m-Double">0.0</span><span class="p">],[</span><span class="m m-Double">0.0</span><span class="p">,</span><span class="m m-Double">1.0</span><span class="p">],[</span><span class="m m-Double">1.0</span><span class="p">,</span><span class="m m-Double">0.0</span><span class="p">]]</span><span class="w"> </span><span class="err">#</span><span class="nx">train</span><span class="w"> </span><span class="nx">set</span>
 
@@ -394,7 +394,7 @@ $$</p>
 <span class="w"> </span><span class="nx">plt</span><span class="p">.</span><span class="nx">xlabel</span><span class="p">(</span><span class="err">&#39;</span><span class="nx">Iteration</span><span class="w"> </span><span class="err">#&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/neural_net/net_learn2_1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/net_learn2_1.png" /></p>
 <p>As you can see the network never reduces error. Let's see how the network answers to the different input patterns.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="n">Weights_1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Weight_Dict</span><span class="o">[</span><span class="n">&#39;Weights_1&#39;</span><span class="o">]</span>
 <span class="w"> </span><span class="n">Weights_2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Weight_Dict</span><span class="o">[</span><span class="n">&#39;Weights_2&#39;</span><span class="o">]</span>
@@ -414,7 +414,7 @@ $$</p>
 <span class="w"> </span><span class="n">plt</span><span class="p">.</span><span class="n">yticks</span><span class="p">(</span><span class="o">[</span><span class="n">0.5,1.5</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">&#39;0&#39;,&#39;1&#39;</span><span class="o">]</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/neural_net/net_guess3_1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/net_guess3_1.png" /></p>
 <p>Looks like the network produces the correct answer in some cases but not others. The network is particularly confused when Inputs 2 is 0. Below I depict the weights after "training." As you can see, they have not changed too much from where the weights started before training.</p>
 <div class="highlight"><pre><span></span><code> Weights_1 = Weight_Dict[&#39;Weights_1&#39;]
  Weights_2 = Weight_Dict[&#39;Weights_2&#39;]
@@ -431,7 +431,7 @@ $$</p>
  network.draw()
 </code></pre></div>
 
-<p><img src="/images/neural_net/local_minimaWeights1.png" /></p>
+<p><img src="https://danvatterott.com/images/neural_net/local_minimaWeights1.png" /></p>
 <p>This network was unable to push itself out of the local optima. While local optima are a problem, they're are a couple things we can do to avoid them. First, we should always train a network multiple times with different random weights in order to test for local optima. If the network continually finds local optima, then we can increase the learning rate. By increasing the learning rate, the network can escape local optima in some cases. This should be done with care though as too big of a learning rate can also prevent finding the global minima.</p>
 <p>Alright, that's it. Obviously the neural network behind <a href="https://en.wikipedia.org/wiki/AlphaGo">alpha go</a> is much more complex than this one, but I would guess that while alpha go is much larger the basic computations underlying it are similar.</p>
 <p>Hopefully these posts have given you an idea for how neural networks function and why they're so cool!</p></div>
@@ -443,12 +443,16 @@ $$</p>
     </span>
   </span>
 <time datetime="2016-05-02T21:56:27-04:00" pubdate>Mon 02 May 2016</time>  <span class="categories">
-    <a class='category' href='/category/python.html'>python</a>
+    <a class='category' href='https://danvatterott.com/category/python.html'>python</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -491,19 +495,19 @@ $$</p>
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -513,13 +517,13 @@ $$</p>
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/an-introduction-to-neural-networks-part-2.html';
-    var disqus_url = '/an-introduction-to-neural-networks-part-2.html';
+    var disqus_url = 'https://danvatterott.com/an-introduction-to-neural-networks-part-2.html';
     var disqus_title = 'An Introduction to Neural Networks: Part 2';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

@@ -18,9 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <link href="/favicon.png" rel="icon">
+    <link href="https://danvatterott.com/favicon.png" rel="icon">
 
-  <link href="/theme/css/main.css" media="screen, projection"
+  <link href="https://danvatterott.com/theme/css/main.css" media="screen, projection"
         rel="stylesheet" type="text/css">
 
   <link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic"
@@ -32,7 +32,7 @@
 
 <body>
   <header role="banner"><hgroup>
-  <h1><a href="/">Dan Vatterott</a></h1>
+  <h1><a href="https://danvatterott.com/">Dan Vatterott</a></h1>
     <h2>Data Scientist</h2>
 </hgroup></header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
@@ -300,56 +300,56 @@
  create_shotChart(player_shotDict);
 </code></pre></div>
 
-<p><img src="/images/nba_shot_charts/attempts1.png" /></p>
+<p><img src="https://danvatterott.com/images/nba_shot_charts/attempts1.png" /></p>
 <p>Here's KAT's shots made</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">aqcuire_shootingData</span><span class="p">(</span><span class="err">&#39;</span><span class="mi">1626157</span><span class="sc">&#39;,&#39;</span><span class="mi">2015</span><span class="o">-</span><span class="mi">16</span><span class="err">&#39;</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">player_shotDict</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">shooting_matrices</span><span class="p">(</span><span class="nx">df</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">create_shotChart</span><span class="p">(</span><span class="nx">player_shotDict</span><span class="p">,</span><span class="nx">fig_type</span><span class="p">=</span><span class="err">&#39;</span><span class="nx">made</span><span class="err">&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/nba_shot_charts/made1.png" /></p>
+<p><img src="https://danvatterott.com/images/nba_shot_charts/made1.png" /></p>
 <p>Here's field goal percentage. I don't like this one too much. It's hard to use similar scales for attempts and field goal percentage even though I'm using standard deviations rather than absolute scales.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">aqcuire_shootingData</span><span class="p">(</span><span class="err">&#39;</span><span class="mi">1626157</span><span class="sc">&#39;,&#39;</span><span class="mi">2015</span><span class="o">-</span><span class="mi">16</span><span class="err">&#39;</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">player_shotDict</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">shooting_matrices</span><span class="p">(</span><span class="nx">df</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">create_shotChart</span><span class="p">(</span><span class="nx">player_shotDict</span><span class="p">,</span><span class="w"> </span><span class="nx">fig_type</span><span class="p">=</span><span class="err">&#39;</span><span class="nx">fg</span><span class="err">&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/nba_shot_charts/fg1.png" /></p>
+<p><img src="https://danvatterott.com/images/nba_shot_charts/fg1.png" /></p>
 <p>Here's points across the court.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">aqcuire_shootingData</span><span class="p">(</span><span class="err">&#39;</span><span class="mi">1626157</span><span class="sc">&#39;,&#39;</span><span class="mi">2015</span><span class="o">-</span><span class="mi">16</span><span class="err">&#39;</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">player_shotDict</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">shooting_matrices</span><span class="p">(</span><span class="nx">df</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">create_shotChart</span><span class="p">(</span><span class="nx">player_shotDict</span><span class="p">,</span><span class="w"> </span><span class="nx">fig_type</span><span class="p">=</span><span class="err">&#39;</span><span class="nx">points</span><span class="err">&#39;</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/nba_shot_charts/points1.png" /></p>
+<p><img src="https://danvatterott.com/images/nba_shot_charts/points1.png" /></p>
 <p>Here's how KAT's attempts compare to the league average. You can see the twolve's midrange heavy offense.</p>
 <div class="highlight"><pre><span></span><code> df = aqcuire_shootingData(&#39;1626157&#39;,&#39;2015-16&#39;)
  player_shotDict = shooting_matrices(df)
  create_shotChart(player_shotDict, league_shotDict=league_shotDict);
 </code></pre></div>
 
-<p><img src="/images/nba_shot_charts/attempts2.png" /></p>
+<p><img src="https://danvatterott.com/images/nba_shot_charts/attempts2.png" /></p>
 <p>How KAT's shots made compares to league average.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">aqcuire_shootingData</span><span class="p">(</span><span class="err">&#39;</span><span class="mi">1626157</span><span class="sc">&#39;,&#39;</span><span class="mi">2015</span><span class="o">-</span><span class="mi">16</span><span class="err">&#39;</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">player_shotDict</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">shooting_matrices</span><span class="p">(</span><span class="nx">df</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">create_shotChart</span><span class="p">(</span><span class="nx">player_shotDict</span><span class="p">,</span><span class="w"> </span><span class="nx">fig_type</span><span class="p">=</span><span class="err">&#39;</span><span class="nx">made</span><span class="err">&#39;</span><span class="p">,</span><span class="nx">league_shotDict</span><span class="p">=</span><span class="nx">league_shotDict</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/nba_shot_charts/made2.png" /></p>
+<p><img src="https://danvatterott.com/images/nba_shot_charts/made2.png" /></p>
 <p>How KAT's field goal percentage compares to league average. Again, the scale on these is not too good.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">aqcuire_shootingData</span><span class="p">(</span><span class="err">&#39;</span><span class="mi">1626157</span><span class="sc">&#39;,&#39;</span><span class="mi">2015</span><span class="o">-</span><span class="mi">16</span><span class="err">&#39;</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">player_shotDict</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">shooting_matrices</span><span class="p">(</span><span class="nx">df</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">create_shotChart</span><span class="p">(</span><span class="nx">player_shotDict</span><span class="p">,</span><span class="w"> </span><span class="nx">fig_type</span><span class="p">=</span><span class="err">&#39;</span><span class="nx">fg</span><span class="err">&#39;</span><span class="p">,</span><span class="nx">league_shotDict</span><span class="p">=</span><span class="nx">league_shotDict</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/nba_shot_charts/fg2.png" /></p>
+<p><img src="https://danvatterott.com/images/nba_shot_charts/fg2.png" /></p>
 <p>And here is how KAT's points compare to league average.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nx">df</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">aqcuire_shootingData</span><span class="p">(</span><span class="err">&#39;</span><span class="mi">1626157</span><span class="sc">&#39;,&#39;</span><span class="mi">2015</span><span class="o">-</span><span class="mi">16</span><span class="err">&#39;</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">player_shotDict</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">shooting_matrices</span><span class="p">(</span><span class="nx">df</span><span class="p">)</span>
 <span class="w"> </span><span class="nx">create_shotChart</span><span class="p">(</span><span class="nx">player_shotDict</span><span class="p">,</span><span class="w"> </span><span class="nx">fig_type</span><span class="p">=</span><span class="err">&#39;</span><span class="nx">points</span><span class="err">&#39;</span><span class="p">,</span><span class="nx">league_shotDict</span><span class="p">=</span><span class="nx">league_shotDict</span><span class="p">);</span>
 </code></pre></div>
 
-<p><img src="/images/nba_shot_charts/points2.png" /></p></div>
+<p><img src="https://danvatterott.com/images/nba_shot_charts/points2.png" /></p></div>
     <footer>
 <p class="meta">
   <span class="byline author vcard">
@@ -358,12 +358,16 @@
     </span>
   </span>
 <time datetime="2016-05-13T11:08:22-04:00" pubdate>Fri 13 May 2016</time>  <span class="categories">
-    <a class='category' href='/category/nba.html'>nba</a>
+    <a class='category' href='https://danvatterott.com/category/nba.html'>nba</a>
   </span>
 </p><div class="sharing">
 </div>    </footer>
   </article>
 
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
 </div>
 <aside class="sidebar">
 
@@ -406,19 +410,19 @@
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
       <li class="post">
-          <a href="/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
+          <a href="https://danvatterott.com/modeling-the-relative-speed-of-hot-wheels-cars.html">Modeling the relative speed of Hot Wheels Cars</a>
       </li>
       <li class="post">
-          <a href="/data-onboarding-checklist.html">Data Onboarding Checklist</a>
+          <a href="https://danvatterott.com/data-onboarding-checklist.html">Data Onboarding Checklist</a>
       </li>
       <li class="post">
-          <a href="/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
+          <a href="https://danvatterott.com/posting-collections-as-hive-tables.html">Posting Collections as Hive Tables</a>
       </li>
       <li class="post">
-          <a href="/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
+          <a href="https://danvatterott.com/balancing-model-weights-in-pyspark.html">Balancing Model Weights in PySpark</a>
       </li>
       <li class="post">
-          <a href="/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
+          <a href="https://danvatterott.com/creating-a-cdf-in-pyspark.html">Creating a CDF in PySpark</a>
       </li>
     </ul>
   </section>
@@ -428,13 +432,13 @@
     Copyright &copy;  2015&ndash;2025  Dan Vatterott &mdash;
   <span class="credit">Powered by <a href="http://getpelican.com">Pelican</a></span>
 </p></footer>
-  <script src="/theme/js/modernizr-2.0.js"></script>
-  <script src="/theme/js/ender.js"></script>
-  <script src="/theme/js/octopress.js" type="text/javascript"></script>
+  <script src="https://danvatterott.com/theme/js/modernizr-2.0.js"></script>
+  <script src="https://danvatterott.com/theme/js/ender.js"></script>
+  <script src="https://danvatterott.com/theme/js/octopress.js" type="text/javascript"></script>
   <script type="text/javascript">
     var disqus_shortname = 'danvatterott';
     var disqus_identifier = '/nba-shot-charts-updated.html';
-    var disqus_url = '/nba-shot-charts-updated.html';
+    var disqus_url = 'https://danvatterott.com/nba-shot-charts-updated.html';
     var disqus_title = 'NBA Shot Charts: Updated';
     (function() {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
