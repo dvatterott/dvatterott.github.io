@@ -62,10 +62,11 @@
   <div class="entry-content"><p>Here I create shot charts depicting both shooting percentage and the number of shots taken at different court locations, similar to those produced on Austin Clemens' website (http://www.austinclemens.com/shotcharts/). </p>
 <p>To create the shooting charts, I looked to a post by Savvas Tjortjoglou (http://savvastjortjoglou.com/nba-shot-sharts.html). Savvas' post is great, but his plots only depict the number of shots taken at different locations.</p>
 <p>I'm interested in both the number of shots AND the shooting percentage at different locations. This requires a little bit more work. Here's how I did it.</p>
-<p>{% codeblock lang:python %}</p>
-<h1>import some libraries and tell ipython we want inline figures rather than interactive figures.</h1>
-<p _="%" endcodeblock>%matplotlib inline
-import matplotlib.pyplot as plt, pandas as pd, numpy as np, matplotlib as mpl</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="c1">#import some libraries and tell ipython we want inline figures rather than interactive figures. </span>
+<span class="w"> </span><span class="o">%</span><span class="n">matplotlib</span><span class="w"> </span><span class="n">inline</span>
+<span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+</code></pre></div>
+
 <p>First, we have to acquire shooting data about each player. I retrieved the data from NBA.com's API using code from Savvas Tjortjoglou's post.</p>
 <p>I won't show you the output of this function. If you're interested in the details, I recommend Savvas Tjortjoglou's post.</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">aqcuire_shootingData</span><span class="p">(</span><span class="n">PlayerID</span><span class="p">,</span><span class="n">Season</span><span class="p">):</span>

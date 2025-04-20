@@ -1,0 +1,61 @@
+<section>
+  <h2>Automated feature engineering in the python stack.</h2>
+</section>
+
+<!-- How does TPOT do it? Preaggregated data.
+  sklearn.cluster.FeatureAgglomeration
+  Polynomials
+  PCA
+  Clustering
+  Scaling
+  Applying a kernel (sampling from)
+-->
+<!-- How does feature tools do it?
+  "Deep Feature Synthesis" - describe "table schema"
+  SQL type aggregations from agg_primitives
+  transform primitives just map categorical to numeric.
+  "Deep" feature synthesis because can do aggregations of aggregations (up to N number of times.)
+-->
+<!-- How does auto_ml do it? Preaggregated data.
+  Trains DNN then uses features from penultimate layer.
+-->
+
+<section data-transition="slide-in slide-out">
+  <h2>TPOT throws the SKLearn kitchen sink at feature engineering.</h2>
+  <!-- all the thing meme would be funny here -->
+  <img width="auto" height="250" src="slides/feature_automation/tpot-logo.jpg"/>
+  <br><br>
+  <div>
+    <ul>
+      <li>Aggregated data.</li>
+      <li>Nothing you couldn't build in your own SKLearn pipeline.</li>
+      <li>Uses genetic search algorithm.</li>
+    </ul>
+  </div>
+</section>
+
+<section data-transition="slide-in slide-out">
+  <h2>auto_ml creates new features using deep learning.</h2>
+  <!-- neural network image -->
+  <img width="auto" height="200" src="slides/feature_automation/neural_network.jpg"/>
+  <br><br>
+  <div>
+    <ul>
+      <li>Aggregated data.</li>
+      <li>Penultimate layer of ten "best" features from DNN appended to data.</li>
+    </ul>
+  </div>
+</section>
+
+<section data-transition="slide-in slide-out">
+  <h2>Features Tools takes the most innovative approach.</h2>
+  <img width="auto" height="100" src="slides/feature_automation/featuretools.png"/>
+  <br><br>
+  <div>
+    <ul>
+      <li>Pre-aggregated data!</li>
+      <li>Recursively applies SQL style aggregations.</li>
+      <li><a href="https://mybinder.org/v2/gh/dvatterott/explore_feature_automation/master">Binder Notebook.</a></li>
+    </ul>
+  </div>
+</section>
